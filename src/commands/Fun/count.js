@@ -16,17 +16,17 @@ import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 
 export default {
   data: new SlashCommandBuilder()
-    .setName('count')
+    .setName('telleleken')
     .setDescription('Administrer telleleken for serveren')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .setDMPermission(false)
     .addSubcommand((subcommand) =>
       subcommand
-        .setName('setup')
+        .setName('sett-opp')
         .setDescription('Start en tellelek i en tekstkanal')
         .addChannelOption((option) =>
           option
-            .setName('channel')
+            .setName('kanal')
             .setDescription('Kanalen hvor tellingen skal foregå')
             .setRequired(true)
             .addChannelTypes(ChannelType.GuildText),
@@ -40,7 +40,7 @@ export default {
         ),
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName('disable').setDescription('Deaktiver telleleken for denne serveren'),
+      subcommand.setName('deaktiver').setDescription('Deaktiver telleleken for denne serveren'),
     )
     .addSubcommand((subcommand) =>
       subcommand.setName('status').setDescription('Vis nåværende status for telleleken'),
@@ -57,7 +57,7 @@ export default {
         ),
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName('leaderboard').setDescription('Vis ledertavlen for telleleken'),
+      subcommand.setName('toppliste').setDescription('Vis ledertavlen for telleleken'),
     ),
   category: 'Fun',
 
@@ -92,7 +92,7 @@ export default {
         return await InteractionHelper.safeEditReply(interaction, {
           embeds: [
             successEmbed(
-              'Tellelek aktivert',
+              'Telleleken er igang',
               `Telleleken er nå aktiv i ${channel} med systemet **${getCountingSystemLabel(system)}**. Spillere må telle oppover fra **1** og kan ikke skrive to tall på rad.`,
             ),
           ],
