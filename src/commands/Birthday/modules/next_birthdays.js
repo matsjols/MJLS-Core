@@ -35,7 +35,7 @@ export default {
             } else if (birthday.daysUntil === 1) {
                 timeUntil = '📅 **Imorgen!**';
             } else {
-                timeUntil = `Om ${birthday.daysUntil} dager${birthday.daysUntil > 1 ? 's' : ''}`;
+                timeUntil = `Om ${birthday.daysUntil} dag${birthday.daysUntil > 1 ? 'er' : ''}`;
             }
         }
 
@@ -64,7 +64,7 @@ export default {
             } else if (birthday.daysUntil === 1) {
                 timeUntil = '📅 **Imorgen!**';
             } else {
-                timeUntil = `Om ${birthday.daysUntil} dager${birthday.daysUntil > 1 ? 's' : ''}`;
+                timeUntil = `Om ${birthday.daysUntil} dag${birthday.daysUntil > 1 ? 'er' : ''}`;
             }
 
             birthdayList += `${displayIndex}. **${member.displayName}**\n<@${birthday.userId}>\n📅 **Dato:** ${birthday.day} ${birthday.monthName}\n⏰ **Tid igjen:** ${timeUntil}\n\n`;
