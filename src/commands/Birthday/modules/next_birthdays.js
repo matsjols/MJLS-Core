@@ -70,7 +70,7 @@ export default {
             birthdayList += `${displayIndex}. **${member.displayName}**\n<@${birthday.userId}>\n📅 **Dato:** ${birthday.day} ${birthday.monthName}\n⏰ **Tid igjen:** ${timeUntil}\n\n`;
         }
 
-        birthdayList += `Use /birthday set to add your birthday!`;
+        birthdayList += `Bruk /bursdag registrer for å legge til bursdagen din!`;
 
         const embed = new EmbedBuilder()
             .setColor(0x00FF00)
