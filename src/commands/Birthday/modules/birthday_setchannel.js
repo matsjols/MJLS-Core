@@ -17,7 +17,7 @@ export default {
         }
 
         try {
-            const channel = interaction.options.getChannel('channel');
+            const channel = interaction.options.getChannel('kanal');
             const guildId = interaction.guildId;
             const guildConfig = await getGuildConfig(client, guildId);
 
