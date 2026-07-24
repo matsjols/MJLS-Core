@@ -28,17 +28,17 @@ const WIZARD_BUTTON_ID = 'config_wizard';
 const activeWizardSessions = new Set();
 
 const DM_DISABLED_HELP = [
-    '1. Right-click this server\'s name (mobile: tap the server name at the top).',
-    '2. Open **Privacy Settings**.',
-    '3. Turn on **Allow direct messages from server members**.',
-    '4. Click **Start Setup Wizard** again.',
+    '1. Høyreklikk på denne serverens navn (mobil: trykk på servernavnet øverst).',
+    '2. Åpne **Personverninnstillinger**.',
+    '3. Slå på **Tillat direktemeldinger fra servermedlemmer**.',
+    '4. Klikk på **Start oppsettsveiviser** igjen.',
 ].join('\n');
 
 async function notifyWizardStarted(buttonInteraction) {
     await buttonInteraction.followUp({
         embeds: [infoEmbed(
-            'Setup Wizard Started',
-            'Check your DMs — I sent you the first setup question there.\n\nAnswer each question in that DM. Type `skip` to keep the current value.',
+            'Oppsettsveiviser startet',
+            'Sjekk direktemeldingene dine – jeg har sendt det første oppsettsspørsmålet dit.\n\nSvar på hvert spørsmål i den direktemeldingen. Skriv `skip` (eller `hopp over`) for å beholde nåværende verdi.',
         )],
         flags: MessageFlags.Ephemeral,
     }).catch(() => {});
@@ -47,13 +47,13 @@ async function notifyWizardStarted(buttonInteraction) {
 async function notifyWizardDmBlocked(buttonInteraction) {
     await replyUserError(buttonInteraction, {
         type: ErrorTypes.USER_INPUT,
-        message: `I couldn't send you a DM. Enable DMs from this server, then try again.\n\n${DM_DISABLED_HELP}`,
+        message: `Jeg kunne ikke sende deg en direktemelding. Aktiver direktemeldinger fra denne serveren, og prøv igjen.\n\n${DM_DISABLED_HELP}`,
     }).catch(() => {});
 }
 
 function formatChannelMention(guild, channelId) {
     if (!channelId) {
-        return '`Not set`';
+        return '`Ikke satt`';
     }
     const channel = guild.channels.cache.get(channelId);
     return channel ? `<#${channelId}>` : `#${channelId}`;
@@ -61,7 +61,7 @@ function formatChannelMention(guild, channelId) {
 
 function formatRoleMention(guild, roleId) {
     if (!roleId) {
-        return '`Not set`';
+        return '`Ikke satt`';
     }
     const role = guild.roles.cache.get(roleId);
     return role ? `<@&${roleId}>` : `@${roleId}`;
@@ -70,10 +70,10 @@ function formatRoleMention(guild, roleId) {
 function getBotPresenceText() {
     const activity = botConfig.presence?.activities?.[0];
     if (!activity?.name) {
-        return '`Not configured`';
+        return '`Ikke konfigurert`';
     }
 
-    const typeLabels = ['Playing', 'Streaming', 'Listening to', 'Watching', '', 'Competing in'];
+    const typeLabels = ['Spiller', 'Strømmer', 'Lytter til', 'Overvåker', '', 'Konkurrerer i'];
     const typeLabel = typeLabels[activity.type];
     if (!typeLabel) {
         return activity.name;
@@ -85,8 +85,8 @@ function getBotPresenceText() {
 function getThemeColorLines() {
     const colors = botConfig.embeds.colors;
     return [
-        `🎨 Primary \`${colors.primary}\` · Success \`${colors.success}\``,
-        `⚠️ Warning \`${colors.warning}\` · Error \`${colors.error}\``,
+        `🎨 Primær \`${colors.primary}\` · Suksess \`${colors.success}\``,
+        `⚠️ Advarsel \`${colors.warning}\` · Feil \`${colors.error}\``,
     ].join('\n');
 }
 
@@ -94,49 +94,49 @@ function buildDashboardEmbed(config, guild) {
     const setupDone = config.setupWizardCompleted;
 
     return createEmbed({
-        title: '⚙️ Server Configuration',
-        description: `Core settings for **${guild.name}**. Pick an option below or run the setup wizard.`,
+        title: '⚙️ Serverkonfigurasjon',
+        description: `Kjerneinnstillinger for **${guild.name}**. Velg et alternativ nedenfor eller kjør oppsettsveiviseren.`,
         color: 'info',
         fields: [
             {
-                name: '⌨️ Server Prefix',
+                name: '⌨️ Serverprefiks',
                 value: `\`${config.prefix || getCommandPrefix()}\``,
                 inline: true,
             },
             {
-                name: '🛡️ Moderator Role',
+                name: '🛡️ Moderatorrolle',
                 value: formatRoleMention(guild, config.modRole),
                 inline: true,
             },
             {
-                name: '📋 Log Channel',
+                name: '📋 Loggkanal',
                 value: formatChannelMention(guild, config.logging?.channels?.audit),
                 inline: true,
             },
             {
-                name: '💚 Bot Status',
+                name: '💚 Bot-status',
                 value: getBotPresenceText(),
                 inline: false,
             },
             {
-                name: '🎨 Embed Theme',
-                value: `${getThemeColorLines()}\n-# Colors are set in bot config and apply globally.`,
+                name: '🎨 Innbyggingstema (Embed Theme)',
+                value: `${getThemeColorLines()}\n-# Farger settes i bot-konfigurasjonen og gjelder globalt.`,
                 inline: false,
             },
             {
-                name: '⚡ Command Access',
-                value: 'Use `/commands dashboard` to enable or disable commands and subcommands.',
+                name: '⚡ Kommandotilgang',
+                value: 'Bruk `/commands dashboard` for å aktivere eller deaktivere kommandoer og underkommandoer.',
                 inline: false,
             },
             {
-                name: `${setupDone ? '✅' : '📝'} Setup`,
+                name: `${setupDone ? '✅' : '📝'} Oppsett`,
                 value: setupDone
-                    ? 'Setup wizard completed — re-run anytime to update settings.'
-                    : 'Run the setup wizard to configure your server quickly.',
+                    ? 'Oppsettsveiviser fullført – kjør på nytt når som helst for å oppdatere innstillinger.'
+                    : 'Kjør oppsettsveiviseren for å konfigurere serveren raskt.',
                 inline: false,
             },
         ],
-        footer: 'Dashboard closes after 10 minutes of inactivity',
+        footer: 'Dashbordet lukkes etter 10 minutters inaktivitet',
     });
 }
 
@@ -144,21 +144,21 @@ function buildSettingsSelect(guildId) {
     return new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
             .setCustomId(`${DASHBOARD_CUSTOM_ID}:${guildId}`)
-            .setPlaceholder('⚙️ Select a setting to edit...')
+            .setPlaceholder('⚙️ Velg en innstilling som skal redigeres...')
             .addOptions(
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Server Prefix')
-                    .setDescription('Change the text command prefix')
+                    .setLabel('Serverprefiks')
+                    .setDescription('Endre prefikset for tekstkommandoer')
                     .setValue('prefix')
                     .setEmoji('⌨️'),
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Moderator Role')
-                    .setDescription('Role used for moderation commands')
+                    .setLabel('Moderatorrolle')
+                    .setDescription('Rolle som brukes til moderatorkommandoer')
                     .setValue('modRole')
                     .setEmoji('🛡️'),
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Log Channel')
-                    .setDescription('Channel for system log messages')
+                    .setLabel('Loggkanal')
+                    .setDescription('Kanal for systemloggmeldinger')
                     .setValue('logChannelId')
                     .setEmoji('📋'),
             ),
@@ -169,7 +169,7 @@ function buildButtonRow(config, guildId) {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(`${WIZARD_BUTTON_ID}:${guildId}`)
-            .setLabel(config.setupWizardCompleted ? 'Re-run Setup Wizard' : 'Start Setup Wizard')
+            .setLabel(config.setupWizardCompleted ? 'Kjør oppsettsveiviser på nytt' : 'Start oppsettsveiviser')
             .setEmoji('📝')
             .setStyle(config.setupWizardCompleted ? ButtonStyle.Secondary : ButtonStyle.Success),
     );
@@ -193,7 +193,7 @@ function extractId(value) {
 async function askQuestion(dmChannel, userId, prompt, stepNumber, totalSteps) {
     await dmChannel.send({
         embeds: [createEmbed({
-            title: `Setup Question ${stepNumber}/${totalSteps}`,
+            title: `Oppsettsspørsmål ${stepNumber}/${totalSteps}`,
             description: prompt,
             color: 'primary',
         })],
@@ -207,15 +207,15 @@ async function askQuestion(dmChannel, userId, prompt, stepNumber, totalSteps) {
 
     if (!collected || !collected.size) {
         await dmChannel.send({
-            embeds: [buildUserErrorEmbed(ErrorTypes.RATE_LIMIT, 'You did not answer in time. Run the setup wizard again when ready.')],
+            embeds: [buildUserErrorEmbed(ErrorTypes.RATE_LIMIT, 'Du svarte ikke i tide. Kjør oppsettsveiviseren på nytt når du er klar.')],
         });
         return null;
     }
 
     const answer = collected.first().content.trim();
-    if (answer.toLowerCase() === 'cancel') {
+    if (answer.toLowerCase() === 'cancel' || answer.toLowerCase() === 'avbryt') {
         await dmChannel.send({
-            embeds: [infoEmbed('Setup Cancelled', 'Setup wizard stopped. Your saved answers are still applied.')],
+            embeds: [infoEmbed('Oppsettsveiviser avbrutt', 'Oppsettsveiviseren ble stanset. Dine lagrede svar gjelder fortsatt.')],
         });
         return { cancelled: true };
     }
@@ -225,32 +225,32 @@ async function askQuestion(dmChannel, userId, prompt, stepNumber, totalSteps) {
 
 function formatSavedAck(key, value, guild) {
     if (key === 'prefix') {
-        return `Server prefix saved as \`${value}\`.`;
+        return `Serverprefiks lagret som \`${value}\`.`;
     }
 
     if (key === 'logChannelId') {
         if (value === null) {
-            return 'Log channel cleared.';
+            return 'Loggkanal tømt.';
         }
         const channel = guild.channels.cache.get(value);
-        return `Log channel saved as ${channel ?? `<#${value}>`}.`;
+        return `Loggkanal lagret som ${channel ?? `<#${value}>`}.`;
     }
 
     if (key === 'modRole') {
         if (value === null) {
-            return 'Moderator role cleared.';
+            return 'Moderatorrolle tømt.';
         }
         const role = guild.roles.cache.get(value);
-        return `Moderator role saved as ${role ?? `<@&${value}>`}.`;
+        return `Moderatorrolle lagret som ${role ?? `<@&${value}>`}.`;
     }
 
-    return 'Setting saved.';
+    return 'Innstilling lagret.';
 }
 
 async function validateGuildChannelId(guild, channelId) {
     const channel = guild.channels.cache.get(channelId) ?? await guild.channels.fetch(channelId).catch(() => null);
     if (!channel || !channel.isTextBased()) {
-        throw new Error('That channel was not found in this server or is not a text channel.');
+        throw new Error('Den kanalen ble ikke funnet på denne serveren, eller er ikke en tekstkanal.');
     }
     return channel.id;
 }
@@ -258,7 +258,7 @@ async function validateGuildChannelId(guild, channelId) {
 async function validateGuildRoleId(guild, roleId) {
     const role = guild.roles.cache.get(roleId) ?? await guild.roles.fetch(roleId).catch(() => null);
     if (!role) {
-        throw new Error('That role was not found in this server.');
+        throw new Error('Den rollen ble ikke funnet på denne serveren.');
     }
     return role.id;
 }
@@ -274,7 +274,7 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
 
     if (activeWizardSessions.has(user.id)) {
         await buttonInteraction.followUp({
-            embeds: [warningEmbed('Setup Already Running', 'You already have a setup wizard open in your DMs. Reply there to continue, or type `cancel` to stop it.')],
+            embeds: [warningEmbed('Oppsett kjører allerede', 'Du har allerede en oppsettsveiviser åpen i direktemeldingene dine. Svar der for å fortsette, eller skriv `cancel` / `avbryt` for å stoppe den.')],
             flags: MessageFlags.Ephemeral,
         }).catch(() => {});
         return;
@@ -287,7 +287,7 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
     try {
         dmChannel = await user.createDM();
     } catch (error) {
-        logger.warn('Failed to create DM channel for setup wizard', { userId: user.id, error: error.message });
+        logger.warn('Kunne ikke opprette DM-kanal for oppsettsveiviser', { userId: user.id, error: error.message });
         await notifyWizardDmBlocked(buttonInteraction);
         return;
     } finally {
@@ -299,40 +299,40 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
     const prompts = [
         {
             key: 'prefix',
-            skipMessage: 'Keeping the current server prefix.',
-            question: 'What command prefix should this server use?\nCurrent: `' + (config.prefix || getCommandPrefix()) + '`\nReply `skip` to keep it, or `cancel` to stop.',
+            skipMessage: 'Beholder nåværende serverprefiks.',
+            question: 'Hvilken kommandoprefiks skal denne serveren bruke?\nNåværende: `' + (config.prefix || getCommandPrefix()) + '`\nSvar `skip` for å beholde den, eller `cancel` for å stoppe.',
             parse: async (answer) => {
                 const normalized = answer.trim();
-                if (normalized.toLowerCase() === 'skip') return undefined;
+                if (normalized.toLowerCase() === 'skip' || normalized.toLowerCase() === 'hopp over') return undefined;
                 if (/\s/.test(normalized) || normalized.length < 1 || normalized.length > 10) {
-                    throw new Error('Prefix must be 1-10 characters with no spaces.');
+                    throw new Error('Prefikset må være mellom 1 og 10 tegn uten mellomrom.');
                 }
                 return normalized;
             },
         },
         {
             key: 'logChannelId',
-            skipMessage: 'Keeping the current log channel.',
-            question: 'Which channel should receive bot logs?\nSend a channel mention, channel ID, `none` to clear, `skip` to keep the current value, or `cancel` to stop.',
+            skipMessage: 'Beholder nåværende loggkanal.',
+            question: 'Hvilken kanal skal motta bot-logger?\nSend en kanal-omtale (mention), kanal-ID, `none` for å tømme, `skip` for å beholde nåværende verdi, eller `cancel` for å stoppe.',
             parse: async (answer) => {
                 const normalized = answer.trim();
-                if (normalized.toLowerCase() === 'skip') return undefined;
-                if (normalized.toLowerCase() === 'none') return null;
+                if (normalized.toLowerCase() === 'skip' || normalized.toLowerCase() === 'hopp over') return undefined;
+                if (normalized.toLowerCase() === 'none' || normalized.toLowerCase() === 'ingen') return null;
                 const id = extractId(normalized);
-                if (!id) throw new Error('Provide a valid channel mention or ID from this server.');
+                if (!id) throw new Error('Oppgi en gyldig kanal-omtale eller ID fra denne serveren.');
                 return validateGuildChannelId(guild, id);
             },
         },
         {
             key: 'modRole',
-            skipMessage: 'Keeping the current moderator role.',
-            question: 'What role should moderators have?\nSend a role mention, role ID, `none` to clear, `skip` to keep the current value, or `cancel` to stop.',
+            skipMessage: 'Beholder nåværende moderatorrolle.',
+            question: 'Hvilken rolle skal moderatorer ha?\nSend en rolle-omtale (mention), rolle-ID, `none` for å tømme, `skip` for å beholde nåværende verdi, eller `cancel` for å stoppe.',
             parse: async (answer) => {
                 const normalized = answer.trim();
-                if (normalized.toLowerCase() === 'skip') return undefined;
-                if (normalized.toLowerCase() === 'none') return null;
+                if (normalized.toLowerCase() === 'skip' || normalized.toLowerCase() === 'hopp over') return undefined;
+                if (normalized.toLowerCase() === 'none' || normalized.toLowerCase() === 'ingen') return null;
                 const id = extractId(normalized);
-                if (!id) throw new Error('Provide a valid role mention or ID from this server.');
+                if (!id) throw new Error('Oppgi en gyldig rolle-omtale eller ID fra denne serveren.');
                 return validateGuildRoleId(guild, id);
             },
         },
@@ -346,13 +346,13 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
         try {
             await dmChannel.send({
                 embeds: [createEmbed({
-                    title: '📝 Setup Wizard',
-                    description: 'Answer each question in this DM.\n\n• Type `skip` to keep the current value\n• Type `cancel` to stop the wizard',
+                    title: '📝 Oppsettsveiviser',
+                    description: 'Svar på hvert spørsmål i denne direktemeldingen.\n\n• Skriv `skip` for å beholde nåværende verdi\n• Skriv `cancel` for å stoppe veiviseren',
                     color: 'info',
                 })],
             });
         } catch (error) {
-            logger.warn('Failed to send setup wizard DM', { userId: user.id, error: error.message });
+            logger.warn('Kunne ikke sende DM for oppsettsveiviser', { userId: user.id, error: error.message });
             await notifyWizardDmBlocked(buttonInteraction);
             return;
         }
@@ -389,20 +389,20 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
 
                     if (value === undefined) {
                         await dmChannel.send({
-                            embeds: [infoEmbed('Skipped', prompt.skipMessage)],
+                            embeds: [infoEmbed('Hoppet over', prompt.skipMessage)],
                         });
                     } else {
                         await ConfigService.updateSetting(client, guild.id, prompt.key, value, user.id);
                         changes[prompt.key] = value;
                         await dmChannel.send({
-                            embeds: [successEmbed('Saved', formatSavedAck(prompt.key, value, guild))],
+                            embeds: [successEmbed('Lagret', formatSavedAck(prompt.key, value, guild))],
                         });
 
                         try {
                             const updatedConfig = await getGuildConfig(client, guild.id);
                             await refreshDashboard(rootInteraction, updatedConfig, guild);
                         } catch (refreshError) {
-                            logger.debug('Failed to refresh dashboard during setup wizard', { error: refreshError.message });
+                            logger.debug('Kunne ikke oppdatere dashbordet under oppsettsveiviseren', { error: refreshError.message });
                         }
                     }
 
@@ -410,7 +410,7 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
                 } catch (error) {
                     errors.push(`• ${prompt.key}: ${error.message}`);
                     await dmChannel.send({
-                        embeds: [buildUserErrorEmbed(ErrorTypes.VALIDATION, `${error.message}\n\nPlease reply again with a valid answer, \`skip\`, or \`cancel\`.`)],
+                        embeds: [buildUserErrorEmbed(ErrorTypes.VALIDATION, `${error.message}\n\nVennligst svar på nytt med et gyldig svar, \`skip\` eller \`cancel\`.`)],
                     });
                 }
             }
@@ -424,21 +424,21 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
             try {
                 await setConfigValue(client, guild.id, 'setupWizardCompleted', true);
             } catch (error) {
-                logger.warn('Failed to persist setupWizardCompleted flag', { guildId: guild.id, error: error.message });
+                logger.warn('Kunne ikke lagre setupWizardCompleted-flagget', { guildId: guild.id, error: error.message });
             }
         }
 
         const summaryTitle = wizardCancelled
-            ? (Object.keys(changes).length > 0 ? 'Setup Stopped' : 'Setup Cancelled')
-            : (errors.length > 0 ? 'Setup Complete' : 'Setup Complete');
+            ? (Object.keys(changes).length > 0 ? 'Oppsettsveiviser stanset' : 'Oppsettsveiviser avbrutt')
+            : (errors.length > 0 ? 'Oppsett fullført' : 'Oppsett fullført');
 
         const summaryBody = wizardCancelled
             ? (Object.keys(changes).length > 0
-                ? `Setup stopped early. Saved **${Object.keys(changes).length}** setting(s) before stopping.`
-                : 'Setup wizard stopped before any changes were saved.')
+                ? `Oppsettet ble stanset tidlig. Lagret **${Object.keys(changes).length}** innstilling(er) før det ble stoppet.`
+                : 'Oppsettsveiviseren ble stanset før noen endringer ble lagret.')
             : (Object.keys(changes).length > 0
-                ? `Updated **${Object.keys(changes).length}** setting(s).${errors.length > 0 ? ' Some answers needed retries.' : ''}`
-                : 'No changes were applied.');
+                ? `Oppdaterte **${Object.keys(changes).length}** innstilling(er).${errors.length > 0 ? ' Noen svar trengte flere forsøk.' : ''}`
+                : 'Ingen endringer ble utført.');
 
         const summaryEmbed = createEmbed({
             title: wizardCancelled ? `⚠️ ${summaryTitle}` : `✅ ${summaryTitle}`,
@@ -448,7 +448,7 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
 
         if (errors.length > 0) {
             const uniqueErrors = [...new Set(errors)];
-            summaryEmbed.addFields({ name: 'Issues', value: uniqueErrors.join('\n').slice(0, 1024) });
+            summaryEmbed.addFields({ name: 'Problemer', value: uniqueErrors.join('\n').slice(0, 1024) });
         }
 
         await dmChannel.send({ embeds: [summaryEmbed] });
@@ -457,7 +457,7 @@ async function runSetupWizard(buttonInteraction, config, guild, client, rootInte
             const updatedConfig = await getGuildConfig(client, guild.id);
             await refreshDashboard(rootInteraction, updatedConfig, guild);
         } catch (error) {
-            logger.debug('Failed to refresh dashboard after wizard completion', { error: error.message });
+            logger.debug('Kunne ikke oppdatere dashbordet etter fullført veiviser', { error: error.message });
         }
     } finally {
         activeWizardSessions.delete(user.id);
@@ -470,19 +470,19 @@ async function showSettingModal(selectInteraction, guildId, setting) {
     if (setting === 'logChannelId') {
         const modal = new ModalBuilder()
             .setCustomId(modalCustomId)
-            .setTitle('📋 Update Log Channel');
+            .setTitle('📋 Oppdater loggkanal');
 
         const channelSelect = new ChannelSelectMenuBuilder()
             .setCustomId('log_channel')
-            .setPlaceholder('Select a text channel...')
+            .setPlaceholder('Velg en tekstkanal...')
             .setMinValues(1)
             .setMaxValues(1)
             .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
             .setRequired(true);
 
         const channelLabel = new LabelBuilder()
-            .setLabel('Log Channel')
-            .setDescription('Channel where system log messages will be sent')
+            .setLabel('Loggkanal')
+            .setDescription('Kanal der systemloggmeldinger vil bli sendt')
             .setChannelSelectMenuComponent(channelSelect);
 
         modal.addLabelComponents(channelLabel);
@@ -493,18 +493,18 @@ async function showSettingModal(selectInteraction, guildId, setting) {
     if (setting === 'modRole') {
         const modal = new ModalBuilder()
             .setCustomId(modalCustomId)
-            .setTitle('🛡️ Update Moderator Role');
+            .setTitle('🛡️ Oppdater moderatorrolle');
 
         const roleSelect = new RoleSelectMenuBuilder()
             .setCustomId('mod_role')
-            .setPlaceholder('Select a moderator role...')
+            .setPlaceholder('Velg en moderatorrolle...')
             .setMinValues(1)
             .setMaxValues(1)
             .setRequired(true);
 
         const roleLabel = new LabelBuilder()
-            .setLabel('Moderator Role')
-            .setDescription('Role used for moderation commands')
+            .setLabel('Moderatorrolle')
+            .setDescription('Rolle som brukes til moderatorkommandoer')
             .setRoleSelectMenuComponent(roleSelect);
 
         modal.addLabelComponents(roleLabel);
@@ -514,11 +514,11 @@ async function showSettingModal(selectInteraction, guildId, setting) {
 
     const modal = new ModalBuilder()
         .setCustomId(modalCustomId)
-        .setTitle('Update Server Prefix');
+        .setTitle('Oppdater serverprefiks');
 
     const textInput = new TextInputBuilder()
         .setCustomId('value')
-        .setLabel('New prefix (1-10 characters, no spaces)')
+        .setLabel('Nytt prefiks (1-10 tegn, ingen mellomrom)')
         .setStyle(TextInputStyle.Short)
         .setRequired(true)
         .setMinLength(1)
@@ -532,7 +532,7 @@ function resolveSettingModalValue(setting, submitted) {
     if (setting === 'logChannelId') {
         const channelId = submitted.fields.getField('log_channel')?.values?.[0];
         if (!channelId) {
-            throw new Error('Please select a log channel.');
+            throw new Error('Vennligst velg en loggkanal.');
         }
         return channelId;
     }
@@ -540,14 +540,14 @@ function resolveSettingModalValue(setting, submitted) {
     if (setting === 'modRole') {
         const roleId = submitted.fields.getField('mod_role')?.values?.[0];
         if (!roleId) {
-            throw new Error('Please select a moderator role.');
+            throw new Error('Vennligst velg en moderatorrolle.');
         }
         return roleId;
     }
 
     const prefix = submitted.fields.getTextInputValue('value')?.trim();
     if (!prefix || prefix.length < 1 || prefix.length > 10 || /\s/.test(prefix)) {
-        throw new Error('Prefix must be 1-10 characters with no spaces.');
+        throw new Error('Prefikset må være mellom 1 og 10 tegn uten mellomrom.');
     }
     return prefix;
 }
@@ -555,15 +555,15 @@ function resolveSettingModalValue(setting, submitted) {
 function buildSettingSuccessMessage(setting, value, guild) {
     if (setting === 'logChannelId') {
         const channel = guild.channels.cache.get(value);
-        return `Log channel set to ${channel ?? `<#${value}>`}.`;
+        return `Loggkanal satt til ${channel ?? `<#${value}>`}.`;
     }
 
     if (setting === 'modRole') {
         const role = guild.roles.cache.get(value);
-        return `Moderator role set to ${role ?? `<@&${value}>`}.`;
+        return `Moderatorrolle satt til ${role ?? `<@&${value}>`}.`;
     }
 
-    return `Server prefix set to \`${value}\`.`;
+    return `Serverprefiks satt til \`${value}\`.`;
 }
 
 async function handleSettingModalSubmit(selectInteraction, rootInteraction, setting, guildId, client) {
@@ -587,17 +587,17 @@ async function handleSettingModalSubmit(selectInteraction, rootInteraction, sett
         await ConfigService.updateSetting(client, guildId, setting, value, submitted.user.id);
 
         await submitted.reply({
-            embeds: [successEmbed('Configuration Updated', buildSettingSuccessMessage(setting, value, submitted.guild))],
+            embeds: [successEmbed('Konfigurasjon oppdatert', buildSettingSuccessMessage(setting, value, submitted.guild))],
             flags: MessageFlags.Ephemeral,
         });
 
         const updatedConfig = await getGuildConfig(client, guildId);
         await refreshDashboard(rootInteraction, updatedConfig, submitted.guild);
     } catch (error) {
-        logger.error('Config wizard modal submit error:', error);
+        logger.error('Feil ved innsending av modal for konfigurasjonsveiviser:', error);
         await replyUserError(submitted, {
             type: ErrorTypes.CONFIGURATION,
-            message: error.message || 'Please try again.',
+            message: error.message || 'Vennligst prøv igjen.',
         }).catch(() => {});
     }
 }
@@ -606,7 +606,7 @@ export default {
     slashOnly: true,
     data: new SlashCommandBuilder()
         .setName('configwizard')
-        .setDescription('Open the server configuration dashboard and setup wizard')
+        .setDescription('Åpne serverens konfigurasjonsdashbord og oppsettsveiviser')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .setDMPermission(false),
     category: 'Core',
@@ -621,7 +621,7 @@ export default {
             if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
                 return replyUserError(interaction, {
                     type: ErrorTypes.PERMISSION,
-                    message: 'You need the **Manage Server** permission to use this command.',
+                    message: 'Du trenger tillatelsen **Administrer server** for å bruke denne kommandoen.',
                 });
             }
 
@@ -669,18 +669,18 @@ export default {
                         );
                     }
                 } catch (error) {
-                    logger.error('Config dashboard interaction error:', error);
+                    logger.error('Interaksjonsfeil i konfigurasjonsdashbordet:', error);
                     await replyUserError(componentInteraction, {
                         type: ErrorTypes.UNKNOWN,
-                        message: 'Failed to process your selection. Please try again.',
+                        message: 'Klarte ikke å behandle valget ditt. Vennligst prøv igjen.',
                     }).catch(() => {});
                 }
             });
         } catch (error) {
-            logger.error('Config command error:', error);
+            logger.error('Feil i config-kommando:', error);
             await replyUserError(interaction, {
                 type: ErrorTypes.CONFIGURATION,
-                message: 'Failed to open configuration dashboard. Please try again.',
+                message: 'Klarte ikke å åpne konfigurasjonsdashbordet. Vennligst prøv igjen.',
             });
         }
     },
