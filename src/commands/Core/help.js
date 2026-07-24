@@ -156,14 +156,17 @@ export async function createInitialHelpMenu(client) {
         options,
     );
 
-    const buttonRow = new ActionRowBuilder().addComponents([
+//    const buttonRow = new ActionRowBuilder().addComponents([
 //        bugReportButton,
 //        supportButton,
-    ]);
+//    ]);
 
     return {
         embeds: [embed],
-        components: [buttonRow, selectRow],
+        components: [
+//            buttonRow,
+            selectRow
+        ],
     };
 }
 
