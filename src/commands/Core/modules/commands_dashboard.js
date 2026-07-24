@@ -31,6 +31,41 @@ const STATUS = {
   disabled: '🔴',
 };
 
+// Oversettelsestabell for kategorier i dashbordet
+const CATEGORY_NAMES_NB = {
+  Core: "Kjerne",
+  Moderation: "Moderering",
+  Economy: "Økonomi",
+  Music: "Musikk",
+  Fun: "Moro",
+  Leveling: "Nivåer",
+  Utility: "Hjelpeverktøy",
+  Ticket: "Billetter",
+  Welcome: "Velkomst",
+  Giveaway: "Giveaway",
+  Counter: "Teller",
+  Tools: "Verktøy",
+  Search: "Søk",
+  Søk: "Søk",
+  ReactionRoles: "Reaksjonsroller",
+  "Reaction Roles": "Reaksjonsroller",
+  Reactionroles: "Reaksjonsroller",
+  Community: "Fellesskap",
+  Birthday: "Bursdag",
+  JoinToCreate: "Koble til for å opprette",
+  "Join To Create": "Koble til for å opprette",
+  Verification: "Verifisering",
+  Logging: "Logging",
+  ServerStats: "Serverstatistikk",
+  "Server Stats": "Serverstatistikk",
+};
+
+function translateCategoryName(rawName) {
+  if (!rawName) return rawName;
+  const compactKey = rawName.replace(/\s+/g, '');
+  return CATEGORY_NAMES_NB[rawName] || CATEGORY_NAMES_NB[compactKey] || rawName;
+}
+
 function customId(base, guildId, suffix = '') {
   return suffix ? `${base}:${guildId}:${suffix}` : `${base}:${guildId}`;
 }
@@ -80,22 +115,23 @@ export function buildOverviewEmbed(snapshot, guild) {
 
   const categoryLines = snapshot.categories.map((category) => {
     const icon = getCategoryStatus(category);
-    const subcommandNote = category.commands.some((c) => c.isSubcommand) ? ' · incl. subcommands' : '';
-    return `${icon} ${category.icon} **${category.displayName}** — ${category.enabledCount}/${category.totalCount}${subcommandNote}`;
+    const subcommandNote = category.commands.some((c) => c.isSubcommand) ? ' · inkl. underkommandoer' : '';
+    const translatedName = translateCategoryName(category.displayName);
+    return `${icon} ${category.icon} **${translatedName}** — ${category.enabledCount}/${category.totalCount}${subcommandNote}`;
   });
 
   const fields = [
     {
-      name: '📊 Summary',
+      name: '📊 Sammendrag',
       value: [
-        `**${snapshot.enabledTotal}/${snapshot.totalCommands}** entries enabled`,
-        `${STATUS.enabled} ${fullyEnabled} fully on · ${STATUS.partial} ${partial} partial · ${STATUS.disabled} ${disabled} off`,
+        `**${snapshot.enabledTotal}/${snapshot.totalCommands}** kommandoer aktivert`,
+        `${STATUS.enabled} ${fullyEnabled} helt på · ${STATUS.partial} ${partial} delvis · ${STATUS.disabled} ${disabled} av`,
       ].join('\n'),
       inline: false,
     },
     {
-      name: '🔑 Legend',
-      value: `${STATUS.enabled} All enabled · ${STATUS.partial} Some disabled · ${STATUS.disabled} Category off`,
+      name: '🔑 Forklaring',
+      value: `${STATUS.enabled} Alle aktivert · ${STATUS.partial} Noen deaktivert · ${STATUS.disabled} Kategori av`,
       inline: false,
     },
   ];
@@ -103,37 +139,37 @@ export function buildOverviewEmbed(snapshot, guild) {
   const chunks = chunkLines(categoryLines);
   chunks.forEach((chunk, index) => {
     fields.push({
-      name: index === 0 ? '📁 Categories' : '📁 Categories (cont.)',
+      name: index === 0 ? '📁 Kategorier' : '📁 Kategorier (forts.)',
       value: chunk,
       inline: false,
     });
   });
 
   fields.push({
-    name: 'How to Use',
+    name: 'Slik bruker du det',
     value: [
-      '• Select a category below to manage commands and subcommands',
-      '• `/commands disable` — turn off a category or specific command',
-      '• `/commands enable` — turn something back on',
+      '• Velg en kategori nedenfor for å administrere kommandoer og underkommandoer',
+      '• `/commands disable` — slå av en kategori eller en bestemt kommando',
+      '• `/commands enable` — slå noe på igjen',
     ].join('\n'),
   });
 
   return createEmbed({
-    title: '⚙️ Command Access',
-    description: `Manage slash and prefix commands for **${guild.name}**. Subcommands (e.g. \`birthday list\`) are listed separately.`,
+    title: '⚙️ Kommandotilgang',
+    description: `Administrer skråstrek- og prefikskommandoer for **${guild.name}**. Underkommandoer (f.eks. \`bursdag liste\`) vises separat.`,
     color: 'info',
     fields,
-    footer: '🔒 commands & configwizard always stay available',
+    footer: '🔒 commands & configwizard forblir alltid tilgjengelige',
   });
 }
 
 export function buildCategoryEmbed(category, guild) {
   const statusIcon = getCategoryStatus(category);
   const statusText = category.categoryDisabled
-    ? 'Category disabled'
+    ? 'Kategori deaktivert'
     : category.disabledCount === 0
-      ? 'All entries enabled'
-      : `${category.disabledCount} of ${category.totalCount} disabled`;
+      ? 'Alle kommandoer aktivert'
+      : `${category.disabledCount} av ${category.totalCount} deaktivert`;
 
   const commandLines = category.commands.map((command) => {
     const enabled = category.enabledCommands.includes(command.name);
@@ -149,8 +185,8 @@ export function buildCategoryEmbed(category, guild) {
       inline: true,
     },
     {
-      name: '📈 Count',
-      value: `${category.enabledCount}/${category.totalCount} enabled`,
+      name: '📈 Antall',
+      value: `${category.enabledCount}/${category.totalCount} aktivert`,
       inline: true,
     },
   ];
@@ -158,36 +194,39 @@ export function buildCategoryEmbed(category, guild) {
   const chunks = chunkLines(commandLines);
   chunks.forEach((chunk, index) => {
     fields.push({
-      name: index === 0 ? '📋 Commands & Subcommands' : '📋 (cont.)',
+      name: index === 0 ? '📋 Kommandoer & Underkommandoer' : '📋 (forts.)',
       value: chunk,
       inline: false,
     });
   });
 
   fields.push({
-    name: 'How to Use',
+    name: 'Slik bruker du det',
     value: [
-      '• Use the dropdown to toggle individual commands or subcommands',
-      '• **Disable All** turns off the whole category',
-      '• **Clear Overrides** re-enables individually disabled entries',
+      '• Bruk nedtrekksmenyen til å slå av/på individuelle kommandoer eller underkommandoer',
+      '• **Deaktiver alle** slår av hele kategorien',
+      '• **Fjern overstyringer** aktiverer individuelt deaktiverte kommandoer igjen',
     ].join('\n'),
   });
 
+  const translatedName = translateCategoryName(category.displayName);
+
   return createEmbed({
-    title: `${category.icon} ${category.displayName}`,
-    description: `Command access for **${guild.name}**.`,
+    title: `${category.icon} ${translatedName}`,
+    description: `Kommandotilgang for **${guild.name}**.`,
     color: category.categoryDisabled ? 'error' : category.disabledCount > 0 ? 'warning' : 'success',
     fields,
-    footer: '🔒 Protected entries cannot be disabled',
+    footer: '🔒 Beskyttede kommandoer kan ikke deaktiveres',
   });
 }
 
 export function buildOverviewComponents(guildId, snapshot) {
   const categoryOptions = snapshot.categories.slice(0, 25).map((category) => {
     const status = getCategoryStatus(category);
+    const translatedName = translateCategoryName(category.displayName);
     return new StringSelectMenuOptionBuilder()
-      .setLabel(`${category.displayName}`.slice(0, 100))
-      .setDescription(`${status} ${category.enabledCount}/${category.totalCount} enabled`.slice(0, 100))
+      .setLabel(`${translatedName}`.slice(0, 100))
+      .setDescription(`${status} ${category.enabledCount}/${category.totalCount} aktivert`.slice(0, 100))
       .setValue(category.key)
       .setEmoji(category.icon);
   });
@@ -196,13 +235,13 @@ export function buildOverviewComponents(guildId, snapshot) {
     new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder()
         .setCustomId(customId(DASHBOARD_CATEGORY_SELECT, guildId))
-        .setPlaceholder('📁 Select a category...')
+        .setPlaceholder('📁 Velg en kategori...')
         .addOptions(categoryOptions),
     ),
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(customId(DASHBOARD_REFRESH, guildId))
-        .setLabel('Refresh')
+        .setLabel('Oppdater')
         .setEmoji('🔄')
         .setStyle(ButtonStyle.Secondary),
     ),
@@ -219,7 +258,7 @@ export function buildCategoryComponents(guildId, category) {
 
     return new StringSelectMenuOptionBuilder()
       .setLabel(label)
-      .setDescription((enabled ? '🟢 Enabled — click to disable' : '🔴 Disabled — click to enable').slice(0, 100))
+      .setDescription((enabled ? '🟢 Aktivert — klikk for å deaktivere' : '🔴 Deaktivert — klikk for å aktivere').slice(0, 100))
       .setValue(command.name);
   });
 
@@ -227,27 +266,27 @@ export function buildCategoryComponents(guildId, category) {
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(customId(DASHBOARD_HOME, guildId))
-        .setLabel('Back')
+        .setLabel('Tilbake')
         .setEmoji('◀️')
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId(customId(DASHBOARD_TOGGLE_CATEGORY, guildId, category.key))
-        .setLabel(category.categoryDisabled ? 'Enable Category' : 'Disable Category')
+        .setLabel(category.categoryDisabled ? 'Aktiver kategori' : 'Deaktiver kategori')
         .setEmoji(category.categoryDisabled ? '🟢' : '🔴')
         .setStyle(category.categoryDisabled ? ButtonStyle.Success : ButtonStyle.Danger),
       new ButtonBuilder()
         .setCustomId(customId(DASHBOARD_ENABLE_ALL, guildId, category.key))
-        .setLabel('Enable All')
+        .setLabel('Aktiver alle')
         .setEmoji('✅')
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
         .setCustomId(customId(DASHBOARD_DISABLE_ALL, guildId, category.key))
-        .setLabel('Disable All')
+        .setLabel('Deaktiver alle')
         .setEmoji('⛔')
         .setStyle(ButtonStyle.Danger),
       new ButtonBuilder()
         .setCustomId(customId(DASHBOARD_RESET_COMMANDS, guildId, category.key))
-        .setLabel('Clear Overrides')
+        .setLabel('Fjern overstyringer')
         .setEmoji('🧹')
         .setStyle(ButtonStyle.Secondary),
     ),
@@ -258,7 +297,7 @@ export function buildCategoryComponents(guildId, category) {
       new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId(customId(DASHBOARD_COMMAND_SELECT, guildId, category.key))
-          .setPlaceholder('Toggle a command or subcommand...')
+          .setPlaceholder('Slå av/på en kommando eller underkommando...')
           .addOptions(commandOptions),
       ),
     );
@@ -301,7 +340,7 @@ export async function handleDashboardComponent(interaction, client) {
 
   if (guildId !== interaction.guildId) {
     return interaction.reply({
-      content: 'This dashboard belongs to another server.',
+      content: 'Dette dashbordet tilhører en annen server.',
       ephemeral: true,
     });
   }
@@ -373,7 +412,7 @@ export async function handleDashboardComponent(interaction, client) {
     return interaction.editReply({ embeds: [view.embed], components: view.components });
   }
 
-  return interaction.editReply({ content: 'Unknown dashboard action.', embeds: [], components: [] });
+  return interaction.editReply({ content: 'Ukjent dashbord-handling.', embeds: [], components: [] });
 }
 
 export function isCommandAccessCustomId(customIdValue) {
