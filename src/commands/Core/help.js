@@ -70,8 +70,10 @@ function formatCategoryName(rawCategory) {
         .replace(/([a-z])([A-Z])/g, '$1 $2')
         .replace(/\b\w/g, (char) => char.toUpperCase());
 
-    // Returner norsk navn hvis det finnes i listen over, ellers fall tilbake til standard
-    return CATEGORY_NAMES[formatted] || formatted;
+    return {
+        english: formatted,
+        norwegian: CATEGORY_NAMES[formatted] || formatted,
+    };
 }
 
 export async function createInitialHelpMenu(client) {
@@ -90,11 +92,11 @@ export async function createInitialHelpMenu(client) {
             value: ALL_COMMANDS_ID,
         },
         ...categoryDirs.map((category) => {
-            const categoryName = formatCategoryName(category);
-            const icon = CATEGORY_ICONS[categoryName] || CATEGORY_ICONS[formatCategoryName(category)] || "🔍";
+            const { english, norwegian } = formatCategoryName(category);
+            const icon = CATEGORY_ICONS[english] || "🔍";
             return {
-                label: `${icon} ${categoryName}`,
-                description: `Vis kommandoer i kategorien ${categoryName}`,
+                label: `${icon} ${norwegian}`,
+                description: `Vis kommandoer i kategorien ${norwegian}`,
                 value: category,
             };
         }),
