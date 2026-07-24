@@ -22,10 +22,10 @@ import appDashboard from './modules/app_dashboard.js';
 function getApplicationStatusPresentation(statusValue) {
     const normalized = typeof statusValue === 'string' ? statusValue.trim().toLowerCase() : 'unknown';
     const statusLabel =
-        normalized === 'pending' ? 'In Progress' :
-        normalized === 'approved' ? 'Accepted' :
-        normalized === 'denied' ? 'Denied' :
-        'Unknown';
+        normalized === 'pending' ? 'Under behandling' :
+        normalized === 'approved' ? 'Godkjent' :
+        normalized === 'denied' ? 'Avslått' :
+        'Ukjent';
     const statusEmoji =
         normalized === 'pending' ? '🟡' :
         normalized === 'approved' ? '🟢' :
@@ -37,63 +37,61 @@ function getApplicationStatusPresentation(statusValue) {
 
 export default {
     data: new SlashCommandBuilder()
-    .setName("app-admin")
-    .setDescription("Manage staff applications")
+    .setName("søknad-admin")
+    .setDescription("Administrer rollesøknader")
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommand((subcommand) =>
         subcommand
-            .setName("setup")
-            .setDescription("Set up a new application")
+            .setName("opprett")
+            .setDescription("Sett opp en ny søknad")
     )
     .addSubcommand((subcommand) =>
         subcommand
-            .setName("review")
-            .setDescription("Approve or deny an application")
+            .setName("behandle")
+            .setDescription("Godkjenn eller avslå en søknad")
             .addStringOption((option) =>
                 option
                     .setName("id")
-                    .setDescription("The application ID")
+                    .setDescription("Søknads-ID-en")
                     .setRequired(true),
             ),
     )
     .addSubcommand((subcommand) =>
         subcommand
-            .setName("list")
-            .setDescription("List all applications")
+            .setName("liste")
+            .setDescription("Vis en liste over alle søknader")
             .addStringOption((option) =>
                 option
                     .setName("status")
-                    .setDescription("Filter by status")
+                    .setDescription("Filtrer etter status")
                     .addChoices(
-                        { name: "Pending", value: "pending" },
-                        { name: "Approved", value: "approved" },
-                        { name: "Denied", value: "denied" },
+                        { name: "Under behandling", value: "pending" },
+                        { name: "Godkjent", value: "approved" },
+                        { name: "Avslått", value: "denied" },
                     ),
             )
             .addStringOption((option) =>
-                option.setName("role").setDescription("Filter by role ID"),
+                option.setName("rolle").setDescription("Filtrer etter rolle-ID"),
             )
             .addUserOption((option) =>
-                option.setName("user").setDescription("Filter by user"),
+                option.setName("bruker").setDescription("Filtrer etter bruker"),
             )
             .addNumberOption((option) =>
                 option
-                    .setName("limit")
-                    .setDescription(
-                        "Maximum number of applications to show (default: 10)",
-                    )
+                    .setName("grense")
+                    .setDescription("Maksimalt antall søknader som skal vises (standard: 10)")
                     .setMinValue(1)
                     .setMaxValue(25),
             ),
     )
     .addSubcommand((subcommand) =>
         subcommand
-            .setName("dashboard")
-            .setDescription("Open the applications configuration dashboard")
+            .setName("dashbord")
+            .setDescription("Åpne konfigurasjonsdashbordet for søknader")
             .addStringOption((option) =>
                 option
-                    .setName("application")
-                    .setDescription("Select an application to configure")
+                    .setName("søknad")
+                    .setDescription("Velg en søknad å konfigurere")
                     .setRequired(false)
                     .setAutocomplete(true),
             ),
@@ -103,17 +101,17 @@ export default {
 
     execute: withErrorHandling(async (interaction) => {
         if (!interaction.inGuild()) {
-            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This command can only be used in a server.' });
+            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Denne kommandoen kan bare brukes på en server.' });
         }
 
         const { options, guild, member } = interaction;
         const subcommand = options.getSubcommand();
 
-        if (subcommand !== 'dashboard' && subcommand !== 'setup') {
+        if (subcommand !== 'dashbord' && subcommand !== 'opprett') {
             await InteractionHelper.safeDefer(interaction, { flags: ['Ephemeral'] });
         }
 
-        logger.info(`App-admin command executed: ${subcommand}`, {
+        logger.info(`Søknad-admin command executed: ${subcommand}`, {
             userId: interaction.user.id,
             guildId: guild.id,
             subcommand
@@ -121,72 +119,71 @@ export default {
 
         await ApplicationService.checkManagerPermission(interaction.client, guild.id, member);
 
-        if (subcommand === "setup") {
+        if (subcommand === "opprett") {
             await handleSetup(interaction);
-        } else if (subcommand === "review") {
+        } else if (subcommand === "behandle") {
             await handleReview(interaction);
-        } else if (subcommand === "list") {
+        } else if (subcommand === "liste") {
             await handleList(interaction);
-        } else if (subcommand === "dashboard") {
-            const selectedAppName = interaction.options.getString("application");
+        } else if (subcommand === "dashbord") {
+            const selectedAppName = interaction.options.getString("søknad");
             await appDashboard.execute(interaction, null, interaction.client, selectedAppName);
         }
-    }, { type: 'command', commandName: 'app-admin' })
+    }, { type: 'command', commandName: 'søknad-admin' })
 };
 
 async function handleSetup(interaction) {
-    
     if (interaction.deferred || interaction.replied) {
-        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This interaction has already been processed. Please try the command again.' });
+        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Denne interaksjonen har allerede blitt behandlet. Vennligst prøv kommandoen på nytt.' });
     }
 
     const modal = new ModalBuilder()
         .setCustomId('app_setup_modal')
-        .setTitle('Set Up New Application');
+        .setTitle('Sett opp ny søknad');
 
     const roleSelect = new RoleSelectMenuBuilder()
         .setCustomId('role_id')
-        .setPlaceholder('Select the role users will apply for')
+        .setPlaceholder('Velg rollen brukere skal søke på')
         .setRequired(true);
 
     const roleLabel = new LabelBuilder()
-        .setLabel('Application Role')
-        .setDescription('The role that users will be applying for')
+        .setLabel('Søknadsrolle')
+        .setDescription('Rollen som brukere vil søke om å få')
         .setRoleSelectMenuComponent(roleSelect);
 
     const appNameInput = new TextInputBuilder()
         .setCustomId('app_name')
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('e.g., Moderator, Helper, Developer')
+        .setPlaceholder('f.eks. Moderator, Hjelper, Utvikler')
         .setMaxLength(50)
         .setMinLength(1)
         .setRequired(true);
 
     const appNameLabel = new LabelBuilder()
-        .setLabel('Application Name')
+        .setLabel('Søknadsnavn')
         .setTextInputComponent(appNameInput);
 
     const q1Input = new TextInputBuilder()
         .setCustomId('app_question_1')
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('Why do you want this role?')
+        .setPlaceholder('Hvorfor vil du ha denne rollen?')
         .setMaxLength(100)
         .setMinLength(1)
         .setRequired(true);
 
     const q1Label = new LabelBuilder()
-        .setLabel('Question 1 (required)')
+        .setLabel('Spørsmål 1 (påkrevd)')
         .setTextInputComponent(q1Input);
 
     const q2Input = new TextInputBuilder()
         .setCustomId('app_question_2')
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('What experience do you have?')
+        .setPlaceholder('Hvilken erfaring har du?')
         .setMaxLength(100)
         .setRequired(false);
 
     const q2Label = new LabelBuilder()
-        .setLabel('Question 2 (optional)')
+        .setLabel('Spørsmål 2 (valgfritt)')
         .setTextInputComponent(q2Input);
 
     const q3Input = new TextInputBuilder()
@@ -196,7 +193,7 @@ async function handleSetup(interaction) {
         .setRequired(false);
 
     const q3Label = new LabelBuilder()
-        .setLabel('Question 3 (optional)')
+        .setLabel('Spørsmål 3 (valgfritt)')
         .setTextInputComponent(q3Input);
 
     modal.addLabelComponents(roleLabel, appNameLabel, q1Label, q2Label, q3Label);
@@ -220,7 +217,7 @@ async function handleSetup(interaction) {
     const roleId = selectedRoles.first()?.id;
 
     if (!roleId) {
-        await replyUserError(submitted, { type: ErrorTypes.USER_INPUT, message: 'You must select a role for the application.' });
+        await replyUserError(submitted, { type: ErrorTypes.USER_INPUT, message: 'Du må velge en rolle for søknaden.' });
         return;
     }
 
@@ -232,13 +229,13 @@ async function handleSetup(interaction) {
 
     const role = await interaction.guild.roles.fetch(roleId).catch(() => null);
     if (!role) {
-        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'The selected role could not be found.' });
+        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'Den valgte rollen ble ikke funnet.' });
         return;
     }
 
     const existingRoles = await getApplicationRoles(interaction.client, interaction.guild.id);
     if (existingRoles.some(r => r.roleId === roleId)) {
-        await replyUserError(submitted, { type: ErrorTypes.CONFIGURATION, message: `The role ${role} is already configured as an application.` });
+        await replyUserError(submitted, { type: ErrorTypes.CONFIGURATION, message: `Rollen ${role} er allerede konfigurert som en søknad.` });
         return;
     }
 
@@ -259,8 +256,8 @@ async function handleSetup(interaction) {
 
     await submitted.reply({
         embeds: [successEmbed(
-            '✅ Application Created',
-            `**${appName}** application has been created for ${role}.\n\nYou can customize the log channel, manager roles, questions, and retention period in the dashboard.`,
+            '✅ Søknad opprettet',
+            `**${appName}**-søknaden har blitt opprettet for ${role}.\n\nDu kan tilpasse loggkanal, lederroller, spørsmål og oppbevaringstid i dashbordet.`,
         )],
         flags: ['Ephemeral'],
     });
@@ -279,24 +276,24 @@ async function handleReview(interaction) {
         appId,
     );
     if (!application) {
-        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Application not found.' });
+        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Søknaden ble ikke funnet.' });
     }
 
     if (application.status !== "pending") {
-        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This application has already been processed.' });
+        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Denne søknaden har allerede blitt behandlet.' });
     }
 
     const appEmbed = createEmbed({
-        title: `Review Application`,
-        description: `**User:** <@${application.userId}>\n**Application:** ${application.roleName}\n**Application ID:** \`${appId}\``,
+        title: `Behandle søknad`,
+        description: `**Bruker:** <@${application.userId}>\n**Søknad:** ${application.roleName}\n**Søknads-ID:** \`${appId}\``,
         color: 'info',
     });
 
     if (application.answers && application.answers.length > 0) {
         application.answers.forEach((item, index) => {
             appEmbed.addFields({
-                name: `Q${index + 1}: ${item.question}`,
-                value: item.answer || '*No answer provided*',
+                name: `Spørsmål ${index + 1}: ${item.question}`,
+                value: item.answer || '*Ingen svar oppgitt*',
                 inline: false
             });
         });
@@ -305,11 +302,11 @@ async function handleReview(interaction) {
     const buttonRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(`app_review_approve_${appId}`)
-            .setLabel('Approve')
+            .setLabel('Godkjenn')
             .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
             .setCustomId(`app_review_deny_${appId}`)
-            .setLabel('Deny')
+            .setLabel('Avslå')
             .setStyle(ButtonStyle.Danger),
     );
 
@@ -334,15 +331,15 @@ async function handleReview(interaction) {
 
         const reasonModal = new ModalBuilder()
             .setCustomId(`app_review_reason_${appId}_${isApprove ? 'approve' : 'deny'}`)
-            .setTitle(`${isApprove ? 'Approve' : 'Deny'} Application - Reason`);
+            .setTitle(`${isApprove ? 'Godkjenn' : 'Avslå'} søknad - Årsak`);
 
         reasonModal.addComponents(
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                     .setCustomId('review_reason')
-                    .setLabel('Reason (optional)')
+                    .setLabel('Årsak (valgfritt)')
                     .setStyle(TextInputStyle.Paragraph)
-                    .setPlaceholder('Provide a reason for this decision...')
+                    .setPlaceholder('Gi en årsak for denne avgjørelsen...')
                     .setMaxLength(500)
                     .setRequired(false),
             ),
@@ -360,7 +357,7 @@ async function handleReview(interaction) {
 
             if (!reasonSubmit) return;
 
-            const reason = reasonSubmit.fields.getTextInputValue('review_reason').trim() || "No reason provided.";
+            const reason = reasonSubmit.fields.getTextInputValue('review_reason').trim() || "Ingen årsak oppgitt.";
             const action = isApprove ? 'approve' : 'deny';
             const status = isApprove ? 'approved' : 'denied';
 
@@ -380,10 +377,10 @@ async function handleReview(interaction) {
                 const statusColor = getApplicationStatusColor(status);
                 const reviewStatus = getApplicationStatusPresentation(status);
                 const dmEmbed = createEmbed({
-                    title: `${reviewStatus.statusEmoji} Application ${reviewStatus.statusLabel}`,
-                    description: `Your application for **${application.roleName}** has been **${status}**\n` +
-                        `**Note:** ${reason}\n\n` +
-                        `Use \`/apply status id:${appId}\` to view details.`
+                    title: `${reviewStatus.statusEmoji} Søknad ${reviewStatus.statusLabel.toLowerCase()}`,
+                    description: `Din søknad for **${application.roleName}** har blitt **${reviewStatus.statusLabel.toLowerCase()}**\n` +
+                        `**Merk:** ${reason}\n\n` +
+                        `Bruk \`/søk status id:${appId}\` for å se detaljer.`
                 }).setColor(statusColor);
 
                 await user.send({ embeds: [dmEmbed] });
@@ -451,8 +448,8 @@ async function handleReview(interaction) {
             await reasonSubmit.reply({
                 embeds: [
                     successEmbed(
-                        `Application ${status}`,
-                        `The application has been **${status}**.`,
+                        `Søknad ${reviewStatus.statusLabel.toLowerCase()}`,
+                        `Søknaden har blitt ${reviewStatus.statusLabel.toLowerCase()}.`,
                     ),
                 ],
                 flags: ["Ephemeral"],
@@ -460,15 +457,15 @@ async function handleReview(interaction) {
 
         } catch (error) {
             logger.error('Error reviewing application:', error);
-            await replyUserError(buttonInteraction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while reviewing the application.' });
+            await replyUserError(buttonInteraction, { type: ErrorTypes.UNKNOWN, message: 'Det oppstod en feil under behandlingen av søknaden.' });
         }
     });
 
     collector.on('end', async (collected, reason) => {
         if (reason === 'time') {
             const timeoutEmbed = createEmbed({
-                title: 'Review Timeout',
-                description: 'The review buttons have timed out.',
+                title: 'Behandling tidsavbrudd',
+                description: 'Behandlingsknappene har tidsavbrudd.',
                 color: 'warning',
             });
 
@@ -482,8 +479,8 @@ async function handleReview(interaction) {
 
 async function handleList(interaction) {
     const status = interaction.options.getString("status");
-    const user = interaction.options.getUser("user");
-    const limit = interaction.options.getNumber("limit") || 10;
+    const user = interaction.options.getUser("bruker");
+    const limit = interaction.options.getNumber("grense") || 10;
 
     const filters = {};
     
@@ -506,7 +503,6 @@ async function handleList(interaction) {
                     await interaction.guild.members.fetch(app.userId);
                     return app; 
                 } catch {
-                    
                     await deleteApplication(interaction.client, interaction.guild.id, app.id, app.userId);
                     return null; 
                 }
@@ -523,29 +519,29 @@ async function handleList(interaction) {
         
         if (applicationRoles.length > 0) {
             const embed = createEmbed({ 
-                title: "No Applications Found", 
-                description: "No submitted applications found matching the specified criteria.\n\nHowever, the following application roles are configured:" 
+                title: "Ingen søknader funnet", 
+                description: "Ingen innsendte søknader matcher de angitte kriteriene.\n\nFølgende søknadsroller er imidlertid konfigurert:" 
             });
 
             applicationRoles.forEach((appRole, index) => {
                 const role = interaction.guild.roles.cache.get(appRole.roleId);
                 embed.addFields({
                     name: `${index + 1}. ${appRole.name}`,
-                    value: `**Role:** ${role ?`<@&${appRole.roleId}>`: 'Role not found'}\n**Available for applications:** Yes`,
+                    value: `**Rolle:** ${role ?`<@&${appRole.roleId}>`: 'Rolle ikke funnet'}\n**Tilgjengelig for søknader:** Ja`,
                     inline: false
                 });
             });
 
             embed.setFooter({
-                text: "Users can apply with /apply submit or see available roles with /apply list"
+                text: "Brukere kan søke med /søk send-inn eller se tilgjengelige roller med /søk liste"
             });
 
             return InteractionHelper.safeEditReply(interaction, { embeds: [embed], flags: ["Ephemeral"] });
         } else {
             return await replyUserError(interaction, {
                 type: ErrorTypes.CONFIGURATION,
-                message: 'No applications found and no application roles configured.\n' +
-                    'Use `/app-admin roles add` to configure application roles first.'
+                message: 'Ingen søknader funnet og ingen søknadsroller konfigurert.\n' +
+                    'Bruk `/søknad-admin opprett` for å konfigurere søknadsroller først.'
             });
         }
     }
@@ -554,23 +550,23 @@ async function handleList(interaction) {
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, limit);
 
-    const embed = createEmbed({ title: "Submitted Applications", description: `Showing ${applications.length} applications.`, });
+    const embed = createEmbed({ title: "Innsendte søknader", description: `Viser ${applications.length} søknader.`, });
 
     applications.forEach((app) => {
         const statusView = getApplicationStatusPresentation(app?.status);
-        const roleName = app?.roleName || 'Unknown Role';
-        const username = app?.username || 'Unknown User';
+        const roleName = app?.roleName || 'Ukjent rolle';
+        const username = app?.username || 'Ukjent bruker';
         const createdAt = app?.createdAt ? new Date(app.createdAt) : null;
         const createdAtDisplay = createdAt && !Number.isNaN(createdAt.getTime())
             ? createdAt.toLocaleString()
-            : 'Unknown date';
+            : 'Ukjent dato';
 
         embed.addFields({
             name: `${statusView.statusEmoji} ${roleName} - ${username}`,
             value:
                 `**ID:** \`${app.id}\`\n` +
                 `**Status:** ${statusView.statusEmoji} ${statusView.statusLabel}\n` +
-                `**Date:** ${createdAtDisplay}`,
+                `**Dato:** ${createdAtDisplay}`,
             inline: true,
         });
     });
@@ -580,4 +576,3 @@ async function handleList(interaction) {
         flags: ["Ephemeral"],
     });
 }
-

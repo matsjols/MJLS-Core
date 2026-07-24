@@ -21,10 +21,10 @@ import {
 function getApplicationStatusPresentation(statusValue) {
     const normalized = typeof statusValue === 'string' ? statusValue.trim().toLowerCase() : 'unknown';
     const statusLabel =
-        normalized === 'pending' ? 'In Progress' :
-        normalized === 'approved' ? 'Accepted' :
-        normalized === 'denied' ? 'Denied' :
-        'Unknown';
+        normalized === 'pending' ? 'Under behandling' :
+        normalized === 'approved' ? 'Godkjent' :
+        normalized === 'denied' ? 'Avslått' :
+        'Ukjent';
     const statusEmoji =
         normalized === 'pending' ? '🟡' :
         normalized === 'approved' ? '🟢' :
@@ -37,16 +37,16 @@ function getApplicationStatusPresentation(statusValue) {
 export default {
     slashOnly: true,
     data: new SlashCommandBuilder()
-        .setName("apply")
-        .setDescription("Manage role applications")
+        .setName("søk")
+        .setDescription("Administrer rollesøknader")
         .addSubcommand((subcommand) =>
             subcommand
-                .setName("submit")
-                .setDescription("Submit an application for a role")
+                .setName("send-inn")
+                .setDescription("Send inn en søknad for en rolle")
                 .addStringOption((option) =>
                     option
-                        .setName("application")
-                        .setDescription("The application you want to submit")
+                        .setName("søknad")
+                        .setDescription("Søknaden du vil sende inn")
                         .setRequired(true)
                         .setAutocomplete(true),
                 ),
@@ -54,36 +54,36 @@ export default {
         .addSubcommand((subcommand) =>
             subcommand
                 .setName("status")
-                .setDescription("Check the status of your application")
+                .setDescription("Sjekk statusen på søknaden din")
                 .addStringOption((option) =>
                     option
                         .setName("id")
-                        .setDescription("Application ID (leave empty to see all)")
+                        .setDescription("Søknads-ID (la stå tom for å se alle)")
                         .setRequired(false),
                 ),
         )
         .addSubcommand((subcommand) =>
             subcommand
-                .setName("list")
-                .setDescription("List available applications to apply for"),
+                .setName("liste")
+                .setDescription("Vis tilgjengelige søknader"),
         ),
 
     category: "Community",
 
     execute: withErrorHandling(async (interaction) => {
         if (!interaction.inGuild()) {
-            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This command can only be used in a server.' });
+            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Denne kommandoen kan bare brukes på en server.' });
         }
 
         const { options, guild, member } = interaction;
         const subcommand = options.getSubcommand();
 
-        if (subcommand !== "submit") {
-            const isListCommand = subcommand === "list";
+        if (subcommand !== "send-inn") {
+            const isListCommand = subcommand === "liste";
             await InteractionHelper.safeDefer(interaction, { flags: isListCommand ? [] : ["Ephemeral"] });
         }
 
-        logger.info(`Apply command executed: ${subcommand}`, {
+        logger.info(`Søk command executed: ${subcommand}`, {
             userId: interaction.user.id,
             guildId: guild.id,
             subcommand
@@ -98,19 +98,19 @@ export default {
             throw createError(
                 'Applications are disabled',
                 ErrorTypes.CONFIGURATION,
-                'Applications are currently disabled in this server.',
+                'Søknader er for øyeblikket deaktivert på denne serveren.',
                 { guildId: guild.id }
             );
         }
 
-        if (subcommand === "submit") {
+        if (subcommand === "send-inn") {
             await handleSubmit(interaction, settings);
         } else if (subcommand === "status") {
             await handleStatus(interaction);
-        } else if (subcommand === "list") {
+        } else if (subcommand === "liste") {
             await handleList(interaction);
         }
-    }, { type: 'command', commandName: 'apply' })
+    }, { type: 'command', commandName: 'søk' })
 };
 
 export async function handleApplicationModal(interaction) {
@@ -125,13 +125,13 @@ export async function handleApplicationModal(interaction) {
     const applicationRole = applicationRoles.find(appRole => appRole.roleId === roleId);
     
     if (!applicationRole) {
-        return await replyUserError(interaction, { type: ErrorTypes.CONFIGURATION, message: 'Application configuration not found.' });
+        return await replyUserError(interaction, { type: ErrorTypes.CONFIGURATION, message: 'Søknadskonfigurasjon ble ikke funnet.' });
     }
     
     const role = interaction.guild.roles.cache.get(roleId);
     
     if (!role) {
-        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Role not found.' });
+        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Rollen ble ikke funnet.' });
     }
     
     const answers = [];
@@ -163,10 +163,10 @@ export async function handleApplicationModal(interaction) {
         });
         
         const embed = successEmbed(
-            'Application Submitted',
-            `Your application for **${applicationRole.name}** has been submitted successfully!\n\n` +
-            `Application ID: \`${application.id}\`\n` +
-            `You can check the status with \`/apply status id:${application.id}\``
+            'Søknad sendt inn',
+            `Din søknad for **${applicationRole.name}** har blitt sendt inn!\n\n` +
+            `Søknads-ID: \`${application.id}\`\n` +
+            `Du kan sjekke status med \`/søk status id:${application.id}\``
         );
         
         await InteractionHelper.safeEditReply(interaction, { embeds: [embed], flags: ["Ephemeral"] });
@@ -184,15 +184,15 @@ export async function handleApplicationModal(interaction) {
                 eventType: EVENT_TYPES.APPLICATION_SUBMIT,
                 channelId: logChannelId,
                 data: {
-                    title: 'Application Submitted',
+                    title: 'Ny søknad mottatt',
                     lines: [
-                        formatLogLine('Applicant', `<@${interaction.user.id}> (${interaction.user.tag})`),
-                        formatLogLine('Application', applicationRole.name),
-                        formatLogLine('Role', role.name),
-                        formatLogLine('Application ID', `\`${application.id}\``),
+                        formatLogLine('Søker', `<@${interaction.user.id}> (${interaction.user.tag})`),
+                        formatLogLine('Søknad', applicationRole.name),
+                        formatLogLine('Rolle', role.name),
+                        formatLogLine('Søknads-ID', `\`${application.id}\``),
                     ],
                     inlineFields: [
-                        { name: 'Status', value: '🟡 In Progress', inline: true },
+                        { name: 'Status', value: '🟡 Under behandling', inline: true },
                     ],
                     author: await resolveUserAuthor(interaction.client, interaction.user.id),
                 },
@@ -227,26 +227,26 @@ async function handleList(interaction) {
         const applicationRoles = await getApplicationRoles(interaction.client, interaction.guild.id);
         
         if (applicationRoles.length === 0) {
-            return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'No applications are currently available.' });
+            return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Ingen søknader er tilgjengelige for øyeblikket.' });
         }
 
         const embed = createEmbed({
-            title: "Available Applications",
-            description: "Here are the roles you can apply for:"
+            title: "Tilgjengelige søknader",
+            description: "Her er rollene du kan søke på:"
         });
 
         applicationRoles.forEach((appRole, index) => {
             const role = interaction.guild.roles.cache.get(appRole.roleId);
             embed.addFields({
                 name: `${index + 1}. ${appRole.name}`,
-                value: `**Role:** ${role ?`<@&${appRole.roleId}>`: 'Role not found'}\n` +
-                       `**Apply with:** \`/apply submit application:"${appRole.name}"\``,
+                value: `**Rolle:** ${role ?`<@&${appRole.roleId}>`: 'Fant ikke rollen'}\n` +
+                       `**Søk med:** \`/søk send-inn søknad:"${appRole.name}"\``,
                 inline: false
             });
         });
 
         embed.setFooter({
-            text: "Use /apply submit application:<name> to apply for any of these roles."
+            text: "Bruk /søk send-inn søknad:<navn> for å søke på en av disse rollene."
         });
 
         return InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
@@ -260,14 +260,15 @@ async function handleList(interaction) {
         throw createError(
             'Failed to load applications',
             ErrorTypes.DATABASE,
-            'Failed to load applications. Please try again later.',
+            'Kunne ikke laste inn søknader. Prøv igjen senere.',
             { guildId: interaction.guild.id }
         );
     }
 }
 
 async function handleSubmit(interaction, settings) {
-    const applicationName = interaction.options.getString("application");
+    // Bruker "søknad" her for å hente fra alternativet i kommandobyggeren
+    const applicationName = interaction.options.getString("søknad"); 
     const member = interaction.member;
 
     const applicationRoles = await getApplicationRoles(interaction.client, interaction.guild.id);
@@ -277,7 +278,7 @@ async function handleSubmit(interaction, settings) {
     );
 
     if (!applicationRole) {
-        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Use `/apply list` to see available applications.' });
+        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Bruk `/søk liste` for å se tilgjengelige søknader.' });
     }
 
     const userApps = await getUserApplications(
@@ -288,17 +289,17 @@ async function handleSubmit(interaction, settings) {
     const pendingApp = userApps.find((app) => app.status === "pending");
 
     if (pendingApp) {
-        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'You already have a pending application. Please wait for it to be reviewed.' });
+        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Du har allerede en ventende søknad. Vennligst vent til den er ferdig vurdert.' });
     }
 
     const role = interaction.guild.roles.cache.get(applicationRole.roleId);
     if (!role) {
-        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'The role for this application no longer exists.' });
+        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Rollen for denne søknaden eksisterer ikke lenger.' });
     }
 
     const modal = new ModalBuilder()
         .setCustomId(`app_modal_${applicationRole.roleId}`)
-        .setTitle(`Application for ${applicationRole.name}`);
+        .setTitle(`Søknad for ${applicationRole.name}`);
 
     let questions = settings.questions?.length ? settings.questions : getDefaultApplicationQuestions();
     const roleSettings = await getApplicationRoleSettings(interaction.client, interaction.guild.id, applicationRole.roleId);
@@ -336,20 +337,20 @@ async function handleStatus(interaction) {
         );
 
         if (!application || application.userId !== interaction.user.id) {
-            return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Application not found or you do not have permission to view it.' });
+            return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Søknaden ble ikke funnet, eller du mangler tilgang til å se den.' });
         }
 
         const submittedAt = application?.createdAt ? new Date(application.createdAt) : null;
         const submittedAtDisplay = submittedAt && !Number.isNaN(submittedAt.getTime())
             ? submittedAt.toLocaleString()
-            : 'Unknown date';
+            : 'Ukjent dato';
         const statusView = getApplicationStatusPresentation(application.status);
         const embed = createEmbed({
-            title: `Application #${application.id} - ${application.roleName || 'Unknown Role'}`,
+            title: `Søknad #${application.id} - ${application.roleName || 'Ukjent rolle'}`,
             description:
-                `**Application ID:** \`${application.id}\`\n` +
+                `**Søknads-ID:** \`${application.id}\`\n` +
                 `**Status:** ${statusView.statusEmoji} ${statusView.statusLabel}\n` +
-                `**Submitted:** ${submittedAtDisplay}`
+                `**Sendt inn:** ${submittedAtDisplay}`
         });
 
         return InteractionHelper.safeEditReply(interaction, { embeds: [embed], flags: ["Ephemeral"] });
@@ -361,7 +362,7 @@ async function handleStatus(interaction) {
         );
 
         if (applications.length === 0) {
-            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'You have not submitted any applications yet.' });
+            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Du har ikke sendt inn noen søknader ennå.' });
         }
 
         const recentApplications = applications
@@ -369,29 +370,29 @@ async function handleStatus(interaction) {
             .slice(0, 10);
 
         const embed = createEmbed({
-            title: "Your Applications",
-            description: `Showing ${recentApplications.length} recent application(s).`
+            title: "Dine søknader",
+            description: `Viser ${recentApplications.length} nylige søknad(er).`
         });
 
         recentApplications.forEach((application) => {
             const submittedAt = application?.createdAt ? new Date(application.createdAt) : null;
             const submittedAtDisplay = submittedAt && !Number.isNaN(submittedAt.getTime())
                 ? submittedAt.toLocaleDateString()
-                : 'Unknown date';
+                : 'Ukjent dato';
             const statusView = getApplicationStatusPresentation(application.status);
 
             embed.addFields({
-                name: `${statusView.statusEmoji} ${application.roleName || 'Unknown Role'} (${statusView.statusLabel})`,
+                name: `${statusView.statusEmoji} ${application.roleName || 'Ukjent rolle'} (${statusView.statusLabel})`,
                 value:
                     `**ID:** \`${application.id}\`\n` +
                     `**Status:** ${statusView.statusEmoji} ${statusView.statusLabel}\n` +
-                    `**Submitted:** ${submittedAtDisplay}`,
+                    `**Sendt inn:** ${submittedAtDisplay}`,
                 inline: true,
             });
         });
 
         if (applications.length > recentApplications.length) {
-            embed.setFooter({ text: `Showing latest ${recentApplications.length} of ${applications.length} applications.` });
+            embed.setFooter({ text: `Viser de siste ${recentApplications.length} av totalt ${applications.length} søknader.` });
         }
 
         return InteractionHelper.safeEditReply(interaction, { embeds: [embed], flags: ["Ephemeral"] });
