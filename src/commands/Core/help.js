@@ -21,6 +21,28 @@ const ALL_COMMANDS_ID = "help-all-commands";
 const BUG_REPORT_BUTTON_ID = "help-bug-report";
 const HELP_MENU_TIMEOUT_MS = 5 * 60 * 1000;
 
+// Egendefinerte norske navn for kategoriene
+const CATEGORY_NAMES = {
+    Core: "Kjerne",
+    Moderation: "Moderering",
+    Economy: "Økonomi",
+    Music: "Musikk",
+    Fun: "Moro",
+    Leveling: "Nivåer",
+    Utility: "Verktøy",
+    Ticket: "Billetter",
+    Welcome: "Velkomst",
+    Giveaway: "Giveaway",
+    Counter: "Teller",
+    Tools: "Verktøy",
+    Search: "Søk",
+    "Reaction Roles": "Reaksjonsroller",
+    Community: "Fellesskap",
+    Birthday: "Bursdag",
+    "Join To Create": "Koble til for å opprette",
+    Verification: "Verifisering",
+};
+
 const CATEGORY_ICONS = {
     Core: "ℹ️",
     Moderation: "🛡️",
@@ -43,10 +65,13 @@ const CATEGORY_ICONS = {
 };
 
 function formatCategoryName(rawCategory) {
-    return rawCategory
+    const formatted = rawCategory
         .replace(/_/g, '')
         .replace(/([a-z])([A-Z])/g, '$1 $2')
         .replace(/\b\w/g, (char) => char.toUpperCase());
+
+    // Returner norsk navn hvis det finnes i listen over, ellers fall tilbake til standard
+    return CATEGORY_NAMES[formatted] || formatted;
 }
 
 export async function createInitialHelpMenu(client) {
@@ -66,7 +91,7 @@ export async function createInitialHelpMenu(client) {
         },
         ...categoryDirs.map((category) => {
             const categoryName = formatCategoryName(category);
-            const icon = CATEGORY_ICONS[categoryName] || "🔍";
+            const icon = CATEGORY_ICONS[categoryName] || CATEGORY_ICONS[formatCategoryName(category)] || "🔍";
             return {
                 label: `${icon} ${categoryName}`,
                 description: `Vis kommandoer i kategorien ${categoryName}`,
@@ -85,7 +110,7 @@ export async function createInitialHelpMenu(client) {
             {
                 name: '🚀 Kom i gang',
                 value: [
-                    '**1. Start oppsett** — Kjør `/configwizard` for å konfigurere prefiks, moderatortrolle og logger.',
+                    '**1. Start oppsett** — Kjør `/configwizard` for å konfigurere prefiks, moderatorrolle og logger.',
                     '**2. Aktiver systemer** — Bruk `/commands dashboard` til å slå kategorier av eller på.',
                     '**3. Bla gjennom kommandoer** — Bruk menyen nedenfor for å se kategorier og kommandoer.',
                 ].join('\n'),
@@ -147,7 +172,6 @@ export default {
         .setDescription("Viser hjelpemenyen med alle tilgjengelige kommandoer"),
 
     async execute(interaction, guildConfig, client) {
-        
         const { MessageFlags } = await import('discord.js');
         await InteractionHelper.safeDefer(interaction);
         
