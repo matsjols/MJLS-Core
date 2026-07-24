@@ -6,8 +6,8 @@ export default {
     async execute(interaction, config, client) {
         await InteractionHelper.safeDefer(interaction);
 
-        const month = interaction.options.getInteger("month");
-        const day = interaction.options.getInteger("day");
+        const month = interaction.options.getInteger("måned");
+        const day = interaction.options.getInteger("dato");
         const userId = interaction.user.id;
         const guildId = interaction.guildId;
 
@@ -15,8 +15,8 @@ export default {
 
         const embed = new EmbedBuilder()
             .setColor(0x00FF00)
-            .setTitle('Birthday Set!')
-            .setDescription(`Your birthday has been set to **${result.data.monthName} ${result.data.day}**!`);
+            .setTitle('Bursdag registrert!')
+            .setDescription(`Fødselsdatoen din er satt til **${result.data.day} ${result.data.monthName}**!`);
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [embed]

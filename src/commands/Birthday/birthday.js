@@ -20,19 +20,20 @@ export default {
                 .setDescription('Registrer bursdagen din')
                 .addIntegerOption(option =>
                     option
-                        .setName('måned')
-                        .setDescription('Fødselsmåned (1-12)')
-                        .setRequired(true)
-                        .setMinValue(1)
-                        .setMaxValue(12)
-                )
-                .addIntegerOption(option =>
-                    option
                         .setName('dato')
                         .setDescription('Fødselsdatoen (1-31)')
                         .setRequired(true)
                         .setMinValue(1)
                         .setMaxValue(31)
+                )
+                .addIntegerOption(option =>
+
+                    option
+                        .setName('måned')
+                        .setDescription('Fødselsmåned (1-12)')
+                        .setRequired(true)
+                        .setMinValue(1)
+                        .setMaxValue(12)
                 )
         )
         .addSubcommand(subcommand =>
