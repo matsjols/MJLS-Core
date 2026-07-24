@@ -145,10 +145,10 @@ export async function createInitialHelpMenu(client) {
         .setLabel("Rapporter feil")
         .setStyle(ButtonStyle.Danger);
 
-    const supportButton = new ButtonBuilder()
-        .setLabel("Støtteserver")
-        .setURL("https://discord.gg/QnWNz2dKCE")
-        .setStyle(ButtonStyle.Link);
+//    const supportButton = new ButtonBuilder()
+//        .setLabel("Støtteserver")
+//        .setURL("https://discord.gg/QnWNz2dKCE")
+//        .setStyle(ButtonStyle.Link);
 
     const selectRow = createSelectMenu(
         CATEGORY_SELECT_ID,
@@ -158,7 +158,7 @@ export async function createInitialHelpMenu(client) {
 
     const buttonRow = new ActionRowBuilder().addComponents([
         bugReportButton,
-        supportButton,
+//        supportButton,
     ]);
 
     return {
