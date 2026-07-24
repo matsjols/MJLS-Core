@@ -13,8 +13,8 @@ export default {
         if (next5.length === 0) {
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
-                .setTitle('No Birthdays Found')
-                .setDescription('No birthdays have been set up in this server yet. Use `/birthday set` to add birthdays!');
+                .setTitle('Ingen bursdager funnet')
+                .setDescription('Det er ikke registrert noen bursdager på denne serveren ennå. Bruk `/bursdag registrer` for å legge til bursdager!');
             return await InteractionHelper.safeEditReply(interaction, {
                 embeds: [embed]
             });
@@ -31,25 +31,25 @@ export default {
 
             let timeUntil = '';
             if (birthday.daysUntil === 0) {
-                timeUntil = '🎉 **Today!**';
+                timeUntil = '🎉 **Idag!**';
             } else if (birthday.daysUntil === 1) {
-                timeUntil = '📅 **Tomorrow!**';
+                timeUntil = '📅 **Imorgen!**';
             } else {
-                timeUntil = `In ${birthday.daysUntil} day${birthday.daysUntil > 1 ? 's' : ''}`;
+                timeUntil = `Om ${birthday.daysUntil} dager${birthday.daysUntil > 1 ? 's' : ''}`;
             }
         }
 
         if (displayIndex === 0) {
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
-                .setTitle('No Upcoming Birthdays')
-                .setDescription('No upcoming birthdays found for current server members.');
+                .setTitle('Ingen kommende bursdager')
+                .setDescription('Ingen kommende bursdager funnet for nåværende servermedlemmer.');
             return await InteractionHelper.safeEditReply(interaction, {
                 embeds: [embed]
             });
         }
 
-        let birthdayList = `🎂 **Next 5 Upcoming Birthdays**\n\nHere are the next 5 birthdays in ${interaction.guild.name}:\n\n`;
+        let birthdayList = `🎂 **De neste 5 kommende bursdagene**\n\nHer er de neste 5 bursdagene i ${interaction.guild.name}:\n\n`;
         displayIndex = 0;
         for (const birthday of next5) {
             const member = await interaction.guild.members.fetch(birthday.userId).catch(() => null);
@@ -60,28 +60,28 @@ export default {
 
             let timeUntil = '';
             if (birthday.daysUntil === 0) {
-                timeUntil = '🎉 **Today!**';
+                timeUntil = '🎉 **Idag!**';
             } else if (birthday.daysUntil === 1) {
-                timeUntil = '📅 **Tomorrow!**';
+                timeUntil = '📅 **Imorgen!**';
             } else {
-                timeUntil = `In ${birthday.daysUntil} day${birthday.daysUntil > 1 ? 's' : ''}`;
+                timeUntil = `Om ${birthday.daysUntil} dager${birthday.daysUntil > 1 ? 's' : ''}`;
             }
 
-            birthdayList += `${displayIndex}. **${member.displayName}**\n<@${birthday.userId}>\n📅 **Date:** ${birthday.monthName} ${birthday.day}\n⏰ **Time:** ${timeUntil}\n\n`;
+            birthdayList += `${displayIndex}. **${member.displayName}**\n<@${birthday.userId}>\n📅 **Dato:** ${birthday.day} ${birthday.monthName}\n⏰ **Tid igjen:** ${timeUntil}\n\n`;
         }
 
         birthdayList += `Use /birthday set to add your birthday!`;
 
         const embed = new EmbedBuilder()
             .setColor(0x00FF00)
-            .setTitle('Next 5 Upcoming Birthdays')
+            .setTitle('De neste 5 kommende bursdagene')
             .setDescription(birthdayList);
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [embed]
         });
 
-        logger.info('Next birthdays retrieved successfully', {
+        logger.info('Neste bursdager hentet uten problemer', {
             userId: interaction.user.id,
             guildId: interaction.guildId,
             upcomingCount: displayIndex,
