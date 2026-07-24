@@ -149,8 +149,8 @@ export function buildOverviewEmbed(snapshot, guild) {
     name: 'Slik bruker du det',
     value: [
       '• Velg en kategori nedenfor for å administrere kommandoer og underkommandoer',
-      '• `/commands disable` — slå av en kategori eller en bestemt kommando',
-      '• `/commands enable` — slå noe på igjen',
+      '• `/commands deaktiver` — slå av en kategori eller en bestemt kommando',
+      '• `/commands aktiver` — slå noe på igjen',
     ].join('\n'),
   });
 

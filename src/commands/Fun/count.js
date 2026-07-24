@@ -12,52 +12,52 @@ import {
   getExpectedCountValue,
 } from '../../services/countingGameService.js';
 import { logger } from '../../utils/logger.js';
-
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
+
 export default {
   data: new SlashCommandBuilder()
     .setName('count')
-    .setDescription('Manage the server counting game')
+    .setDescription('Administrer telleleken for serveren')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .setDMPermission(false)
     .addSubcommand((subcommand) =>
       subcommand
         .setName('setup')
-        .setDescription('Start a counting game in a text channel')
+        .setDescription('Start en tellelek i en tekstkanal')
         .addChannelOption((option) =>
           option
             .setName('channel')
-            .setDescription('The channel where counting will take place')
+            .setDescription('Kanalen hvor tellingen skal foregå')
             .setRequired(true)
             .addChannelTypes(ChannelType.GuildText),
         )
         .addStringOption((option) =>
           option
             .setName('system')
-            .setDescription('The counting system to use')
+            .setDescription('Tellesystemet som skal brukes')
             .setRequired(true)
             .addChoices(...getCountingSystemChoices()),
         ),
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName('disable').setDescription('Disable the counting game for this server'),
+      subcommand.setName('disable').setDescription('Deaktiver telleleken for denne serveren'),
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName('status').setDescription('View current counting game status'),
+      subcommand.setName('status').setDescription('Vis nåværende status for telleleken'),
     )
     .addSubcommand((subcommand) =>
       subcommand
         .setName('reset')
-        .setDescription('Reset the current counting sequence')
+        .setDescription('Tilbakestill den nåværende tellesekvensen')
         .addIntegerOption((option) =>
           option
             .setName('start')
-            .setDescription('The number to start at after reset')
+            .setDescription('Tallet som skal startes på etter tilbakestilling')
             .setMinValue(1),
         ),
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName('leaderboard').setDescription('Show the counting game leaderboard'),
+      subcommand.setName('leaderboard').setDescription('Vis ledertavlen for telleleken'),
     ),
   category: 'Fun',
 
@@ -70,7 +70,7 @@ export default {
       }
 
       if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
-        return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the **Manage Server** permission to use this command.' });
+        return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Du trenger tillatelsen **Administrer server** for å bruke denne kommandoen.' });
       }
 
       const guildId = interaction.guildId;
@@ -81,19 +81,19 @@ export default {
         const channel = interaction.options.getChannel('channel');
         const system = interaction.options.getString('system');
         if (!channel || channel.type !== ChannelType.GuildText) {
-          return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Please choose a text channel for the counting game.' });
+          return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Vennligst velg en tekstkanal for telleleken.' });
         }
 
         if (config.enabled && config.channelId && config.channelId !== channel.id) {
-          return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `This server already has an active counting channel configured: <#${config.channelId}>. Disable the current counting game first, or use that existing channel.` });
+          return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `Denne serveren har allerede en aktiv tellekanal konfigurert: <#${config.channelId}>. Deaktiver den nåværende telleleken først, eller bruk den eksisterende kanalen.` });
         }
 
         await activateCountingGame(interaction.client, guildId, channel.id, system);
         return await InteractionHelper.safeEditReply(interaction, {
           embeds: [
             successEmbed(
-              'Counting Game Enabled',
-              `The counting game is now active in ${channel} using the **${getCountingSystemLabel(system)}** system. Players must count up from **1** and may not post two numbers in a row.`,
+              'Tellelek aktivert',
+              `Telleleken er nå aktiv i ${channel} med systemet **${getCountingSystemLabel(system)}**. Spillere må telle oppover fra **1** og kan ikke skrive to tall på rad.`,
             ),
           ],
         });
@@ -102,32 +102,32 @@ export default {
       if (subcommand === 'disable') {
         if (!config.enabled) {
           return await InteractionHelper.safeEditReply(interaction, {
-            embeds: [infoEmbed('Counting Game Disabled', 'The counting game is already disabled for this server.')],
+            embeds: [infoEmbed('Tellelek deaktivert', 'Telleleken er allerede deaktivert for denne serveren.')],
           });
         }
 
         await disableCountingGame(interaction.client, guildId);
         return await InteractionHelper.safeEditReply(interaction, {
-          embeds: [successEmbed('Counting Game Disabled', 'The counting game has been disabled.')],
+          embeds: [successEmbed('Tellelek deaktivert', 'Telleleken har blitt deaktivert.')],
         });
       }
 
       if (subcommand === 'status') {
         const fields = [
-          { name: 'Enabled', value: config.enabled ? 'Yes' : 'No', inline: true },
-          { name: 'Channel', value: config.channelId ? `<#${config.channelId}>` : 'Not configured', inline: true },
+          { name: 'Aktivert', value: config.enabled ? 'Ja' : 'Nei', inline: true },
+          { name: 'Kanal', value: config.channelId ? `<#${config.channelId}>` : 'Ikke konfigurert', inline: true },
           { name: 'System', value: getCountingSystemLabel(config.system), inline: true },
-          { name: 'Next count', value: getExpectedCountValue(config), inline: true },
-          { name: 'Current streak', value: `${config.currentStreak}`, inline: true },
-          { name: 'Best streak', value: `${config.bestStreak || 0}`, inline: true },
-          { name: 'Last counter', value: config.lastUserId ? `<@${config.lastUserId}>` : 'None', inline: true },
+          { name: 'Neste tall', value: getExpectedCountValue(config), inline: true },
+          { name: 'Nåværende rekke', value: `${config.currentStreak}`, inline: true },
+          { name: 'Beste rekke', value: `${config.bestStreak || 0}`, inline: true },
+          { name: 'Siste teller', value: config.lastUserId ? `<@${config.lastUserId}>` : 'Ingen', inline: true },
         ];
 
         return await InteractionHelper.safeEditReply(interaction, {
           embeds: [
             createEmbed({
-              title: 'Counting Game Status',
-              description: 'Overview of the currently configured counting game.',
+              title: 'Status for tellelek',
+              description: 'Oversikt over den nåværende konfigurerte telleleken.',
               fields,
               color: 'primary',
             }),
@@ -137,7 +137,7 @@ export default {
 
       if (subcommand === 'reset') {
         if (!config.enabled) {
-          return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Enable the counting game first with `/count setup`.' });
+          return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Aktiver telleleken først med `/count setup`.' });
         }
 
         const startNumber = interaction.options.getInteger('start') || 1;
@@ -146,8 +146,8 @@ export default {
         return await InteractionHelper.safeEditReply(interaction, {
           embeds: [
             successEmbed(
-              'Counting Game Reset',
-              `The counting sequence has been reset. Start again with **${startNumber}** in <#${config.channelId}>.`,
+              'Tellelek tilbakestilt',
+              `Tellesekvensen har blitt tilbakestilt. Start igjen med **${startNumber}** i <#${config.channelId}>.`,
             ),
           ],
         });
@@ -159,18 +159,18 @@ export default {
         return await InteractionHelper.safeEditReply(interaction, {
           embeds: [
             createEmbed({
-              title: 'Counting Game Leaderboard',
-              description: leaderboard.length > 0 ? leaderboard.join('\n') : 'No counts have been recorded yet.',
+              title: 'Ledertavle for tellelek',
+              description: leaderboard.length > 0 ? leaderboard.join('\n') : 'Ingen tall har blitt registrert ennå.',
               color: 'primary',
             }),
           ],
         });
       }
 
-      return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Please choose a valid counting game action.' });
+      return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Vennligst velg en gyldig handling for telleleken.' });
     } catch (error) {
       logger.error('Count command error:', error);
-      return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Something went wrong while managing the counting game.' });
+      return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Noe gikk galt under administrering av telleleken.' });
     }
   },
 };

@@ -2,16 +2,16 @@ import { SlashCommandBuilder } from 'discord.js';
 import { successEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
-
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+
 export default {
-    data: new SlashCommandBuilder()
+  data: new SlashCommandBuilder()
     .setName("roll")
-    .setDescription("Rolls dice using standard notation (e.g., 2d20, 1d6 + 5).")
+    .setDescription("Kaster terninger med standard notasjon (f.eks. 2d20, 1d6 + 5).")
     .addStringOption((option) =>
       option
         .setName("notation")
-        .setDescription("The dice notation (e.g., 2d6, 1d20 + 4)")
+        .setDescription("Terningnotasjonen (f.eks. 2d6, 1d20 + 4)")
         .setRequired(true)
         .setMaxLength(50),
     ),
@@ -29,9 +29,9 @@ export default {
 
     if (!match) {
       throw new TitanBotError(
-        `Invalid dice notation: ${notation}`,
+        `Ugyldig terningnotasjon: ${notation}`,
         ErrorTypes.USER_INPUT,
-        'Invalid notation. Use format like `1d20` or `3d6+5`.'
+        'Ugyldig notasjon. Bruk et format som `1d20` eller `3d6+5`.'
       );
     }
 
@@ -41,17 +41,17 @@ export default {
 
     if (numDice < 1 || numDice > 20) {
       throw new TitanBotError(
-        `Too many dice requested: ${numDice}`,
+        `For mange terninger forespurt: ${numDice}`,
         ErrorTypes.VALIDATION,
-        'Please keep the number of dice between 1 and 20.'
+        'Vennligst hold antall terninger mellom 1 og 20.'
       );
     }
 
     if (numSides < 1 || numSides > 1000) {
       throw new TitanBotError(
-        `Invalid number of sides: ${numSides}`,
+        `Ugyldig antall sider: ${numSides}`,
         ErrorTypes.VALIDATION,
-        'Please keep the number of sides between 1 and 1000.'
+        'Vennligst hold antall sider mellom 1 og 1000.'
       );
     }
 
@@ -67,12 +67,12 @@ export default {
     const finalTotal = totalRoll + modifier;
 
     const resultsDetail =
-      numDice > 1 ? `**Rolls:** ${rolls.join(" + ")}\n` : "";
+      numDice > 1 ? `**Kast:** ${rolls.join(" + ")}\n` : "";
     const modifierText = modifier !== 0 ? `+ (${modifier})` : "";
 
     const embed = successEmbed(
-      `🎲 Rolling ${numDice}d${numSides}${modifier !== 0 ? match[3] : ""}`,
-      `${resultsDetail}**Total Roll:** ${totalRoll}${modifierText} = **${finalTotal}**`,
+      `🎲 Kaster ${numDice}d${numSides}${modifier !== 0 ? match[3] : ""}`,
+      `${resultsDetail}**Totalt:** ${totalRoll}${modifierText} = **${finalTotal}**`,
     );
 
     await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
