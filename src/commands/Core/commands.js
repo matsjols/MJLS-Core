@@ -38,7 +38,7 @@ function buildCategoryChoices(client) {
 
 async function ensureManageGuild(interaction) {
   if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
-    await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the **Manage Server** permission to manage commands.' });
+    await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Du trenger tillatelsen **Manage Server** for å administrere kommandoer.'});
     return false;
   }
 
@@ -48,54 +48,54 @@ async function ensureManageGuild(interaction) {
 export default {
   data: new SlashCommandBuilder()
     .setName('commands')
-    .setDescription('Enable or disable bot commands and categories for this server')
+    .setDescription('Aktiver eller deaktiver bot-commands og/eller kategorier')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .setDMPermission(false)
     .addSubcommand((subcommand) =>
       subcommand
         .setName('dashboard')
-        .setDescription('Open the interactive command access dashboard'),
+        .setDescription('Åpne det interaktive dashbordet for commandtilganger'),
     )
     .addSubcommand((subcommand) =>
       subcommand
-        .setName('disable')
-        .setDescription('Disable a command or entire category')
+        .setName('deaktiver')
+        .setDescription('Deaktiver en kommando eller en hel kategori')
         .addStringOption((option) =>
           option
             .setName('scope')
-            .setDescription('Disable a single command or a whole category')
+            .setDescription('Deaktiver en enkeltkommando eller en hel kategori')
             .setRequired(true)
             .addChoices(
-              { name: 'Category', value: 'category' },
-              { name: 'Command', value: 'command' },
+              { name: 'Kategori', value: 'category' },
+              { name: 'Kommando', value: 'command' },
             ),
         )
         .addStringOption((option) =>
           option
             .setName('target')
-            .setDescription('Category or command name')
+            .setDescription('Kategori eller kommandonavn')
             .setRequired(true)
             .setAutocomplete(true),
         ),
     )
     .addSubcommand((subcommand) =>
       subcommand
-        .setName('enable')
-        .setDescription('Enable a command or entire category')
+        .setName('aktiver')
+        .setDescription('Aktiver en kommando eller en hel kategori')
         .addStringOption((option) =>
           option
             .setName('scope')
-            .setDescription('Enable a single command or a whole category')
+            .setDescription('Aktiver en enkeltkommando eller en hel kategori')
             .setRequired(true)
             .addChoices(
-              { name: 'Category', value: 'category' },
-              { name: 'Command', value: 'command' },
+              { name: 'Kategori', value: 'category' },
+              { name: 'Kommando', value: 'command' },
             ),
         )
         .addStringOption((option) =>
           option
             .setName('target')
-            .setDescription('Category or command name')
+            .setDescription('Kategori eller kommandonavn')
             .setRequired(true)
             .setAutocomplete(true),
         ),
@@ -227,7 +227,7 @@ export default {
     if (scope === 'category') {
       const category = resolveCategoryChoice(client, target);
       if (!category) {
-        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `No category matched \`${target}\`. Use \`/commands dashboard\` to browse categories.` });
+        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `Ingen kategori passet \`${target}\`. Bruk \`/commands dashboard\` for å bla gjennom kategorier.` });
       }
 
       if (isDisable) {
@@ -235,8 +235,8 @@ export default {
         return InteractionHelper.safeEditReply(interaction, {
           embeds: [
             successEmbed(
-              'Category Disabled',
-              `All **${category.displayName}** commands are now disabled.\nProtected commands remain available.`,
+              'Kategori deaktivert',
+              `Alle **${category.displayName}**-kommandoer er nå deaktivert.\nBeskyttede kommandoer forblir tilgjengelige.`,
             ),
           ],
         });
@@ -244,7 +244,7 @@ export default {
 
       await enableCategory(client, interaction.guildId, category.key);
       return InteractionHelper.safeEditReply(interaction, {
-        embeds: [successEmbed('Category Enabled', `**${category.displayName}** commands are now enabled (except individually disabled commands).`)],
+        embeds: [successEmbed('Kategori aktivert', `**${category.displayName}**-kommandoer er nå aktivert (med unntak av kommandoer som er deaktivert individuelt).`)],
       });
     }
 
@@ -252,13 +252,13 @@ export default {
     if (isDisable) {
       await disableCommand(client, interaction.guildId, commandName);
       return InteractionHelper.safeEditReply(interaction, {
-        embeds: [successEmbed('Command Disabled', `\`/${commandName}\` is now disabled in this server.`)],
+        embeds: [successEmbed('Kommando deaktivert', `\`/${commandName}\` er nå deaktivert på denne serveren.`)],
       });
     }
 
     await enableCommand(client, interaction.guildId, commandName);
     return InteractionHelper.safeEditReply(interaction, {
-      embeds: [successEmbed('Command Enabled', `\`/${commandName}\` is now enabled in this server.`)],
+      embeds: [successEmbed('Kommando aktivert', `\`/${commandName}\` er nå aktivert på denne serveren.`)],
     });
   },
 };

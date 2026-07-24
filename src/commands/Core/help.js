@@ -112,7 +112,7 @@ export async function createInitialHelpMenu(client) {
             {
                 name: '🚀 Kom i gang',
                 value: [
-                    '**1. Start oppsett** — Kjør `/configwizard` for å konfigurere prefiks, moderatorrolle og logger.',
+                    '**1. Start oppsett** — Kjør `/configbordet` for å konfigurere prefiks, moderatorrolle og logger.',
                     '**2. Aktiver systemer** — Bruk `/commands dashboard` til å slå kategorier av eller på.',
                     '**3. Bla gjennom kommandoer** — Bruk menyen nedenfor for å se kategorier og kommandoer.',
                 ].join('\n'),
@@ -129,7 +129,7 @@ export async function createInitialHelpMenu(client) {
             },
 //            {
 //                name: '\u200B',
-//                value: `-# ${botName} er [åpen kildekode](https://youtu.be/1jCZX8s3bJE?si=NPOYx-vxVE1I5vJK)`,
+//                value: `-# ${botName} er [open source](https://youtu.be/1jCZX8s3bJE?si=NPOYx-vxVE1I5vJK)`,
 //                inline: false,
 //            },
         ],

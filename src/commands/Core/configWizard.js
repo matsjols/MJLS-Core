@@ -605,7 +605,7 @@ async function handleSettingModalSubmit(selectInteraction, rootInteraction, sett
 export default {
     slashOnly: true,
     data: new SlashCommandBuilder()
-        .setName('configwizard')
+        .setName('configbordet')
         .setDescription('Åpne serverens konfigurasjonsdashbord og oppsettsveiviser')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .setDMPermission(false),
