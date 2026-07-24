@@ -54,12 +54,12 @@ export default {
             });
         }
 
-        birthdayList = `**${displayIndex} birthday${displayIndex !== 1 ? 's' : ''} in ${interaction.guild.name}**\n\n` + birthdayList;
+        birthdayList = `**${displayIndex} bursdager${displayIndex !== 1 ? 's' : ''} i ${interaction.guild.name}**\n\n` + birthdayList;
 
         const embed = new EmbedBuilder()
             .setColor(0x00FF00)
-            .setTitle('Server Birthdays')
-            .setDescription(`${birthdayList}\n\nTotal: ${displayIndex} birthday${displayIndex !== 1 ? 's' : ''}`);
+            .setTitle('Bursdager som er på serveren')
+            .setDescription(`${birthdayList}\n\nTotalt: ${displayIndex} bursdager${displayIndex !== 1 ? 's' : ''}`);
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [embed]
