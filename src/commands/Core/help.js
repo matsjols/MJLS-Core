@@ -140,10 +140,10 @@ export async function createInitialHelpMenu(client) {
     });
     embed.setTimestamp();
 
-    const bugReportButton = new ButtonBuilder()
-        .setCustomId(BUG_REPORT_BUTTON_ID)
-        .setLabel("Rapporter feil")
-        .setStyle(ButtonStyle.Danger);
+//    const bugReportButton = new ButtonBuilder()
+//        .setCustomId(BUG_REPORT_BUTTON_ID)
+//        .setLabel("Rapporter feil")
+//        .setStyle(ButtonStyle.Danger);
 
 //    const supportButton = new ButtonBuilder()
 //        .setLabel("Støtteserver")
@@ -157,7 +157,7 @@ export async function createInitialHelpMenu(client) {
     );
 
     const buttonRow = new ActionRowBuilder().addComponents([
-        bugReportButton,
+//        bugReportButton,
 //        supportButton,
     ]);
 
