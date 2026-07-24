@@ -15,8 +15,8 @@ export default {
         if (sortedBirthdays.length === 0) {
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
-                .setTitle('No Birthdays')
-                .setDescription('No birthdays have been set in this server yet.');
+                .setTitle('Ingen bursdager')
+                .setDescription('Ingen bursdager er registrert på denne serveren ennå.');
             return await InteractionHelper.safeEditReply(interaction, {
                 embeds: [embed]
             });
@@ -35,7 +35,7 @@ export default {
                 continue;
             }
             displayIndex++;
-            birthdayList += `${displayIndex}. <@${birthday.userId}> - ${birthday.monthName} ${birthday.day}\n`;
+            birthdayList += `${displayIndex}. <@${birthday.userId}> - ${birthday.day} ${birthday.monthName}\n`;
         }
 
         if (fetchedMembers && staleUserIds.length > 0) {
@@ -47,8 +47,8 @@ export default {
         if (displayIndex === 0) {
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
-                .setTitle('No Birthdays')
-                .setDescription('No birthdays have been set by current server members.');
+                .setTitle('Ingen bursdager')
+                .setDescription('Ingen bursdager er registrert av nåværende servermedlemmer.');
             return await InteractionHelper.safeEditReply(interaction, {
                 embeds: [embed]
             });
@@ -65,7 +65,7 @@ export default {
             embeds: [embed]
         });
 
-        logger.info('Birthday list retrieved successfully', {
+        logger.info('Bursdagslisten er hentet', {
             userId: interaction.user.id,
             guildId,
             birthdayCount: displayIndex,
