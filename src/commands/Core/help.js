@@ -127,11 +127,11 @@ export async function createInitialHelpMenu(client) {
                 ].join('\n'),
                 inline: false,
             },
-            {
-                name: '\u200B',
-                value: `-# ${botName} er [åpen kildekode](https://youtu.be/1jCZX8s3bJE?si=NPOYx-vxVE1I5vJK)`,
-                inline: false,
-            },
+//            {
+//                name: '\u200B',
+//                value: `-# ${botName} er [åpen kildekode](https://youtu.be/1jCZX8s3bJE?si=NPOYx-vxVE1I5vJK)`,
+//                inline: false,
+//            },
         ],
     });
 
@@ -144,22 +144,22 @@ export async function createInitialHelpMenu(client) {
 //        .setCustomId(BUG_REPORT_BUTTON_ID)
 //        .setLabel("Rapporter feil")
 //        .setStyle(ButtonStyle.Danger);
-
+//
 //    const supportButton = new ButtonBuilder()
 //        .setLabel("Støtteserver")
 //        .setURL("https://discord.gg/QnWNz2dKCE")
 //        .setStyle(ButtonStyle.Link);
+//
+//    const buttonRow = new ActionRowBuilder().addComponents([
+//        bugReportButton,
+//        supportButton,
+//    ]);
 
     const selectRow = createSelectMenu(
         CATEGORY_SELECT_ID,
         "Velg for å vise kommandoene",
         options,
     );
-
-//    const buttonRow = new ActionRowBuilder().addComponents([
-//        bugReportButton,
-//        supportButton,
-//    ]);
 
     return {
         embeds: [embed],
