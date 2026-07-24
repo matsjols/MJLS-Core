@@ -12,24 +12,24 @@ import birthdaySetchannel from './modules/birthday_setchannel.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
-        .setName('birthday')
-        .setDescription('Birthday system commands')
+        .setName('bursdag')
+        .setDescription('Systemkommandoer for bursdager')
         .addSubcommand(subcommand =>
             subcommand
-                .setName('set')
-                .setDescription('Set your birthday')
+                .setName('registrer')
+                .setDescription('Registrer bursdagen din')
                 .addIntegerOption(option =>
                     option
-                        .setName('month')
-                        .setDescription('Birth month (1-12)')
+                        .setName('måned')
+                        .setDescription('Fødselsmåned (1-12)')
                         .setRequired(true)
                         .setMinValue(1)
                         .setMaxValue(12)
                 )
                 .addIntegerOption(option =>
                     option
-                        .setName('day')
-                        .setDescription('Birth day (1-31)')
+                        .setName('dato')
+                        .setDescription('Fødselsdatoen (1-31)')
                         .setRequired(true)
                         .setMinValue(1)
                         .setMaxValue(31)
@@ -38,37 +38,37 @@ export default {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('info')
-                .setDescription('View birthday information')
+                .setDescription('Se bursdagsinformasjon')
                 .addUserOption(option =>
                     option
-                        .setName('user')
-                        .setDescription('User to check birthday for')
+                        .setName('bruker')
+                        .setDescription('Brukeren du sjekker bursdag for')
                         .setRequired(false)
                 )
         )
         .addSubcommand(subcommand =>
             subcommand
-                .setName('list')
-                .setDescription('List all birthdays in the server')
+                .setName('liste')
+                .setDescription('List opp alle bursdager på serveren')
         )
         .addSubcommand(subcommand =>
             subcommand
-                .setName('remove')
-                .setDescription('Remove your birthday')
+                .setName('slett')
+                .setDescription('Slett bursdagen din')
         )
         .addSubcommand(subcommand =>
             subcommand
-                .setName('next')
-                .setDescription('Show upcoming birthdays')
+                .setName('kommende')
+                .setDescription('Vis kommende bursdager')
         )
         .addSubcommand(subcommand =>
             subcommand
-                .setName('setchannel')
-                .setDescription('Set or disable the channel for birthday announcements. (Manage Server required)')
+                .setName('angi-bursdagskanal')
+                .setDescription('Angi eller deaktiver kanalen for bursdagsmeldinger. (Krever tillatelse til å administrere serveren)')
                 .addChannelOption(option =>
                     option
-                        .setName('channel')
-                        .setDescription('The text channel for announcements. Leave empty to disable.')
+                        .setName('kanal')
+                        .setDescription('Tekstkanalen for kunngjøringer. La stå tom for å deaktivere.')
                         .addChannelTypes(ChannelType.GuildText)
                         .setRequired(false)
                 )
@@ -78,17 +78,17 @@ export default {
         const subcommand = interaction.options.getSubcommand();
 
         switch (subcommand) {
-            case 'set':
+            case 'registrer':
                 return await birthdaySet.execute(interaction, config, client);
             case 'info':
                 return await birthdayInfo.execute(interaction, config, client);
-            case 'list':
+            case 'liste':
                 return await birthdayList.execute(interaction, config, client);
-            case 'remove':
+            case 'slett':
                 return await birthdayRemove.execute(interaction, config, client);
-            case 'next':
+            case 'kommende':
                 return await nextBirthdays.execute(interaction, config, client);
-            case 'setchannel':
+            case 'angi-bursdagskanal':
                 return await birthdaySetchannel.execute(interaction, config, client);
             default:
                 return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Unknown subcommand' });
