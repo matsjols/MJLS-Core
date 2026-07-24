@@ -77,9 +77,12 @@ export default {
       const subcommand = interaction.options.getSubcommand();
       const config = await getCountingGameConfig(interaction.client, guildId);
 
-      if (subcommand === 'setup') {
-        const channel = interaction.options.getChannel('channel');
+      // Fikset: Sjekker nå etter det norske navnet 'sett-opp' i stedet for 'setup'
+      if (subcommand === 'sett-opp') {
+        // Fikset: Henter 'kanal' i stedet for 'channel'
+        const channel = interaction.options.getChannel('kanal');
         const system = interaction.options.getString('system');
+        
         if (!channel || channel.type !== ChannelType.GuildText) {
           return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Vennligst velg en tekstkanal for telleleken.' });
         }
@@ -99,7 +102,8 @@ export default {
         });
       }
 
-      if (subcommand === 'disable') {
+      // Fikset: Sjekker nå etter 'deaktiver' i stedet for 'disable'
+      if (subcommand === 'deaktiver') {
         if (!config.enabled) {
           return await InteractionHelper.safeEditReply(interaction, {
             embeds: [infoEmbed('Tellelek deaktivert', 'Telleleken er allerede deaktivert for denne serveren.')],
@@ -137,7 +141,7 @@ export default {
 
       if (subcommand === 'reset') {
         if (!config.enabled) {
-          return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Aktiver telleleken først med `/count setup`.' });
+          return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Aktiver telleleken først med `/telleleken sett-opp`.' });
         }
 
         const startNumber = interaction.options.getInteger('start') || 1;
@@ -153,7 +157,8 @@ export default {
         });
       }
 
-      if (subcommand === 'leaderboard') {
+      // Fikset: Sjekker nå etter 'toppliste' i stedet for 'leaderboard'
+      if (subcommand === 'toppliste') {
         const leaderboard = buildCountingLeaderboard(config, interaction.guild);
 
         return await InteractionHelper.safeEditReply(interaction, {
