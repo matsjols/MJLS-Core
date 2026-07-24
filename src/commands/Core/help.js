@@ -140,15 +140,15 @@ export async function createInitialHelpMenu(client) {
     });
     embed.setTimestamp();
 
-    const bugReportButton = new ButtonBuilder()
-        .setCustomId(BUG_REPORT_BUTTON_ID)
-        .setLabel("Rapporter feil")
-        .setStyle(ButtonStyle.Danger);
-
-    const supportButton = new ButtonBuilder()
-        .setLabel("Støtteserver")
-        .setURL("https://discord.gg/QnWNz2dKCE")
-        .setStyle(ButtonStyle.Link);
+//    const bugReportButton = new ButtonBuilder()
+//        .setCustomId(BUG_REPORT_BUTTON_ID)
+//        .setLabel("Rapporter feil")
+//        .setStyle(ButtonStyle.Danger);
+//
+//    const supportButton = new ButtonBuilder()
+//        .setLabel("Støtteserver")
+//        .setURL("https://discord.gg/QnWNz2dKCE")
+//        .setStyle(ButtonStyle.Link);
 
     const selectRow = createSelectMenu(
         CATEGORY_SELECT_ID,
