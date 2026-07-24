@@ -7,12 +7,12 @@ const SUPPORT_SERVER_URL = "https://discord.gg/QnWNz2dKCE";
 export default {
     data: new SlashCommandBuilder()
     .setName("support")
-    .setDescription("Get link to the support server"),
+    .setDescription("Hent linken til support"),
 
   async execute(interaction) {
     try {
       const supportButton = new ButtonBuilder()
-        .setLabel("Join Support Server")
+        .setLabel("Join Support Serveren")
         .setStyle(ButtonStyle.Link)
         .setURL(SUPPORT_SERVER_URL);
 
@@ -20,7 +20,7 @@ export default {
 
       await InteractionHelper.safeReply(interaction, {
         embeds: [
-          createEmbed({ title: "Need Help?", description: "Join our official support server for assistance, report bugs, or suggest features. If you are customizing this bot, remember to change the link in the code!" }),
+          createEmbed({ title: "Trenger hjelp?", description: "Bli med på vår offisielle support-server for å få hjelp, rapportere feil eller foreslå nye funksjoner. (Hvis du tilpasser denne boten, må du huske å endre lenken i koden!)"}),
         ],
         components: [actionRow],
         flags: MessageFlags.Ephemeral,
@@ -30,7 +30,7 @@ export default {
       
       try {
         return await InteractionHelper.safeReply(interaction, {
-          embeds: [createEmbed({ title: 'System Error', description: 'Could not display support information.', color: 'error' })],
+          embeds: [createEmbed({ title: 'System Error', description: 'Kunne ikke vise support informasjon.', color: 'error' })],
           flags: MessageFlags.Ephemeral,
         });
       } catch (replyError) {

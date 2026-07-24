@@ -6,7 +6,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
     .setName("uptime")
-    .setDescription("Check how long the bot has been online"),
+    .setDescription("Sjekk hvor lenge MJLS Core har vært pålogget"),
 
   async execute(interaction) {
     try {
@@ -24,7 +24,7 @@ export default {
 
       await InteractionHelper.safeEditReply(interaction, {
         embeds: [createEmbed({ 
-          title: "System Uptime", 
+          title: "MJLS Core's Uptime", 
           description: `\`\`\`${uptimeStr}\`\`\`` 
         })],
       });
@@ -33,11 +33,11 @@ export default {
       
       try {
         return await InteractionHelper.safeEditReply(interaction, {
-          embeds: [createEmbed({ title: 'System Error', description: 'Could not compute uptime.', color: 'error' })],
+          embeds: [createEmbed({ title: 'System Error', description: 'Kunne ikke beregne uptime.', color: 'error' })],
           flags: MessageFlags.Ephemeral,
         });
       } catch (replyError) {
-        logger.error('Failed to send error reply:', replyError);
+        logger.error('Kunne ikke sende error-kode:', replyError);
       }
     }
   },

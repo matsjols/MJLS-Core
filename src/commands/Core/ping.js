@@ -6,7 +6,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
         .setName("ping")
-        .setDescription("Checks the bot's latency and API speed"),
+        .setDescription("Sjekker boten's latency og API-hastighet."),
 
     async prefixExecute(interaction) {
         try {
@@ -23,10 +23,10 @@ export default {
 
             await pingingMessage.edit({ content: null, embeds: [embed] });
         } catch (error) {
-            logger.error('Ping prefix command error:', error);
+            logger.error('Feil ved kommando for ping:', error);
             if (!interaction.replied && !interaction._replyMessage) {
                 await interaction.channel.send({
-                    embeds: [createEmbed({ title: 'System Error', description: 'Could not determine latency at this time.', color: 'error' })],
+                    embeds: [createEmbed({ title: 'Systemfeil', description: 'Kunne ikke fastslå latency på nåværende tidspunkt.', color: 'error' })],
                 }).catch(() => {});
             }
         }
@@ -38,7 +38,7 @@ export default {
         
         const deferSuccess = await InteractionHelper.safeDefer(interaction);
         if (!deferSuccess) {
-            logger.warn(`Ping interaction defer failed`, {
+            logger.warn(`Utsettelse av ping-interaksjon mislyktes`, {
                 userId: interaction.user.id,
                 guildId: interaction.guildId,
                 commandName: 'ping'
@@ -70,11 +70,11 @@ export default {
             logger.error('Ping command error:', error);
             try {
                 return await InteractionHelper.safeReply(interaction, {
-                    embeds: [createEmbed({ title: 'System Error', description: 'Could not determine latency at this time.', color: 'error' })],
+                    embeds: [createEmbed({ title: 'Systemfeil', description: 'Kunne ikke fastslå latency på nåværende tidspunkt.', color: 'error' })],
                     flags: MessageFlags.Ephemeral,
                 });
             } catch (replyError) {
-                logger.error('Failed to send error reply:', replyError);
+                logger.error('Kunne ikke sende error-kode:', replyError);
             }
         }
     },
