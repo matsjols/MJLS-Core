@@ -33,14 +33,14 @@ const STATUS = {
 
 // Oversettelsestabell for kategorier i dashbordet
 const CATEGORY_NAMES_NB = {
-  Core: "Kjerne",
+  Core: "Core",
   Moderation: "Moderering",
   Economy: "Økonomi",
   Music: "Musikk",
   Fun: "Moro",
-  Leveling: "Nivåer",
+  Leveling: "Leveling",
   Utility: "Hjelpeverktøy",
-  Ticket: "Billetter",
+  Ticket: "Tickets",
   Welcome: "Velkomst",
   Giveaway: "Giveaway",
   Counter: "Teller",
@@ -52,8 +52,8 @@ const CATEGORY_NAMES_NB = {
   Reactionroles: "Reaksjonsroller",
   Community: "Fellesskap",
   Birthday: "Bursdag",
-  JoinToCreate: "Koble til for å opprette",
-  "Join To Create": "Koble til for å opprette",
+  JoinToCreate: "TempVoice",
+  "Join To Create": "TempVoice",
   Verification: "Verifisering",
   Logging: "Logging",
   ServerStats: "Serverstatistikk",

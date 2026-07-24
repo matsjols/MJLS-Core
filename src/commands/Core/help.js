@@ -23,24 +23,31 @@ const HELP_MENU_TIMEOUT_MS = 5 * 60 * 1000;
 
 // Egendefinerte norske navn for kategoriene
 const CATEGORY_NAMES = {
-    Core: "Kjerne",
+    Core: "Core",
     Moderation: "Moderering",
     Economy: "Økonomi",
     Music: "Musikk",
     Fun: "Moro",
-    Leveling: "Nivåer",
+    Leveling: "Leveling",
     Utility: "Hjelpeverktøy",
-    Ticket: "Billetter",
+    Ticket: "Tickets",
     Welcome: "Velkomst",
     Giveaway: "Giveaway",
     Counter: "Teller",
     Tools: "Verktøy",
     Search: "Søk",
+    Søk: "Søk",
+    ReactionRoles: "Reaksjonsroller",
     "Reaction Roles": "Reaksjonsroller",
+    Reactionroles: "Reaksjonsroller",
     Community: "Fellesskap",
     Birthday: "Bursdag",
-    "Join To Create": "Koble til for å opprette",
+    JoinToCreate: "TempVoice",
+    "Join To Create": "TempVoice",
     Verification: "Verifisering",
+    Logging: "Logging",
+    ServerStats: "Serverstatistikk",
+    "Server Stats": "Serverstatistikk",
 };
 
 const CATEGORY_ICONS = {
@@ -57,22 +64,39 @@ const CATEGORY_ICONS = {
     Counter: "🔢",
     Tools: "🛠️",
     Search: "🔍",
+    Søk: "🔍",
+    ReactionRoles: "🎭",
     "Reaction Roles": "🎭",
+    Reactionroles: "🎭",
     Community: "👥",
     Birthday: "🎂",
+    JoinToCreate: "🔌",
     "Join To Create": "🔌",
     Verification: "✅",
+    Logging: "📜",
+    ServerStats: "📈",
+    "Server Stats": "📈",
 };
 
+// Oppdatert format-funksjon som takler mapper med og uten mellomrom!
 function formatCategoryName(rawCategory) {
     const formatted = rawCategory
         .replace(/_/g, '')
         .replace(/([a-z])([A-Z])/g, '$1 $2')
         .replace(/\b\w/g, (char) => char.toUpperCase());
 
+    const compactKey = formatted.replace(/\s+/g, '');
+
+    const norwegianName = CATEGORY_NAMES[formatted] || 
+                          CATEGORY_NAMES[compactKey] || 
+                          CATEGORY_NAMES[rawCategory] || 
+                          formatted;
+
     return {
-        english: formatted,
-        norwegian: CATEGORY_NAMES[formatted] || formatted,
+        key: rawCategory,
+        formatted,
+        compactKey,
+        norwegian: norwegianName,
     };
 }
 
@@ -92,8 +116,14 @@ export async function createInitialHelpMenu(client) {
             value: ALL_COMMANDS_ID,
         },
         ...categoryDirs.map((category) => {
-            const { english, norwegian } = formatCategoryName(category);
-            const icon = CATEGORY_ICONS[english] || "🔍";
+            const { formatted, compactKey, norwegian } = formatCategoryName(category);
+            
+            // Finner ikon på samme måte (sjekker flere varianter)
+            const icon = CATEGORY_ICONS[category] || 
+                         CATEGORY_ICONS[formatted] || 
+                         CATEGORY_ICONS[compactKey] || 
+                         "📁";
+            
             return {
                 label: `${icon} ${norwegian}`,
                 description: `Vis kommandoer i kategorien ${norwegian}`,
@@ -127,11 +157,11 @@ export async function createInitialHelpMenu(client) {
                 ].join('\n'),
                 inline: false,
             },
-//            {
-//                name: '\u200B',
-//                value: `-# ${botName} er [open source](https://youtu.be/1jCZX8s3bJE?si=NPOYx-vxVE1I5vJK)`,
-//                inline: false,
-//            },
+//             {
+//                 name: '\u200B',
+//                 value: `-# ${botName} er [open source](https://youtu.be/1jCZX8s3bJE?si=NPOYx-vxVE1I5vJK)`,
+//                 inline: false,
+//             },
         ],
     });
 
@@ -164,7 +194,7 @@ export async function createInitialHelpMenu(client) {
     return {
         embeds: [embed],
         components: [
-//            buttonRow,
+//             buttonRow,
             selectRow
         ],
     };
