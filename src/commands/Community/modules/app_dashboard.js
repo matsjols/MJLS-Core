@@ -162,7 +162,7 @@ export default {
                 throw new TitanBotError(
                     'Søknadssystemet er ikke satt opp',
                     ErrorTypes.CONFIGURATION,
-                    'Søknadssystemet har ikke blitt konfigurert ennå. Vennligst kjør `/søknad-admin oppsett` for å opprette din første søknad.',
+                    'Søknadssystemet har ikke blitt konfigurert ennå. Vennligst kjør `/søknad-admin opprett` for å opprette din første søknad.',
                 );
             }
 
