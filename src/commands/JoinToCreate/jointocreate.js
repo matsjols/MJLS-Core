@@ -168,7 +168,7 @@ async function handleSetupSubcommand(interaction, client) {
 
         logger.debug('Oppretter «TempVoice»-kanal...');
         let triggerChannel = await interaction.guild.channels.create({
-            name: 'Join to Create',
+            name: '➕︱TempVoice-kanal',
             type: ChannelType.GuildVoice,
             parent: category?.id,
             userLimit: 0,
