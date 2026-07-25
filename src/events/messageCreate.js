@@ -76,7 +76,7 @@ async function handlePrefixCommand(message, client) {
     if (isMaintenanceMode() && !isBotOwner(message.author.id)) {
       await message.channel.send({
         embeds: [createEmbed({
-          title: 'Maintenance Mode',
+          title: 'Vedlikeholdsmodus',
           description: getBotMessage('maintenanceMode'),
           color: 'warning',
         })],
@@ -87,7 +87,7 @@ async function handlePrefixCommand(message, client) {
     if (!isCommandCategoryEnabled(command.category)) {
       await message.channel.send({
         embeds: [createEmbed({
-          title: 'Feature Disabled',
+          title: 'Funksjon deaktivert',
           description: getBotMessage('commandDisabled'),
           color: 'error',
         })],
@@ -99,8 +99,8 @@ async function handlePrefixCommand(message, client) {
     if (!supportsPrefixExecution(command) || restriction.blocked) {
       if (restriction.blocked && restriction.reason) {
         const embed = createEmbed({
-          title: 'Slash Command Only',
-          description: `${restriction.reason}\nUse \`/${resolvedCommandName}\` instead.`,
+          title: 'Kun skråstrek-kommando (/)',
+          description: `${restriction.reason}\nBruk \`/${resolvedCommandName}\` i stedet.`,
           color: 'info',
         });
         await message.channel.send({ embeds: [embed] }).catch(() => {});
@@ -110,8 +110,8 @@ async function handlePrefixCommand(message, client) {
 
     if (!(await isCommandEnabled(client, message.guild.id, resolvePrefixAccessKey(command.data, args), command.category))) {
       const embed = createEmbed({
-        title: 'Command Disabled',
-        description: 'This command has been disabled for this server.',
+        title: 'Kommando deaktivert',
+        description: 'Denne kommandoen har blitt deaktivert for denne serveren.',
         color: 'error',
       });
       await message.channel.send({ embeds: [embed] }).catch(() => {});
@@ -130,8 +130,8 @@ async function handlePrefixCommand(message, client) {
     if (!abuseProtection.allowed) {
       const formattedCooldown = formatCooldownDuration(abuseProtection.remainingMs);
       const embed = createEmbed({
-        title: 'Command Cooldown',
-        description: `This command is on cooldown. Please wait ${formattedCooldown} before trying again.`,
+        title: 'Kommando-nedkjøling',
+        description: `Denne kommandoen har en nedkjølingstid. Vennligst vent ${formattedCooldown} før du prøver igjen.`,
         color: 'error',
       });
       await message.channel.send({ embeds: [embed] }).catch(() => {});

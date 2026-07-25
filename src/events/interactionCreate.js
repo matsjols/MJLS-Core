@@ -77,16 +77,16 @@ export default {
 
             if (!command) {
               throw createError(
-                `No command matching ${interaction.commandName} was found.`,
+                `Fant ingen kommando som samsvarer med ${interaction.commandName}.`,
                 ErrorTypes.CONFIGURATION,
-                'Sorry, that command does not exist.',
+                'Beklager, den kommandoen eksisterer ikke.',
                 withTraceContext({ commandName: interaction.commandName }, interactionTraceContext)
               );
             }
 
             if (isMaintenanceMode() && !isBotOwner(interaction.user.id)) {
               throw createError(
-                'Bot is in maintenance mode',
+                'Boten er i vedlikeholdsmodus',
                 ErrorTypes.CONFIGURATION,
                 getBotMessage('maintenanceMode'),
                 withTraceContext({ commandName: interaction.commandName }, interactionTraceContext)
@@ -95,7 +95,7 @@ export default {
 
             if (!isCommandCategoryEnabled(command.category)) {
               throw createError(
-                `Feature disabled for category ${command.category}`,
+                `Funksjonen er deaktivert for kategorien ${command.category}`,
                 ErrorTypes.CONFIGURATION,
                 getBotMessage('commandDisabled'),
                 withTraceContext({ commandName: interaction.commandName, category: command.category }, interactionTraceContext)
@@ -110,7 +110,7 @@ export default {
               if (expiresAt && Date.now() < expiresAt) {
                 const remainingSec = Math.ceil((expiresAt - Date.now()) / 1000);
                 throw createError(
-                  `Default command cooldown active for ${interaction.commandName}`,
+                  `Standard nedkjølingstid er aktiv for ${interaction.commandName}`,
                   ErrorTypes.RATE_LIMIT,
                   getBotMessage('cooldownActive', { time: `${remainingSec}s` }),
                   withTraceContext({ commandName: interaction.commandName, remainingSec }, interactionTraceContext)
@@ -124,9 +124,9 @@ export default {
             if (!abuseProtection.allowed) {
               const formattedCooldown = formatCooldownDuration(abuseProtection.remainingMs);
               throw createError(
-                `Risky command cooldown active for ${interaction.commandName}`,
+                `Nedkjølingstid for risikofylt kommando er aktiv for ${interaction.commandName}`,
                 ErrorTypes.RATE_LIMIT,
-                `This command is on cooldown. Please wait ${formattedCooldown} before trying again.`,
+                `Denne kommandoen har en nedkjølingstid. Vennligst vent ${formattedCooldown} før du prøver igjen.`,
                 withTraceContext({
                   commandName: interaction.commandName,
                   subtype: 'command_cooldown',
@@ -144,9 +144,9 @@ export default {
               const accessKey = resolveSlashAccessKey(interaction);
               if (!(await isCommandEnabled(client, interaction.guild.id, accessKey, command.category))) {
                 throw createError(
-                  `Command ${accessKey} is disabled in this guild`,
+                  `Kommandoen ${accessKey} er deaktivert på denne serveren`,
                   ErrorTypes.CONFIGURATION,
-                  'This command has been disabled for this server.',
+                  'Denne kommandoen har blitt deaktivert for denne serveren.',
                   withTraceContext({ commandName: accessKey, guildId: interaction.guild.id }, interactionTraceContext)
                 );
               }
@@ -199,7 +199,7 @@ export default {
               
               await interaction.respond(
                 filtered.slice(0, 25).map(role => ({
-                  name: `${role.name}${role.enabled === false ? ' (disabled)' : ''}`,
+                  name: `${role.name}${role.enabled === false ? ' (deaktivert)' : ''}`,
                   value: role.name
                 }))
               );
@@ -223,7 +223,7 @@ export default {
               
               await interaction.respond(
                 filtered.slice(0, 25).map(role => ({
-                  name: `${role.name}${role.enabled === false ? ' (disabled)' : ''}`,
+                  name: `${role.name}${role.enabled === false ? ' (deaktivert)' : ''}`,
                   value: role.name
                 }))
               );
@@ -282,8 +282,8 @@ export default {
                     const msg = await channel.messages.fetch(panel.messageId).catch(() => null);
                     if (!msg) return null;
                     
-                    const title = msg?.embeds?.[0]?.title ?? 'Untitled Panel';
-                    const channelName = channel?.name ?? 'unknown';
+                    const title = msg?.embeds?.[0]?.title ?? 'Navnløst panel';
+                    const channelName = channel?.name ?? 'ukjent';
                     
                     return {
                       name: `${title} (${channelName})`.substring(0, 100),
@@ -325,9 +325,9 @@ export default {
               }
             } else {
               throw createError(
-                `No button handler found for ${buttonType}`,
+                `Fant ingen knappehåndterer for ${buttonType}`,
                 ErrorTypes.CONFIGURATION,
-                'This button is not available.',
+                'Denne knappen er ikke tilgjengelig.',
                 withTraceContext({ buttonType }, interactionTraceContext)
               );
             }
@@ -343,9 +343,9 @@ export default {
             }
 
             throw createError(
-              `No button handler found for ${customId}`,
+              `Fant ingen knappehåndterer for ${customId}`,
               ErrorTypes.CONFIGURATION,
-              'This button is not available.',
+              'Denne knappen er ikke tilgjengelig.',
               withTraceContext({ customId }, interactionTraceContext)
             );
           }
@@ -369,9 +369,9 @@ export default {
             }
 
             throw createError(
-              `No select menu handler found for ${customId}`,
+              `Fant ingen nedtrekksmeny-håndterer for ${customId}`,
               ErrorTypes.CONFIGURATION,
-              'This select menu is not available.',
+              'Denne nedtrekksmenyen er ikke tilgjengelig.',
               withTraceContext({ customId }, interactionTraceContext)
             );
           }
@@ -417,14 +417,13 @@ export default {
 
           if (!modal) {
             if (!interaction.customId.includes(':')) {
-
               return;
             }
 
             throw createError(
-              `No modal handler found for ${customId}`,
+              `Fant ingen skjemahåndterer for ${customId}`,
               ErrorTypes.CONFIGURATION,
-              'This form is not available.',
+              'Dette skjemaet er ikke tilgjengelig.',
               withTraceContext({ customId }, interactionTraceContext)
             );
           }
