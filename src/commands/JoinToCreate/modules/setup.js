@@ -15,7 +15,7 @@ export default {
 
         try {
             const triggerChannel = await interaction.guild.channels.create({
-                name: '➕︱TempVoice',
+                name: '➕︱TempVoice-kanal',
                 type: ChannelType.GuildVoice,
                 parent: category?.id,
                 userLimit: userLimit,
