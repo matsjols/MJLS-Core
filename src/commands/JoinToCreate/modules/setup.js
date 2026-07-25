@@ -36,14 +36,14 @@ export default {
             });
 
             const embed = successEmbed(
-                '✅ Join to Create Setup Complete',
-                `Created trigger channel: ${triggerChannel}\n\n` +
-                `**Settings:**\n` +
-                `• Temporary Channel Name Template: \`${nameTemplate}\`\n` +
-                `• User Limit: ${userLimit === 0 ? 'No limit' : userLimit + ' users'}\n` +
+                '✅ TempVoice-oppsett fullført',
+                `Opprettet utløserkanal: ${triggerChannel}\n\n` +
+                `**Innstillinger:**\n` +
+                `• Mal for kanalnavn: \`${nameTemplate}\`\n` +
+                `• Åpne slots: ${userLimit === 0 ? 'Ingen grense' : userLimit + ' brukere'}\n` +
                 `• Bitrate: ${bitrate} kbps\n` +
-                `${category ?`• Category: ${category.name}`: '• Category: None (root level)'}\n\n` +
-                `When users join this channel, a temporary voice channel will be created for them.`
+                `${category ?`• Kategori: ${category.name}`: '• Kategori: Ingen (rotnivå)'}\n\n` +
+                `Når brukere blir med i denne kanalen, vil en midlertidig talekanal bli opprettet for dem.`
             );
 
             try {
@@ -53,25 +53,25 @@ export default {
                     await InteractionHelper.safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });
                 }
             } catch (responseError) {
-                logger.error('Error responding to interaction:', responseError);
+                logger.error('Feil ved svar på interaksjon:', responseError);
                 
                 try {
                     if (!interaction.replied) {
                         await InteractionHelper.safeReply(interaction, { embeds: [embed], flags: MessageFlags.Ephemeral });
                     }
                 } catch (e) {
-                    logger.error('All response attempts failed:', e);
+                    logger.error('Alle forsøk på å svare mislyktes:', e);
                 }
             }
         } catch (error) {
             if (error instanceof TitanBotError) {
                 throw error;
             }
-            logger.error('Error in JoinToCreate setup:', error);
+            logger.error('Feil i TempVoice-oppsett:', error);
             throw new TitanBotError(
-                `Setup failed: ${error.message}`,
+                `Oppsett mislyktes: ${error.message}`,
                 ErrorTypes.DISCORD_API,
-                'Failed to set up Join to Create system.'
+                'Kunne ikke sette opp TempVoice-systemet.'
             );
         }
     }

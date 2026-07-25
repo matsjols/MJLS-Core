@@ -31,59 +31,59 @@ export default {
 
         if (!currentConfig.triggerChannels.includes(triggerChannel.id)) {
             throw new TitanBotError(
-                `Channel ${triggerChannel.id} is not a Join to Create trigger`,
+                `Kanalen ${triggerChannel.id} er ikke en TempVoice-utløser`,
                 ErrorTypes.VALIDATION,
-                `${triggerChannel} is not configured as a Join to Create trigger channel.`
+                `${triggerChannel} er ikke konfigurert som en TempVoice-kanal.`
             );
         }
 
         const embed = new EmbedBuilder()
-            .setTitle('Join to Create Configuration')
-            .setDescription(`Configure settings for ${triggerChannel}`)
+            .setTitle('TempVoice Konfigurasjon')
+            .setDescription(`Konfigurer innstillinger for ${triggerChannel}`)
             .setColor(getColor('info'))
             .addFields(
                 {
-                    name: 'Current Channel Name Template',
+                    name: 'Nåværende mal for kanalnavn',
                     value: `\`${currentConfig.channelOptions?.[triggerChannel.id]?.nameTemplate || currentConfig.channelNameTemplate}\``,
                     inline: false
                 },
                 {
-                    name: 'Current User Limit',
-                    value: `${currentConfig.channelOptions?.[triggerChannel.id]?.userLimit || currentConfig.userLimit === 0 ? 'No limit' : currentConfig.userLimit + ' users'}`,
+                    name: 'Nåværende grense for brukere',
+                    value: `${currentConfig.channelOptions?.[triggerChannel.id]?.userLimit || currentConfig.userLimit === 0 ? 'Ingen grense' : currentConfig.userLimit + ' brukere'}`,
                     inline: true
                 },
                 {
-                    name: 'Current Bitrate',
+                    name: 'Nåværende Bitrate',
                     value: `${(currentConfig.channelOptions?.[triggerChannel.id]?.bitrate || currentConfig.bitrate) / 1000} kbps`,
                     inline: true
                 }
             )
-            .setFooter({ text: 'Select an option to configure below' })
+            .setFooter({ text: 'Velg et alternativ å konfigurere under' })
             .setTimestamp();
 
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(`jointocreate_config_${triggerChannel.id}`)
-            .setPlaceholder('Select a configuration option')
+            .setPlaceholder('Velg et konfigurasjonsalternativ')
             .addOptions(
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Change Channel Name Template')
-                    .setDescription('Modify the template for temporary channel names')
+                    .setLabel('Endre mal for kanalnavn')
+                    .setDescription('Endre malen for midlertidige kanalnavn')
                     .setValue('name_template'),
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Change User Limit')
-                    .setDescription('Set maximum users per temporary channel')
+                    .setLabel('Endre grense for antall brukere')
+                    .setDescription('Angi maksimalt antall brukere per midlertidige kanal')
                     .setValue('user_limit'),
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Change Bitrate')
-                    .setDescription('Adjust audio quality for temporary channels')
+                    .setLabel('Endre Bitrate')
+                    .setDescription('Juster lydkvaliteten for midlertidige kanaler')
                     .setValue('bitrate'),
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Remove This Trigger Channel')
-                    .setDescription('Remove this channel from the Join to Create system')
+                    .setLabel('Fjern denne utløserkanalen')
+                    .setDescription('Fjern denne kanalen fra TempVoice-systemet')
                     .setValue('remove_trigger'),
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('View Current Settings')
-                    .setDescription('Show all current configuration details')
+                    .setLabel('Vis nåværende innstillinger')
+                    .setDescription('Vis alle nåværende konfigurasjonsdetaljer')
                     .setValue('view_settings')
             );
 
@@ -93,13 +93,13 @@ export default {
             embeds: [embed],
             components: [row],
         }).catch(error => {
-            logger.error('Failed to edit reply in config_setup:', error);
+            logger.error('Kunne ikke oppdatere svar i config_setup:', error);
         });
 
         const collector = interaction.channel.createMessageComponentCollector({
             componentType: ComponentType.StringSelect,
             filter: (i) => i.user.id === interaction.user.id && i.customId === `jointocreate_config_${triggerChannel.id}`,
-time: 60000
+            time: 60000
         });
 
         collector.on('collect', async (selectInteraction) => {
@@ -127,14 +127,14 @@ time: 60000
                 }
             } catch (error) {
                 if (error instanceof TitanBotError) {
-                    logger.debug(`Configuration validation error: ${error.message}`, error.context || {});
+                    logger.debug(`Konfigurasjonsvalideringsfeil: ${error.message}`, error.context || {});
                 } else {
-                    logger.error('Unexpected configuration menu error:', error);
+                    logger.error('Uventet feil i konfigurasjonsmeny:', error);
                 }
                 
                 const errorMessage = error instanceof TitanBotError 
-                    ? error.userMessage || 'An error occurred while processing your selection.'
-                    : 'An error occurred while processing your selection.';
+                    ? error.userMessage || 'Det oppsto en feil under behandling av valget ditt.'
+                    : 'Det oppsto en feil under behandling av valget ditt.';
                     
                 await replyUserError(selectInteraction, {
                     type: ErrorTypes.CONFIGURATION,
@@ -158,11 +158,11 @@ time: 60000
             if (error instanceof TitanBotError) {
                 throw error;
             }
-            logger.error('Unexpected error in config_setup:', error);
+            logger.error('Uventet feil i config_setup:', error);
             throw new TitanBotError(
-                `Config setup failed: ${error.message}`,
+                `Konfigurasjonsoppsett mislyktes: ${error.message}`,
                 ErrorTypes.UNKNOWN,
-                'Failed to configure Join to Create system.'
+                'Kunne ikke konfigurere TempVoice-systemet.'
             );
         }
     }
@@ -170,28 +170,28 @@ time: 60000
 
 async function handleNameTemplateChange(interaction, triggerChannel, currentConfig, client) {
     const embed = new EmbedBuilder()
-        .setTitle('Channel Name Template Configuration')
-        .setDescription('Please enter the new channel name template.')
+        .setTitle('Konfigurasjon av navnemal')
+        .setDescription('Vennligst skriv inn den nye malen for kanalnavn.')
         .addFields(
             {
-                name: 'Available Variables',
-                value: '• `{username}` - User\'s username\n• `{display_name}` - User\'s display name\n• `{user_tag}` - User\'s tag (User#1234)\n• `{guild_name}` - Server name',
+                name: 'Tilgjengelige variabler',
+                value: '• `{username}` - Brukerens brukernavn\n• `{display_name}` - Brukerens visningsnavn\n• `{user_tag}` - Brukerens tag (Bruker#1234)\n• `{guild_name}` - Servernavn',
                 inline: false
             },
             {
-                name: 'Current Template',
+                name: 'Nåværende mal',
                 value: `\`${currentConfig.channelOptions?.[triggerChannel.id]?.nameTemplate || currentConfig.channelNameTemplate}\``,
                 inline: false
             }
         )
         .setColor(getColor('info'))
-        .setFooter({ text: 'Type your new template in the chat below' });
+        .setFooter({ text: 'Skriv inn den nye malen din i chatten under' });
 
     await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
     const collector = interaction.channel.createMessageCollector({
         filter: (m) => m.author.id === interaction.user.id,
-time: 600_000,
+        time: 600_000,
         max: 1
     });
 
@@ -202,7 +202,7 @@ time: 600_000,
             if (!newTemplate || newTemplate.length > 100) {
                 await replyUserError(interaction, {
                     type: ErrorTypes.VALIDATION,
-                    message: 'Template must be between 1 and 100 characters.'
+                    message: 'Malen må være mellom 1 og 100 tegn.'
                 });
                 return;
             }
@@ -218,21 +218,21 @@ time: 600_000,
             });
 
             await interaction.followUp({
-                embeds: [successEmbed('Template Updated', `Channel name template changed to \`${newTemplate}\``)],
+                embeds: [successEmbed('Mal oppdatert', `Mal for kanalnavn endret til \`${newTemplate}\``)],
                 flags: MessageFlags.Ephemeral,
             });
 
             await message.delete().catch(() => {});
         } catch (error) {
             if (error instanceof TitanBotError) {
-                logger.debug(`Template validation error: ${error.message}`);
+                logger.debug(`Malvalideringsfeil: ${error.message}`);
             } else {
-                logger.error('Template update error:', error);
+                logger.error('Feil ved oppdatering av mal:', error);
             }
             
             const errorMessage = error instanceof TitanBotError
-                ? error.userMessage || 'Could not update the channel name template.'
-                : 'Could not update the channel name template.';
+                ? error.userMessage || 'Kunne ikke oppdatere malen for kanalnavn.'
+                : 'Kunne ikke oppdatere malen for kanalnavn.';
                 
             await replyUserError(interaction, {
                 type: ErrorTypes.CONFIGURATION,
@@ -245,7 +245,7 @@ time: 600_000,
         if (reason === 'time') {
             replyUserError(interaction, {
                 type: ErrorTypes.RATE_LIMIT,
-                message: 'No response received. Template update cancelled.'
+                message: 'Ingen respons mottatt. Oppdatering av mal avbrutt.'
             }).catch(() => {});
         }
     });
@@ -253,17 +253,17 @@ time: 600_000,
 
 async function handleUserLimitChange(interaction, triggerChannel, currentConfig, client) {
     const embed = new EmbedBuilder()
-        .setTitle('User Limit Configuration')
-        .setDescription('Please enter the new user limit (0-99, where 0 = no limit).')
+        .setTitle('Konfigurasjon av åpne slots')
+        .setDescription('Vennligst skriv inn ny grense for antall brukere (0-99, hvor 0 = ubegrenset).')
         .addFields(
             {
-                name: 'Current Limit',
-                value: `${currentConfig.channelOptions?.[triggerChannel.id]?.userLimit || currentConfig.userLimit === 0 ? 'No limit' : currentConfig.userLimit + ' users'}`,
+                name: 'Nåværende grense',
+                value: `${currentConfig.channelOptions?.[triggerChannel.id]?.userLimit || currentConfig.userLimit === 0 ? 'Ingen grense' : currentConfig.userLimit + ' brukere'}`,
                 inline: false
             }
         )
         .setColor(getColor('info'))
-        .setFooter({ text: 'Type the new limit in the chat below' });
+        .setFooter({ text: 'Skriv inn den nye grensen i chatten under' });
 
     await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
@@ -280,7 +280,7 @@ async function handleUserLimitChange(interaction, triggerChannel, currentConfig,
             if (newLimit < 0 || newLimit > 99) {
                 await replyUserError(interaction, {
                     type: ErrorTypes.VALIDATION,
-                    message: 'User limit must be between 0 and 99.'
+                    message: 'Brukergrensen må være mellom 0 og 99.'
                 });
                 return;
             }
@@ -296,21 +296,21 @@ async function handleUserLimitChange(interaction, triggerChannel, currentConfig,
             });
 
             await interaction.followUp({
-                embeds: [successEmbed('Limit Updated', `User limit changed to ${newLimit === 0 ? 'No limit' : newLimit + ' users'}`)],
+                embeds: [successEmbed('Grense oppdatert', `Brukergrense endret til ${newLimit === 0 ? 'Ubegrenset' : newLimit + ' brukere'}`)],
                 flags: MessageFlags.Ephemeral,
             });
 
             await message.delete().catch(() => {});
         } catch (error) {
             if (error instanceof TitanBotError) {
-                logger.debug(`User limit validation error: ${error.message}`);
+                logger.debug(`Feil ved validering av brukergrense: ${error.message}`);
             } else {
-                logger.error('User limit update error:', error);
+                logger.error('Feil ved oppdatering av brukergrense:', error);
             }
             
             const errorMessage = error instanceof TitanBotError
-                ? error.userMessage || 'Could not update the user limit.'
-                : 'Could not update the user limit.';
+                ? error.userMessage || 'Kunne ikke oppdatere brukergrensen.'
+                : 'Kunne ikke oppdatere brukergrensen.';
                 
             await replyUserError(interaction, {
                 type: ErrorTypes.CONFIGURATION,
@@ -323,7 +323,7 @@ async function handleUserLimitChange(interaction, triggerChannel, currentConfig,
         if (reason === 'time') {
             replyUserError(interaction, {
                 type: ErrorTypes.RATE_LIMIT,
-                message: 'No valid response received. Update cancelled.'
+                message: 'Ingen gyldig respons mottatt. Oppdatering avbrutt.'
             }).catch(() => {});
         }
     });
@@ -331,22 +331,22 @@ async function handleUserLimitChange(interaction, triggerChannel, currentConfig,
 
 async function handleBitrateChange(interaction, triggerChannel, currentConfig, client) {
     const embed = new EmbedBuilder()
-        .setTitle('Bitrate Configuration')
-        .setDescription('Please enter the new bitrate in kbps (8-384).')
+        .setTitle('Bitrate-konfigurasjon')
+        .setDescription('Vennligst skriv inn den nye bitraten i kbps (8-384).')
         .addFields(
             {
-                name: 'Current Bitrate',
+                name: 'Nåværende Bitrate',
                 value: `${(currentConfig.channelOptions?.[triggerChannel.id]?.bitrate || currentConfig.bitrate) / 1000} kbps`,
                 inline: false
             },
             {
-                name: 'Common Values',
-                value: '• 64 kbps - Normal quality\n• 96 kbps - Good quality\n• 128 kbps - High quality\n• 256 kbps - Very high quality',
+                name: 'Vanlige verdier',
+                value: '• 64 kbps - Normal kvalitet\n• 96 kbps - God kvalitet\n• 128 kbps - Høy kvalitet\n• 256 kbps - Veldig høy kvalitet',
                 inline: false
             }
         )
         .setColor(getColor('info'))
-        .setFooter({ text: 'Type the new bitrate in the chat below' });
+        .setFooter({ text: 'Skriv inn den nye bitraten i chatten under' });
 
     await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
@@ -363,7 +363,7 @@ async function handleBitrateChange(interaction, triggerChannel, currentConfig, c
             if (newBitrate < 8 || newBitrate > 384) {
                 await replyUserError(interaction, {
                     type: ErrorTypes.VALIDATION,
-                    message: 'Bitrate must be between 8 and 384 kbps.'
+                    message: 'Bitrate må være mellom 8 og 384 kbps.'
                 });
                 return;
             }
@@ -379,21 +379,21 @@ async function handleBitrateChange(interaction, triggerChannel, currentConfig, c
             });
 
             await interaction.followUp({
-                embeds: [successEmbed('Bitrate Updated', `Bitrate changed to ${newBitrate} kbps`)],
+                embeds: [successEmbed('Bitrate oppdatert', `Bitrate endret til ${newBitrate} kbps`)],
                 flags: MessageFlags.Ephemeral,
             });
 
             await message.delete().catch(() => {});
         } catch (error) {
             if (error instanceof TitanBotError) {
-                logger.debug(`Bitrate validation error: ${error.message}`);
+                logger.debug(`Feil ved validering av bitrate: ${error.message}`);
             } else {
-                logger.error('Bitrate update error:', error);
+                logger.error('Feil ved oppdatering av bitrate:', error);
             }
             
             const errorMessage = error instanceof TitanBotError
-                ? error.userMessage || 'Could not update the bitrate.'
-                : 'Could not update the bitrate.';
+                ? error.userMessage || 'Kunne ikke oppdatere bitraten.'
+                : 'Kunne ikke oppdatere bitraten.';
                 
             await replyUserError(interaction, {
                 type: ErrorTypes.CONFIGURATION,
@@ -406,7 +406,7 @@ async function handleBitrateChange(interaction, triggerChannel, currentConfig, c
         if (reason === 'time') {
             replyUserError(interaction, {
                 type: ErrorTypes.RATE_LIMIT,
-                message: 'No valid response received. Update cancelled.'
+                message: 'Ingen gyldig respons mottatt. Oppdatering avbrutt.'
             }).catch(() => {});
         }
     });
@@ -414,19 +414,19 @@ async function handleBitrateChange(interaction, triggerChannel, currentConfig, c
 
 async function handleRemoveTrigger(interaction, triggerChannel, currentConfig, client) {
     const embed = new EmbedBuilder()
-        .setTitle('Remove Trigger Channel')
-        .setDescription(`Are you sure you want to remove ${triggerChannel} from the Join to Create system?`)
+        .setTitle('Fjern utløserkanal')
+        .setDescription(`Er du sikker på at du vil fjerne ${triggerChannel} fra TempVoice-systemet?`)
         .setColor('#ff6600')
-        .setFooter({ text: 'This action cannot be undone' });
+        .setFooter({ text: 'Dette kan ikke angres' });
 
     const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(`confirm_remove_${triggerChannel.id}`)
-            .setLabel('Remove Channel')
+            .setLabel('Fjern kanal')
             .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
             .setCustomId(`cancel_remove_${triggerChannel.id}`)
-            .setLabel('Cancel')
+            .setLabel('Avbryt')
             .setStyle(ButtonStyle.Secondary)
     );
 
@@ -453,25 +453,25 @@ async function handleRemoveTrigger(interaction, triggerChannel, currentConfig, c
                 
                 if (success) {
                     await buttonInteraction.followUp({
-                        embeds: [successEmbed('Channel Removed', `${triggerChannel} has been removed from the Join to Create system.`)],
+                        embeds: [successEmbed('Kanal fjernet', `${triggerChannel} har blitt fjernet fra TempVoice-systemet.`)],
                         flags: MessageFlags.Ephemeral,
                     });
                 } else {
                     await replyUserError(buttonInteraction, {
                         type: ErrorTypes.CONFIGURATION,
-                        message: 'Could not remove the trigger channel.'
+                        message: 'Kunne ikke fjerne utløserkanalen.'
                     });
                 }
             } catch (error) {
                 if (error instanceof TitanBotError) {
-                    logger.debug(`Trigger removal validation error: ${error.message}`);
+                    logger.debug(`Feil ved validering av fjerning av utløser: ${error.message}`);
                 } else {
-                    logger.error('Remove trigger error:', error);
+                    logger.error('Feil ved fjerning av utløser:', error);
                 }
                 
                 const errorMessage = error instanceof TitanBotError
-                    ? error.userMessage || 'An error occurred while removing the trigger channel.'
-                    : 'An error occurred while removing the trigger channel.';
+                    ? error.userMessage || 'Det oppsto en feil under fjerning av utløserkanalen.'
+                    : 'Det oppsto en feil under fjerning av utløserkanalen.';
                     
                 await replyUserError(buttonInteraction, {
                     type: ErrorTypes.CONFIGURATION,
@@ -480,7 +480,7 @@ async function handleRemoveTrigger(interaction, triggerChannel, currentConfig, c
             }
         } else {
             await buttonInteraction.followUp({
-                embeds: [successEmbed('Cancelled', 'Channel removal has been cancelled.')],
+                embeds: [successEmbed('Avbrutt', 'Fjerning av kanal har blitt avbrutt.')],
                 flags: MessageFlags.Ephemeral,
             });
         }
@@ -490,7 +490,7 @@ async function handleRemoveTrigger(interaction, triggerChannel, currentConfig, c
         if (reason === 'time') {
             replyUserError(interaction, {
                 type: ErrorTypes.RATE_LIMIT,
-                message: 'No response received. Removal cancelled.'
+                message: 'Ingen respons mottatt. Fjerning avbrutt.'
             }).catch(() => {});
         }
     });
@@ -500,23 +500,23 @@ async function handleViewSettings(interaction, triggerChannel, currentConfig, cl
     const channelConfig = currentConfig.channelOptions?.[triggerChannel.id] || {};
     
     const embed = new EmbedBuilder()
-        .setTitle('Current Settings')
-        .setDescription(`Configuration for ${triggerChannel}`)
+        .setTitle('Nåværende innstillinger')
+        .setDescription(`Konfigurasjon for ${triggerChannel}`)
         .setColor(getColor('info'))
         .addFields(
             {
-                name: 'Trigger Channel',
+                name: 'Utløserkanal',
                 value: `${triggerChannel} (${triggerChannel.id})`,
                 inline: false
             },
             {
-                name: 'Channel Name Template',
+                name: 'Mal for kanalnavn',
                 value: `\`${channelConfig.nameTemplate || currentConfig.channelNameTemplate}\``,
                 inline: false
             },
             {
-                name: 'User Limit',
-                value: `${channelConfig.userLimit || currentConfig.userLimit === 0 ? 'No limit' : (channelConfig.userLimit || currentConfig.userLimit) + ' users'}`,
+                name: 'Åpne slots',
+                value: `${channelConfig.userLimit || currentConfig.userLimit === 0 ? 'Ingen grense' : (channelConfig.userLimit || currentConfig.userLimit) + ' brukere'}`,
                 inline: true
             },
             {
@@ -525,17 +525,17 @@ async function handleViewSettings(interaction, triggerChannel, currentConfig, cl
                 inline: true
             },
             {
-                name: 'Category',
-                value: currentConfig.categoryId ? `<#${currentConfig.categoryId}>` : 'Not set',
+                name: 'Kategori',
+                value: currentConfig.categoryId ? `<#${currentConfig.categoryId}>` : 'Ikke satt',
                 inline: true
             },
             {
-                name: 'System Status',
-                value: currentConfig.enabled ? '✅ Enabled' : '❌ Disabled',
+                name: 'Systemstatus',
+                value: currentConfig.enabled ? '✅ Aktivert' : '❌ Deaktivert',
                 inline: true
             },
             {
-                name: 'Active Temporary Channels',
+                name: 'Aktive midlertidige kanaler',
                 value: Object.keys(currentConfig.temporaryChannels || {}).length.toString(),
                 inline: true
             }

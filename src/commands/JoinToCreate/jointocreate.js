@@ -33,18 +33,18 @@ export default {
                 .addStringOption((option) =>
                     option
                         .setName("kanalnavn")
-                        .setDescription("Select a template for naming temporary voice channels.")
+                        .setDescription("Velg en mal for navnsetting av midlertidige talekanaler.")
                         .addChoices(
-                            { name: "{username}'s Room (Default)", value: "{username}'s Room" },
-                            { name: "{username}'s Channel", value: "{username}'s Channel" },
-                            { name: "{username}'s Lounge", value: "{username}'s Lounge" },
-                            { name: "{username}'s Space", value: "{username}'s Space" },
-                            { name: "{displayName}'s Room", value: "{displayName}'s Room" },
-                            { name: "{username}'s VC", value: "{username}'s VC" },
-                            { name: "{username}'s Music Room", value: "{username}'s Music Room" },
-                            { name: "{username}'s Gaming Room", value: "{username}'s Gaming Room" },
-                            { name: "{username}'s Chat Room", value: "{username}'s Chat Room" },
-                            { name: "{username}'s Private Room", value: "{username}'s Private Room" }
+                            { name: "{username}s Rom (Standard)", value: "{username}'s Room" },
+                            { name: "{username}s Kanal", value: "{username}'s Channel" },
+                            { name: "{username}s Lounge", value: "{username}'s Lounge" },
+                            { name: "{username}s Space", value: "{username}'s Space" },
+                            { name: "{displayName}s Rom", value: "{displayName}'s Room" },
+                            { name: "{username}s VC", value: "{username}'s VC" },
+                            { name: "{username}s Musikkrom", value: "{username}'s Music Room" },
+                            { name: "{username}s Spillrom", value: "{username}'s Gaming Room" },
+                            { name: "{username}s Chatterom", value: "{username}'s Chat Room" },
+                            { name: "{username}s Private Rom", value: "{username}'s Private Room" }
                         )
                 )
                 .addIntegerOption((option) =>
@@ -79,7 +79,7 @@ export default {
                 throw new TitanBotError(
                     'Brukeren mangler tillatelsen ManageGuild',
                     ErrorTypes.PERMISSION,
-                    'Du trenger tillatelsen **Manage Server** for å bruke denne kommandoen.'
+                    'Du trenger tillatelsen **Administrer server** for å bruke denne kommandoen.'
                 );
             }
 
@@ -124,7 +124,7 @@ async function handleSetupSubcommand(interaction, client) {
         const bitrate = interaction.options.getInteger('bitrate') || 64;
         const guildId = interaction.guild.id;
 
-        logger.debug(`Setting up Join to Create in guild ${guildId} with template: ${nameTemplate}`);
+        logger.debug(`Setter opp Join to Create i server ${guildId} med mal: ${nameTemplate}`);
 
         const existingConfig = await getConfiguration(client, guildId);
         
@@ -143,14 +143,14 @@ async function handleSetupSubcommand(interaction, client) {
 
             if (staleTriggerChannelIds.length > 0) {
                 for (const staleChannelId of staleTriggerChannelIds) {
-                    logger.info(`Cleaning up stale JTC trigger ${staleChannelId} from guild ${guildId}`);
+                    logger.info(`Fjerner utdatert JTC-utløser ${staleChannelId} fra server ${guildId}`);
                     await removeTriggerChannel(client, guildId, staleChannelId);
                 }
             }
 
             if (activeTriggerChannels.length > 0) {
                 const primaryTrigger = activeTriggerChannels[0];
-                const errorMessage = `This server already has a Join to Create channel set up: ${primaryTrigger}\n\nUse \`/jointocreate dashboard\` to modify it, or remove it first before creating a new one.`;
+                const errorMessage = `Denne serveren har allerede en TempVoice-kanal satt opp: ${primaryTrigger}\n\nBruk \`/tempvoice dashboard\` for å endre den, eller fjern den først før du oppretter en ny.`;
 
                 throw new TitanBotError(
                     'Serveren har allerede en TempVoice-kanal.',
@@ -190,7 +190,7 @@ async function handleSetupSubcommand(interaction, client) {
             categoryId: category?.id
         });
 
-        await logConfigurationChange(client, guildId, interaction.user.id, 'Initialized Join to Create', {
+        await logConfigurationChange(client, guildId, interaction.user.id, 'Initialiserte TempVoice', {
             channelId: triggerChannel.id,
             nameTemplate,
             userLimit,
@@ -200,26 +200,26 @@ async function handleSetupSubcommand(interaction, client) {
         logger.info(`«TempVoice»-systemet ble opprettet i guilden ${guildId}`);
 
         const responseEmbed = successEmbed(
-            '✅ Setup Complete',
-            `Created Join to Create channel: ${triggerChannel}\n\n` +
-            `**Settings:**\n` +
-            `• Template: \`${nameTemplate}\`\n` +
-            `• User Limit: ${userLimit === 0 ? 'Unlimited' : userLimit + ' users'}\n` +
+            '✅ Oppsett fullført',
+            `Opprettet TempVoice-kanal: ${triggerChannel}\n\n` +
+            `**Innstillinger:**\n` +
+            `• Mal: \`${nameTemplate}\`\n` +
+            `• Åpne slots: ${userLimit === 0 ? 'Ubegrenset' : userLimit + ' brukere'}\n` +
             `• Bitrate: ${bitrate} kbps\n` +
-            `${category ?`• Category: ${category.name}`: '• Category: Root level'}`
+            `${category ?`• Kategori: ${category.name}`: '• Kategori: Ingen (rotnivå)'}`
         );
 
         return await InteractionHelper.safeEditReply(interaction, { embeds: [responseEmbed] });
 
     } catch (error) {
-        logger.error('Error in handleSetupSubcommand:', error);
+        logger.error('Error i handleSetupSubcommand:', error);
         if (error instanceof TitanBotError) {
             throw error;
         }
         throw new TitanBotError(
-            `Setup failed: ${error.message}`,
+            `Oppsett mislyktes: ${error.message}`,
             ErrorTypes.DISCORD_API,
-            'Failed to set up Join to Create system. Please check bot permissions.'
+            'Kunne ikke sette opp TempVoice-systemet. Vennligst sjekk botens tillatelser.'
         );
     }
 }
@@ -244,7 +244,7 @@ async function handleConfigSubcommand(interaction, client) {
                 },
                 {
                     name: 'Åpne slots',
-                    value: `${(channelConfig.userLimit ?? currentConfig.userLimit ?? 0) === 0 ? 'Unlimited' : (channelConfig.userLimit ?? currentConfig.userLimit ?? 0) + ' users'}`,
+                    value: `${(channelConfig.userLimit ?? currentConfig.userLimit ?? 0) === 0 ? 'Ubegrenset' : (channelConfig.userLimit ?? currentConfig.userLimit ?? 0) + ' brukere'}`,
                     inline: true
                 },
                 {
@@ -253,7 +253,7 @@ async function handleConfigSubcommand(interaction, client) {
                     inline: true
                 }
             )
-            .setFooter({ text: 'Use the buttons below to modify settings • Only one trigger channel is supported per guild' })
+            .setFooter({ text: 'Bruk knappene under for å endre innstillinger • Kun én utløserkanal støttes per server' })
             .setTimestamp();
 
         const nameButton = new ButtonBuilder()
@@ -303,7 +303,7 @@ async function handleConfigSubcommand(interaction, client) {
                 
                 if (!hasManageGuildPermission(buttonInteraction.member)) {
                     await buttonInteraction.reply({
-                        content: '❌ Du trenger tillatelsen **Manage Server** for å bruke disse kontrollene.',
+                        content: '❌ Du trenger tillatelsen **Administrer server** for å bruke disse kontrollene.',
                         flags: MessageFlags.Ephemeral
                     });
                     return;
@@ -326,9 +326,9 @@ async function handleConfigSubcommand(interaction, client) {
                     : 'Det oppsto en feil under behandling av forespørselen din.';
 
                 if (error instanceof TitanBotError) {
-                    logger.debug(`Button interaction validation error: ${error.message}`, error.context || {});
+                    logger.debug(`Valideringsfeil for knappeinteraksjon: ${error.message}`, error.context || {});
                 } else {
-                    logger.error('Unexpected error in config button interaction:', error);
+                    logger.error('Uventet feil i knappeinteraksjon for konfigurasjon:', error);
                 }
 
                 await buttonInteraction.reply({
@@ -357,9 +357,9 @@ async function handleConfigSubcommand(interaction, client) {
             throw error;
         }
         throw new TitanBotError(
-            `Config failed: ${error.message}`,
+            `Konfigurasjon mislyktes: ${error.message}`,
             ErrorTypes.DATABASE,
-            'Failed to load configuration.'
+            'Kunne ikke laste konfigurasjonen.'
         );
     }
 }
@@ -367,16 +367,16 @@ async function handleConfigSubcommand(interaction, client) {
 async function handleNameTemplateModal(interaction, triggerChannel, currentConfig, client) {
     try {
         const TEMPLATE_OPTIONS = [
-            { label: "{username}'s Room (Default)", value: "{username}'s Room" },
-            { label: "{username}'s Channel",        value: "{username}'s Channel" },
-            { label: "{username}'s Lounge",         value: "{username}'s Lounge" },
-            { label: "{username}'s Space",          value: "{username}'s Space" },
-            { label: "{displayName}'s Room",        value: "{displayName}'s Room" },
-            { label: "{username}'s VC",             value: "{username}'s VC" },
-            { label: "{username}'s Music Room",  value: "{username}'s Music Room" },
-            { label: "{username}'s Gaming Room", value: "{username}'s Gaming Room" },
-            { label: "{username}'s Chat Room",   value: "{username}'s Chat Room" },
-            { label: "{username}'s Private Room",   value: "{username}'s Private Room" },
+            { label: "{username}s Rom (Standard)", value: "{username}'s Room" },
+            { label: "{username}s Kanal",        value: "{username}'s Channel" },
+            { label: "{username}s Lounge",         value: "{username}'s Lounge" },
+            { label: "{username}s Space",          value: "{username}'s Space" },
+            { label: "{displayName}s Rom",        value: "{displayName}'s Room" },
+            { label: "{username}s VC",             value: "{username}'s VC" },
+            { label: "{username}s Musikkrom",  value: "{username}'s Music Room" },
+            { label: "{username}s Spillrom", value: "{username}'s Gaming Room" },
+            { label: "{username}s Chatterom",   value: "{username}'s Chat Room" },
+            { label: "{username}s Private Rom",   value: "{username}'s Private Room" },
         ];
 
         const currentTemplate = currentConfig.channelConfig?.nameTemplate
@@ -385,7 +385,7 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
 
         const templateSelect = new StringSelectMenuBuilder()
             .setCustomId('template')
-            .setPlaceholder('Pick a name template...')
+            .setPlaceholder('Velg en navnemal...')
             .setOptions(
                 TEMPLATE_OPTIONS.map(o => ({
                     label: o.label,
@@ -412,7 +412,7 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
 
         if (!hasManageGuildPermission(modalSubmission.member)) {
             await modalSubmission.reply({
-                content: '❌ Du trenger tillatelsen **Manage Server** for å endre disse innstillingene.',
+                content: '❌ Du trenger tillatelsen **Administrer server** for å endre disse innstillingene.',
                 flags: MessageFlags.Ephemeral
             });
             return;
@@ -443,7 +443,7 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
         }
         logger.error('Uventet feil i modalvinduet for navnemal:', error);
         throw new TitanBotError(
-            `Modal error: ${error.message}`,
+            `Modalfeil: ${error.message}`,
             ErrorTypes.UNKNOWN,
             'Det oppstod en feil under oppdatering av malen.'
         );
@@ -461,7 +461,7 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
                 new ActionRowBuilder().addComponents(
                     new TextInputBuilder()
                         .setCustomId('user_limit')
-                        .setLabel('Angi åpne slots (0-99, 0 = unlimited)')
+                        .setLabel('Angi åpne slots (0-99, 0 = ubegrenset)')
                         .setPlaceholder('Skriv inn et tall mellom 0 og 99')
                         .setStyle(TextInputStyle.Short)
                         .setRequired(true)
@@ -480,7 +480,7 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
 
         if (!hasManageGuildPermission(modalSubmission.member)) {
             await modalSubmission.reply({
-                content: '❌ Du trenger tillatelsen **Manage Server** for å endre disse innstillingene..',
+                content: '❌ Du trenger tillatelsen **Administrer server** for å endre disse innstillingene..',
                 flags: MessageFlags.Ephemeral
             });
             return;
@@ -498,7 +498,7 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
         });
 
         await modalSubmission.reply({
-            embeds: [successEmbed('Oppdatert', `Åpne slots endret til ${parseInt(userInput) === 0 ? 'Unlimited' : parseInt(userInput) + ' users'}`)],
+            embeds: [successEmbed('Oppdatert', `Åpne slots endret til ${parseInt(userInput) === 0 ? 'Ubegrenset' : parseInt(userInput) + ' brukere'}`)],
             flags: MessageFlags.Ephemeral
         });
 
@@ -511,7 +511,7 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
         }
         logger.error('Uventet feil i modalvinduet for åpne slots:', error);
         throw new TitanBotError(
-            `Modal error: ${error.message}`,
+            `Modalfeil: ${error.message}`,
             ErrorTypes.UNKNOWN,
             'Det oppsto en feil under oppdatering av åpne slots.'
         );
@@ -548,7 +548,7 @@ async function handleBitrateModal(interaction, triggerChannel, currentConfig, cl
 
         if (!hasManageGuildPermission(modalSubmission.member)) {
             await modalSubmission.reply({
-                content: '❌ Du trenger tillatelsen **Manage Server** for å endre disse innstillingene.',
+                content: '❌ Du trenger tillatelsen **Administrer server** for å endre disse innstillingene.',
                 flags: MessageFlags.Ephemeral
             });
             return;
@@ -560,7 +560,7 @@ async function handleBitrateModal(interaction, triggerChannel, currentConfig, cl
             bitrate: parseInt(userInput) * 1000
         });
 
-        await logConfigurationChange(client, interaction.guild.id, interaction.user.id, 'Updated bitrate', {
+        await logConfigurationChange(client, interaction.guild.id, interaction.user.id, 'Oppdatert bitrate', {
             channelId: triggerChannel.id,
             bitrate: parseInt(userInput)
         });
@@ -579,7 +579,7 @@ async function handleBitrateModal(interaction, triggerChannel, currentConfig, cl
         }
         logger.error('Uventet feil i bitrate-dialogboksen:', error);
         throw new TitanBotError(
-            `Modal error: ${error.message}`,
+            `Modalfeil: ${error.message}`,
             ErrorTypes.UNKNOWN,
             'Det oppstod en feil under oppdatering av bitrate.'
         );
@@ -591,16 +591,16 @@ async function handleChannelDeletion(interaction, triggerChannel, currentConfig,
         const confirmRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId(`jtc_delete_confirm_${triggerChannel.id}`)
-                .setLabel('🗑️ Yes, Delete')
+                .setLabel('🗑️ Ja, slett')
                 .setStyle(ButtonStyle.Danger),
             new ButtonBuilder()
                 .setCustomId(`jtc_delete_cancel_${triggerChannel.id}`)
-                .setLabel('❌ Cancel')
+                .setLabel('❌ Avbryt')
                 .setStyle(ButtonStyle.Secondary)
         );
 
         await InteractionHelper.safeReply(interaction, {
-            embeds: [warningEmbed('Confirm Deletion', `Are you sure you want to remove **${triggerChannel.name}** from the Join to Create system?\n\nThis action cannot be undone.`)],
+            embeds: [warningEmbed('Bekreft sletting', `Er du sikker på at du vil fjerne **${triggerChannel.name}** fra TempVoice-systemet?\n\nDette kan ikke angres.`)],
             components: [confirmRow],
             flags: MessageFlags.Ephemeral
         });
@@ -620,7 +620,7 @@ async function handleChannelDeletion(interaction, triggerChannel, currentConfig,
                 
                 if (!hasManageGuildPermission(buttonInteraction.member)) {
                     await buttonInteraction.reply({
-                        content: '❌ You need **Manage Server** permission to remove channels.',
+                        content: '❌ Du trenger tillatelsen **Administrer server** for å fjerne kanaler.',
                         flags: MessageFlags.Ephemeral
                     });
                     return;
@@ -630,35 +630,35 @@ async function handleChannelDeletion(interaction, triggerChannel, currentConfig,
                     
                     await removeTriggerChannel(client, interaction.guild.id, triggerChannel.id);
 
-                    await logConfigurationChange(client, interaction.guild.id, interaction.user.id, 'Removed Join to Create trigger', {
+                    await logConfigurationChange(client, interaction.guild.id, interaction.user.id, 'Fjernet TempVoice-utløser', {
                         channelId: triggerChannel.id,
                         channelName: triggerChannel.name
                     });
 
                     try {
                         if (triggerChannel.members.size === 0) {
-                            await triggerChannel.delete('Join to Create trigger removed by administrator');
+                            await triggerChannel.delete('TempVoice-utløser fjernet av administrator');
                         }
                     } catch (deleteError) {
-                        logger.warn(`Could not delete channel ${triggerChannel.id}: ${deleteError.message}`);
+                        logger.warn(`Kunne ikke slette kanalen ${triggerChannel.id}: ${deleteError.message}`);
                         
                     }
 
                     await buttonInteraction.update({
-                        embeds: [successEmbed('Removed', `**${triggerChannel.name}** has been removed from the Join to Create system.`)],
+                        embeds: [successEmbed('Fjernet', `**${triggerChannel.name}** har blitt fjernet fra TempVoice-systemet.`)],
                         components: []
                     });
 
                 } else {
                     await buttonInteraction.update({
-                        embeds: [successEmbed('Cancelled', 'Channel removal has been cancelled.')],
+                        embeds: [successEmbed('Avbrutt', 'Fjerning av kanal har blitt avbrutt.')],
                         components: []
                     });
                 }
             } catch (collectError) {
-                logger.error('Error handling delete confirmation:', collectError);
+                logger.error('Feil ved håndtering av bekreftelse på sletting:', collectError);
                 await buttonInteraction.reply({
-                    content: '❌ An error occurred while processing your request.',
+                    content: '❌ Det oppsto en feil under behandling av forespørselen din.',
                     flags: MessageFlags.Ephemeral
                 }).catch(() => {});
             }
@@ -674,11 +674,11 @@ async function handleChannelDeletion(interaction, triggerChannel, currentConfig,
         if (error instanceof TitanBotError) {
             throw error;
         }
-        logger.error('Unexpected error in handleChannelDeletion:', error);
+        logger.error('Uventet feil i handleChannelDeletion:', error);
         throw new TitanBotError(
-            `Deletion error: ${error.message}`,
+            `Slettefeil: ${error.message}`,
             ErrorTypes.UNKNOWN,
-            'An error occurred while removing the channel.'
+            'Det oppsto en feil under fjerning av kanalen.'
         );
     }
 }
