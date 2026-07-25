@@ -7,7 +7,7 @@ import { addJoinToCreateTrigger, getJoinToCreateConfig } from '../../../utils/da
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 export default {
     async execute(interaction, config, client) {
-        const category = interaction.options.getChannel('category');
+        const category = interaction.options.getChannel('kategori');
         const nameTemplate = interaction.options.getString('channel_name') || "{username}'s Room";
         const userLimit = interaction.options.getInteger('user_limit') || 0;
         const bitrate = interaction.options.getInteger('bitrate') || 64;
@@ -15,7 +15,7 @@ export default {
 
         try {
             const triggerChannel = await interaction.guild.channels.create({
-                name: 'Join to Create',
+                name: '➕︱TempVoice',
                 type: ChannelType.GuildVoice,
                 parent: category?.id,
                 userLimit: userLimit,
