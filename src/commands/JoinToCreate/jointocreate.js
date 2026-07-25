@@ -16,23 +16,23 @@ import {
 
 export default {
     data: new SlashCommandBuilder()
-        .setName("jointocreate")
-        .setDescription("Manage Join to Create voice channels system.")
+        .setName("tempvoice")
+        .setDescription("Administrer systemet for stemmekanaler der man kan bli med for å opprette dem.")
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .setDMPermission(false)
         .addSubcommand((subcommand) =>
             subcommand
-                .setName("setup")
-                .setDescription("Set up a new Join to Create voice channel.")
+                .setName("sett-opp")
+                .setDescription("Opprett en ny TempVoice-talekanal.")
                 .addChannelOption((option) =>
                     option
-                        .setName("category")
-                        .setDescription("Category to create the channel in.")
+                        .setName("kategori")
+                        .setDescription("Kategori talekanalen skal opprettes i.")
                         .addChannelTypes(ChannelType.GuildCategory)
                 )
                 .addStringOption((option) =>
                     option
-                        .setName("channel_name")
+                        .setName("kanalnavn")
                         .setDescription("Select a template for naming temporary voice channels.")
                         .addChoices(
                             { name: "{username}'s Room (Default)", value: "{username}'s Room" },
@@ -49,23 +49,23 @@ export default {
                 )
                 .addIntegerOption((option) =>
                     option
-                        .setName("user_limit")
-                        .setDescription("Maximum number of users in temporary channels. (0 = unlimited)")
+                        .setName("åpne-slots")
+                        .setDescription("Maksimalt antall brukere i midlertidige kanaler. (0 = ubegrenset)")
                 )
                 .addIntegerOption((option) =>
                     option
                         .setName("bitrate")
-                        .setDescription("Bitrate for temporary channels in kbps (8-96).")
+                        .setDescription("Bithastighet for midlertidige kanaler i kbps (8–96).")
                 )
         )
         .addSubcommand((subcommand) =>
             subcommand
                 .setName("dashboard")
-                .setDescription("Configure an existing Join to Create system.")
+                .setDescription("Konfigurer et eksisterende «Join to Create»-system.")
                 .addChannelOption((option) =>
                     option
                         .setName("trigger_channel")
-                        .setDescription("The Join to Create trigger channel to configure.")
+                        .setDescription("TempVoice-kanalen som skal konfigureres.")
                         .setRequired(true)
                         .addChannelTypes(ChannelType.GuildVoice)
                 )
@@ -77,9 +77,9 @@ export default {
             
             if (!hasManageGuildPermission(interaction.member)) {
                 throw new TitanBotError(
-                    'User lacks ManageGuild permission',
+                    'Brukeren mangler tillatelsen ManageGuild',
                     ErrorTypes.PERMISSION,
-                    'You need **Manage Server** permission to use this command.'
+                    'Du trenger tillatelsen **Manage Server** for å bruke denne kommandoen.'
                 );
             }
 
@@ -88,7 +88,7 @@ export default {
 
             let responseEmbed;
 
-            if (subcommand === "setup") {
+            if (subcommand === "sett-opp") {
                 await handleSetupSubcommand(interaction, client);
                 return;
             } else if (subcommand === "dashboard") {
@@ -98,19 +98,19 @@ export default {
 
         } catch (error) {
             try {
-                let errorMessage = 'An error occurred while executing this command.';
+                let errorMessage = 'Det oppsto en feil under utførelsen av denne kommandoen.';
                 
                 if (error instanceof TitanBotError) {
-                    errorMessage = error.userMessage || 'An error occurred. Please try again.';
+                    errorMessage = error.userMessage || 'Det oppstod en feil. Vennligst prøv igjen.';
                     logger.debug(`TitanBotError [${error.type}]: ${error.message}`, error.context || {});
                 } else {
-                    logger.error('Unexpected error in jointocreate command:', error);
-                    errorMessage = 'An unexpected error occurred. Please try again or contact support.';
+                    logger.error('Uventet feil i tempvoice-kommandoen:', error);
+                    errorMessage = 'Det oppstod en uventet feil. Vennligst prøv igjen eller kontakt kundestøtte.';
                 }
 
                 return replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: errorMessage });
             } catch (replyError) {
-                logger.error('Failed to send error message:', replyError);
+                logger.error('Kunne ikke sende feilmelding:', replyError);
             }
         }
     }
@@ -153,7 +153,7 @@ async function handleSetupSubcommand(interaction, client) {
                 const errorMessage = `This server already has a Join to Create channel set up: ${primaryTrigger}\n\nUse \`/jointocreate dashboard\` to modify it, or remove it first before creating a new one.`;
 
                 throw new TitanBotError(
-                    'Guild already has a Join to Create channel',
+                    'Serveren har allerede en TempVoice-kanal.',
                     ErrorTypes.VALIDATION,
                     errorMessage,
                     {
@@ -166,7 +166,7 @@ async function handleSetupSubcommand(interaction, client) {
             }
         }
 
-        logger.debug('Creating Join to Create trigger channel...');
+        logger.debug('Oppretter «TempVoice»-kanal...');
         let triggerChannel = await interaction.guild.channels.create({
             name: 'Join to Create',
             type: ChannelType.GuildVoice,
@@ -181,7 +181,7 @@ async function handleSetupSubcommand(interaction, client) {
             ],
         });
 
-        logger.debug(`Created trigger channel ${triggerChannel.id}, initializing config...`);
+        logger.debug(`Opprettet utløserkanal ${triggerChannel.id}, initialiserer konfigurasjon...`);
 
         const config = await initializeJoinToCreate(client, guildId, triggerChannel.id, {
             nameTemplate: nameTemplate,
@@ -197,7 +197,7 @@ async function handleSetupSubcommand(interaction, client) {
             bitrate
         });
 
-        logger.info(`Successfully created Join to Create system in guild ${guildId}`);
+        logger.info(`«TempVoice»-systemet ble opprettet i guilden ${guildId}`);
 
         const responseEmbed = successEmbed(
             '✅ Setup Complete',
@@ -233,17 +233,17 @@ async function handleConfigSubcommand(interaction, client) {
         const channelConfig = currentConfig.channelConfig || {};
 
         const configEmbed = new EmbedBuilder()
-            .setTitle('Join to Create Configuration')
-            .setDescription(`Configuration for ${triggerChannel}`)
+            .setTitle('TempVoice konfigurasjon')
+            .setDescription(`Konfigurasjon for ${triggerChannel}`)
             .setColor(getColor('info'))
             .addFields(
                 {
-                    name: 'Channel Name Template',
+                    name: 'Mal for kanalnavn',
                     value: `\`${channelConfig.nameTemplate || currentConfig.channelNameTemplate || "{username}'s Room"}\``,
                     inline: false
                 },
                 {
-                    name: 'User Limit',
+                    name: 'Åpne slots',
                     value: `${(channelConfig.userLimit ?? currentConfig.userLimit ?? 0) === 0 ? 'Unlimited' : (channelConfig.userLimit ?? currentConfig.userLimit ?? 0) + ' users'}`,
                     inline: true
                 },
@@ -258,12 +258,12 @@ async function handleConfigSubcommand(interaction, client) {
 
         const nameButton = new ButtonBuilder()
             .setCustomId(`jtc_config_name_${triggerChannel.id}`)
-            .setLabel('📝 Name Template')
+            .setLabel('📝 Navnemal')
             .setStyle(ButtonStyle.Primary);
 
         const limitButton = new ButtonBuilder()
             .setCustomId(`jtc_config_limit_${triggerChannel.id}`)
-            .setLabel('👥 User Limit')
+            .setLabel('👥 Åpne slots')
             .setStyle(ButtonStyle.Primary);
 
         const bitrateButton = new ButtonBuilder()
@@ -273,7 +273,7 @@ async function handleConfigSubcommand(interaction, client) {
 
         const deleteButton = new ButtonBuilder()
             .setCustomId(`jtc_config_delete_${triggerChannel.id}`)
-            .setLabel('🗑️ Remove Channel')
+            .setLabel('🗑️ Fjern kanal')
             .setStyle(ButtonStyle.Danger);
 
         const row = new ActionRowBuilder().addComponents(nameButton, limitButton, bitrateButton, deleteButton);
@@ -287,9 +287,9 @@ async function handleConfigSubcommand(interaction, client) {
 
         if (!message || typeof message.createMessageComponentCollector !== 'function') {
             throw new TitanBotError(
-                'Failed to fetch interaction reply for collector setup',
+                'Kunne ikke hente interaksjonssvar for oppsett av innsamler',
                 ErrorTypes.DISCORD_API,
-                'Failed to open configuration controls. Please run `/jointocreate dashboard` again.'
+                'Kunne ikke åpne konfigurasjonskontrollene. Kjør `/tempvoice dashboard` på nytt..'
             );
         }
 
@@ -303,7 +303,7 @@ async function handleConfigSubcommand(interaction, client) {
                 
                 if (!hasManageGuildPermission(buttonInteraction.member)) {
                     await buttonInteraction.reply({
-                        content: '❌ You need **Manage Server** permission to use these controls.',
+                        content: '❌ Du trenger tillatelsen **Manage Server** for å bruke disse kontrollene.',
                         flags: MessageFlags.Ephemeral
                     });
                     return;
@@ -322,8 +322,8 @@ async function handleConfigSubcommand(interaction, client) {
                 }
             } catch (error) {
                 const userMessage = error instanceof TitanBotError
-                    ? error.userMessage || 'An error occurred.'
-                    : 'An error occurred while processing your request.';
+                    ? error.userMessage || 'Det oppsto en feil.'
+                    : 'Det oppsto en feil under behandling av forespørselen din.';
 
                 if (error instanceof TitanBotError) {
                     logger.debug(`Button interaction validation error: ${error.message}`, error.context || {});
@@ -348,7 +348,7 @@ async function handleConfigSubcommand(interaction, client) {
 
             message.edit({
                 components: [disabledRow],
-                embeds: [configEmbed.setFooter({ text: 'Configuration session expired. Run the command again to make changes.' })]
+                embeds: [configEmbed.setFooter({ text: 'Konfigurasjonsøkten er utløpt. Kjør kommandoen på nytt for å gjøre endringer.' })]
             }).catch(() => {});
         });
 
@@ -395,12 +395,12 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
             );
 
         const templateLabel = new LabelBuilder()
-            .setLabel('Channel name template')
+            .setLabel('Mal for kanalnavn')
             .setStringSelectMenuComponent(templateSelect);
 
         const modal = new ModalBuilder()
             .setCustomId(`jtc_name_modal_${triggerChannel.id}`)
-            .setTitle('Channel Name Template')
+            .setTitle('Mal for kanalnavn')
             .addLabelComponents(templateLabel);
 
         await interaction.showModal(modal);
@@ -412,7 +412,7 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
 
         if (!hasManageGuildPermission(modalSubmission.member)) {
             await modalSubmission.reply({
-                content: '❌ You need **Manage Server** permission to modify these settings.',
+                content: '❌ Du trenger tillatelsen **Manage Server** for å endre disse innstillingene.',
                 flags: MessageFlags.Ephemeral
             });
             return;
@@ -424,13 +424,13 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
             nameTemplate: newTemplate
         });
 
-        await logConfigurationChange(client, interaction.guild.id, interaction.user.id, 'Updated channel name template', {
+        await logConfigurationChange(client, interaction.guild.id, interaction.user.id, 'Oppdatert mal for kanalnavn', {
             channelId: triggerChannel.id,
             newTemplate
         });
 
         await modalSubmission.reply({
-            embeds: [successEmbed('Updated', `Channel name template changed to \`${newTemplate}\``)],
+            embeds: [successEmbed('Oppdatert', `Mal for kanalnavn endret til \`${newTemplate}\``)],
             flags: MessageFlags.Ephemeral
         });
 
@@ -441,11 +441,11 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
         if (error instanceof TitanBotError) {
             throw error;
         }
-        logger.error('Unexpected error in name template modal:', error);
+        logger.error('Uventet feil i modalvinduet for navnemal:', error);
         throw new TitanBotError(
             `Modal error: ${error.message}`,
             ErrorTypes.UNKNOWN,
-            'An error occurred while updating the template.'
+            'Det oppstod en feil under oppdatering av malen.'
         );
     }
 }
@@ -456,13 +456,13 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
 
         const modal = new ModalBuilder()
             .setCustomId(`jtc_limit_modal_${triggerChannel.id}`)
-            .setTitle('Configure User Limit')
+            .setTitle('Konfigurer åpne slots')
             .addComponents(
                 new ActionRowBuilder().addComponents(
                     new TextInputBuilder()
                         .setCustomId('user_limit')
-                        .setLabel('Enter user limit (0-99, 0 = unlimited)')
-                        .setPlaceholder('Enter a number between 0 and 99')
+                        .setLabel('Angi åpne slots (0-99, 0 = unlimited)')
+                        .setPlaceholder('Skriv inn et tall mellom 0 og 99')
                         .setStyle(TextInputStyle.Short)
                         .setRequired(true)
                         .setMinLength(1)
@@ -480,7 +480,7 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
 
         if (!hasManageGuildPermission(modalSubmission.member)) {
             await modalSubmission.reply({
-                content: '❌ You need **Manage Server** permission to modify these settings.',
+                content: '❌ Du trenger tillatelsen **Manage Server** for å endre disse innstillingene..',
                 flags: MessageFlags.Ephemeral
             });
             return;
@@ -492,13 +492,13 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
             userLimit: parseInt(userInput)
         });
 
-        await logConfigurationChange(client, interaction.guild.id, interaction.user.id, 'Updated user limit', {
+        await logConfigurationChange(client, interaction.guild.id, interaction.user.id, 'Oppdatert åpne slots', {
             channelId: triggerChannel.id,
             userLimit: parseInt(userInput)
         });
 
         await modalSubmission.reply({
-            embeds: [successEmbed('Updated', `User limit changed to ${parseInt(userInput) === 0 ? 'Unlimited' : parseInt(userInput) + ' users'}`)],
+            embeds: [successEmbed('Oppdatert', `Åpne slots endret til ${parseInt(userInput) === 0 ? 'Unlimited' : parseInt(userInput) + ' users'}`)],
             flags: MessageFlags.Ephemeral
         });
 
@@ -509,11 +509,11 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
         if (error instanceof TitanBotError) {
             throw error;
         }
-        logger.error('Unexpected error in user limit modal:', error);
+        logger.error('Uventet feil i modalvinduet for åpne slots:', error);
         throw new TitanBotError(
             `Modal error: ${error.message}`,
             ErrorTypes.UNKNOWN,
-            'An error occurred while updating the user limit.'
+            'Det oppsto en feil under oppdatering av åpne slots.'
         );
     }
 }
@@ -524,13 +524,13 @@ async function handleBitrateModal(interaction, triggerChannel, currentConfig, cl
 
         const modal = new ModalBuilder()
             .setCustomId(`jtc_bitrate_modal_${triggerChannel.id}`)
-            .setTitle('Configure Bitrate')
+            .setTitle('Konfigurer Bitrate')
             .addComponents(
                 new ActionRowBuilder().addComponents(
                     new TextInputBuilder()
                         .setCustomId('bitrate')
-                        .setLabel('Enter bitrate in kbps (8-384)')
-                        .setPlaceholder('Enter a number between 8 and 384')
+                        .setLabel('Angi bitrate i kbps (8-384)')
+                        .setPlaceholder('Skriv inn et tall mellom 8 og 384')
                         .setStyle(TextInputStyle.Short)
                         .setRequired(true)
                         .setMinLength(1)
@@ -548,7 +548,7 @@ async function handleBitrateModal(interaction, triggerChannel, currentConfig, cl
 
         if (!hasManageGuildPermission(modalSubmission.member)) {
             await modalSubmission.reply({
-                content: '❌ You need **Manage Server** permission to modify these settings.',
+                content: '❌ Du trenger tillatelsen **Manage Server** for å endre disse innstillingene.',
                 flags: MessageFlags.Ephemeral
             });
             return;
@@ -566,7 +566,7 @@ async function handleBitrateModal(interaction, triggerChannel, currentConfig, cl
         });
 
         await modalSubmission.reply({
-            embeds: [successEmbed('Updated', `Bitrate changed to ${parseInt(userInput)} kbps`)],
+            embeds: [successEmbed('Oppdatert', `Bitrate endret til ${parseInt(userInput)} kbps`)],
             flags: MessageFlags.Ephemeral
         });
 
@@ -577,11 +577,11 @@ async function handleBitrateModal(interaction, triggerChannel, currentConfig, cl
         if (error instanceof TitanBotError) {
             throw error;
         }
-        logger.error('Unexpected error in bitrate modal:', error);
+        logger.error('Uventet feil i bitrate-dialogboksen:', error);
         throw new TitanBotError(
             `Modal error: ${error.message}`,
             ErrorTypes.UNKNOWN,
-            'An error occurred while updating the bitrate.'
+            'Det oppstod en feil under oppdatering av bitrate.'
         );
     }
 }
