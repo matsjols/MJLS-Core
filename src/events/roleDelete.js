@@ -18,8 +18,8 @@ export default {
         guildId: role.guild.id,
         eventType: EVENT_TYPES.ROLE_DELETE,
         data: {
-          title: 'Role Deleted',
-          headline: `**${role.name}** was deleted`,
+          title: 'Rolle slettet',
+          headline: `**${role.name}** ble slettet`,
           lines,
         },
       });

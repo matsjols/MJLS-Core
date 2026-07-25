@@ -16,7 +16,7 @@ const DEFAULT_VOICE_BITRATE = 64000;
 const MAX_VOICE_BITRATE = 384000;
 const MIN_VOICE_BITRATE = 8000;
 const MAX_CHANNEL_NAME_LENGTH = 100;
-const FALLBACK_CHANNEL_NAME = 'Voice Room';
+const FALLBACK_CHANNEL_NAME = 'Tale-rom';
 const MAX_TRACKED_COOLDOWNS = 10000;
 
 export default {
@@ -62,7 +62,7 @@ export default {
             const now = Date.now();
             if (channelCreationCooldown.has(cooldownKey)) {
                 const lastCreation = channelCreationCooldown.get(cooldownKey);
-if (now - lastCreation < VOICE_CREATE_COOLDOWN_MS) {
+                if (now - lastCreation < VOICE_CREATE_COOLDOWN_MS) {
                     logger.warn(`User ${member.id} is on cooldown for channel creation`);
                     return;
                 }
@@ -157,7 +157,7 @@ if (now - lastCreation < VOICE_CREATE_COOLDOWN_MS) {
                 }
 
                 const channelOptions = config.channelOptions?.[triggerChannel.id] || {};
-                const nameTemplate = channelOptions.nameTemplate || config.channelNameTemplate || "{username}'s Room";
+                const nameTemplate = channelOptions.nameTemplate || config.channelNameTemplate || "{username}s rom";
                 
                 let userLimit = channelOptions.userLimit ?? config.userLimit ?? 0;
                 const bitrate = clampVoiceBitrate(channelOptions.bitrate ?? config.bitrate ?? DEFAULT_VOICE_BITRATE);
@@ -198,9 +198,9 @@ if (now - lastCreation < VOICE_CREATE_COOLDOWN_MS) {
 
                 const tempChannel = await guild.channels.create({
                     name: channelName,
-type: ChannelType.GuildVoice,
+                    type: ChannelType.GuildVoice,
                     parent: triggerChannel.parentId,
-userLimit: userLimit === 0 ? undefined : userLimit,
+                    userLimit: userLimit === 0 ? undefined : userLimit,
                     bitrate: bitrate,
                     permissionOverwrites: [
                         {
@@ -231,7 +231,7 @@ userLimit: userLimit === 0 ? undefined : userLimit,
                 
                 try {
                     await member.send({
-                        content: `❌ Failed to create your temporary voice channel. Please contact a server administrator.`
+                        content: `❌ Klarte ikke å opprette din midlertidige talekanal. Vennligst kontakt en serveradministrator.`
                     });
                 } catch (dmError) {
                     logger.debug(`Unable to send temporary channel failure DM to user ${member.id}:`, dmError);
@@ -243,7 +243,7 @@ userLimit: userLimit === 0 ? undefined : userLimit,
             try {
                 await unregisterTemporaryChannel(client, guildId, channel.id);
 
-                await channel.delete('Temporary voice channel - empty');
+                await channel.delete('Midlertidig talekanal - tom');
 
                 logger.info(`Deleted temporary voice channel ${channel.name} (${channel.id}) in guild ${channel.guild.name}`);
 
@@ -272,7 +272,7 @@ userLimit: userLimit === 0 ? undefined : userLimit,
                         userTag: newOwner.user.tag,
                         displayName: newOwner.displayName,
                         guildName: channel.guild.name,
-                        channelName: channel.guild.channels.cache.get(tempChannelInfo.triggerChannelId)?.name || 'Voice Channel'
+                        channelName: channel.guild.channels.cache.get(tempChannelInfo.triggerChannelId)?.name || 'Talekanal'
                     }));
 
                     await channel.setName(newChannelName);
