@@ -8,7 +8,7 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 export default {
     async execute(interaction, config, client) {
         const category = interaction.options.getChannel('kategori');
-        const nameTemplate = interaction.options.getString('kanalnavn') || "{username}'s Room";
+        const nameTemplate = interaction.options.getString('kanalnavn') || "{username}'s Rom";
         const userLimit = interaction.options.getInteger('åpne-slots') || 0;
         const bitrate = interaction.options.getInteger('bitrate') || 64;
         const guildId = interaction.guild.id;

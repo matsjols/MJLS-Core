@@ -35,16 +35,16 @@ export default {
                         .setName("kanalnavn")
                         .setDescription("Velg en mal for navnsetting av midlertidige talekanaler.")
                         .addChoices(
-                            { name: "{username}s Rom (Standard)", value: "{username}'s Room" },
-                            { name: "{username}s Kanal", value: "{username}'s Channel" },
-                            { name: "{username}s Lounge", value: "{username}'s Lounge" },
-                            { name: "{username}s Space", value: "{username}'s Space" },
-                            { name: "{displayName}s Rom", value: "{displayName}'s Room" },
-                            { name: "{username}s VC", value: "{username}'s VC" },
-                            { name: "{username}s Musikkrom", value: "{username}'s Music Room" },
-                            { name: "{username}s Spillrom", value: "{username}'s Gaming Room" },
-                            { name: "{username}s Chatterom", value: "{username}'s Chat Room" },
-                            { name: "{username}s Private Rom", value: "{username}'s Private Room" }
+                            { name: "{username}'s Rom (Standard)", value: "{username}'s Rom" },
+                            { name: "{username}'s Kanal", value: "{username}'s Channel" },
+                            { name: "{username}'s Lounge", value: "{username}'s Lounge" },
+                            { name: "{username}'s Space", value: "{username}'s Space" },
+                            { name: "{displayName}'s Rom", value: "{displayName}'s Room" },
+                            { name: "{username}'s VC", value: "{username}'s VC" },
+                            { name: "{username}'s Musikkrom", value: "{username}'s Music Room" },
+                            { name: "{username}'s Spillrom", value: "{username}'s Gaming Room" },
+                            { name: "{username}'s Chatterom", value: "{username}'s Chat Room" },
+                            { name: "{username}'s Private Rom", value: "{username}'s Private Room" }
                         )
                 )
                 .addIntegerOption((option) =>
@@ -367,16 +367,16 @@ async function handleConfigSubcommand(interaction, client) {
 async function handleNameTemplateModal(interaction, triggerChannel, currentConfig, client) {
     try {
         const TEMPLATE_OPTIONS = [
-            { label: "{username}s Rom (Standard)", value: "{username}'s Room" },
-            { label: "{username}s Kanal",        value: "{username}'s Channel" },
-            { label: "{username}s Lounge",         value: "{username}'s Lounge" },
-            { label: "{username}s Space",          value: "{username}'s Space" },
-            { label: "{displayName}s Rom",        value: "{displayName}'s Room" },
-            { label: "{username}s VC",             value: "{username}'s VC" },
-            { label: "{username}s Musikkrom",  value: "{username}'s Music Room" },
-            { label: "{username}s Spillrom", value: "{username}'s Gaming Room" },
-            { label: "{username}s Chatterom",   value: "{username}'s Chat Room" },
-            { label: "{username}s Private Rom",   value: "{username}'s Private Room" },
+            { label: "{username}'s Rom (Standard)", value: "{username}'s Rom" },
+            { label: "{username}'s Kanal",        value: "{username}'s Channel" },
+            { label: "{username}'s Lounge",         value: "{username}'s Lounge" },
+            { label: "{username}'s Space",          value: "{username}'s Space" },
+            { label: "{displayName}'s Rom",        value: "{displayName}'s Room" },
+            { label: "{username}'s VC",             value: "{username}'s VC" },
+            { label: "{username}'s Musikkrom",  value: "{username}'s Music Room" },
+            { label: "{username}'s Spillrom", value: "{username}'s Gaming Room" },
+            { label: "{username}'s Chatterom",   value: "{username}'s Chat Room" },
+            { label: "{username}'s Private Rom",   value: "{username}'s Private Room" },
         ];
 
         const currentTemplate = currentConfig.channelConfig?.nameTemplate
