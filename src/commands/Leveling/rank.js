@@ -7,11 +7,11 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
   data: new SlashCommandBuilder()
     .setName('rank')
-    .setDescription("Check your or another user's rank and level")
+    .setDescription("Sjekk din egen eller en annen brukers rangering og level")
     .addUserOption((option) =>
       option
         .setName('user')
-        .setDescription('The user to check the rank of')
+        .setDescription('Brukeren du vil sjekke rangeringen til')
         .setRequired(false)
     )
     .setDMPermission(false),
@@ -26,7 +26,7 @@ export default {
         embeds: [
           new EmbedBuilder()
             .setColor('#f1c40f')
-            .setDescription('The leveling system is currently disabled on this server.')
+            .setDescription('Levlingssystemet er for øyeblikket deaktivert på denne serveren.')
         ],
         flags: MessageFlags.Ephemeral
       });
@@ -42,7 +42,7 @@ export default {
       throw new TitanBotError(
         `User ${targetUser.id} not found in guild`,
         ErrorTypes.USER_INPUT,
-        'Could not find the specified user in this server.'
+        'Kunne ikke finne den angitte brukeren på denne serveren.'
       );
     }
 
@@ -59,7 +59,7 @@ export default {
     const progressBar = createProgressBar(progress, 20);
 
     const embed = new EmbedBuilder()
-      .setTitle(`${member.displayName}'s Rank`)
+      .setTitle(`${member.displayName} sin rangering`)
       .setThumbnail(member.displayAvatarURL({ dynamic: true }))
       .addFields(
         {
@@ -78,7 +78,7 @@ export default {
           inline: true
         },
         {
-          name: `Progress to Level ${safeUserData.level + 1}`,
+          name: `Fremdrift mot level ${safeUserData.level + 1}`,
           value: `${progressBar} ${progress}%`
         }
       )

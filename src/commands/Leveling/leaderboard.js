@@ -7,7 +7,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
   data: new SlashCommandBuilder()
     .setName('leaderboard')
-    .setDescription("Shows the server's level leaderboard")
+    .setDescription("Viser serverens level-ledertavle")
     .setDMPermission(false),
   category: 'Leveling',
 
@@ -21,7 +21,7 @@ export default {
         embeds: [
           new EmbedBuilder()
             .setColor('#f1c40f')
-            .setDescription('The leveling system is currently disabled on this server.')
+            .setDescription('Levlingssystemet er for øyeblikket deaktivert på denne serveren.')
         ],
         flags: MessageFlags.Ephemeral
       });
@@ -34,14 +34,14 @@ export default {
       throw new TitanBotError(
         'No leaderboard data found',
         ErrorTypes.DATABASE,
-        'No level data found yet. Start chatting to gain XP!'
+        'Ingen level-data funnet enda. Begynn å chatte for å tjene XP!'
       );
     }
 
     const embed = new EmbedBuilder()
-      .setTitle('Level Leaderboard')
+      .setTitle('Level-ledertavle')
       .setColor('#2ecc71')
-      .setDescription("Top 10 most active members in this server:")
+      .setDescription("Topp 10 mest aktive medlemmer på denne serveren:")
       .setTimestamp();
 
     const leaderboardText = await Promise.all(
@@ -59,13 +59,13 @@ export default {
 
           return `${rankPrefix} ${userMention} - Level ${user.level} (${user.xp}/${xpForNextLevel} XP)`;
         } catch {
-          return `**${index + 1}.** Error loading user ${user.userId}`;
+          return `**${index + 1}.** Feil ved innlasting av bruker ${user.userId}`;
         }
       })
     );
 
     embed.addFields({
-      name: 'Rankings',
+      name: 'Rangeringer',
       value: leaderboardText.join('\n')
     });
 
