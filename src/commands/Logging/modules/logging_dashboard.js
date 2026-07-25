@@ -14,6 +14,7 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { logger } from '../../../utils/logger.js';
 
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
+
 export function getCategoryStatus(enabledEvents, category, auditEnabled) {
   if (!auditEnabled) return false;
   const events = enabledEvents || {};
@@ -24,9 +25,9 @@ export function getCategoryStatus(enabledEvents, category, auditEnabled) {
 }
 
 async function formatChannelMention(guild, id) {
-  if (!id) return '`Not configured`';
+  if (!id) return '`Ikke konfigurert`';
   const channel = guild.channels.cache.get(id) ?? await guild.channels.fetch(id).catch(() => null);
-  return channel ? channel.toString() : `⚠️ Missing (${id})`;
+  return channel ? channel.toString() : `⚠️ Mangler (${id})`;
 }
 
 function countEnabledCategories(enabledEvents, auditEnabled) {
@@ -53,44 +54,44 @@ export async function buildLoggingDashboardView(interaction, client) {
   const { enabled: enabledCount, total } = countEnabledCategories(loggingStatus.enabledEvents, auditEnabled);
 
   const embed = new EmbedBuilder()
-    .setTitle('📝 Logging Dashboard')
-    .setDescription(`Manage server logging for **${interaction.guild.name}**. Use the menu below to configure channels, categories, and filters.`)
+    .setTitle('📝 Kontrollpanel for logging')
+    .setDescription(`Administrer serverlogging for **${interaction.guild.name}**. Bruk menyen under for å konfigurere kanaler, kategorier og filtre.`)
     .setColor(auditEnabled ? getColor('success') : getColor('warning'))
     .addFields(
       {
-        name: 'Logging Status',
-        value: auditEnabled ? '✅ Enabled' : '❌ Disabled',
+        name: 'Loggstatus',
+        value: auditEnabled ? '✅ Aktivert' : '❌ Deaktivert',
         inline: true,
       },
       {
-        name: 'Event Categories',
-        value: auditEnabled ? `${enabledCount}/${total} enabled` : '`Logging disabled`',
+        name: 'Handlingskategorier',
+        value: auditEnabled ? `${enabledCount}/${total} aktivert` : '`Logging deaktivert`',
         inline: true,
       },
       {
-        name: 'Ignore Filters',
-        value: `${ignore.users?.length || 0} users · ${ignore.channels?.length || 0} channels`,
+        name: 'Ignoreringsfiltre',
+        value: `${ignore.users?.length || 0} brukere · ${ignore.channels?.length || 0} kanaler`,
         inline: true,
       },
       {
-        name: 'Log Channels',
+        name: 'Loggkanaler',
         value: [
-          `**Audit:** ${auditChannel}`,
-          `**Applications:** ${applicationsChannel}`,
-          `**Reports:** ${reportsChannel}`,
+          `**Revisjon (Audit):** ${auditChannel}`,
+          `**Søknader:** ${applicationsChannel}`,
+          `**Rapporter:** ${reportsChannel}`,
         ].join('\n'),
         inline: false,
       },
       {
-        name: 'Ticket Channels (read-only)',
+        name: 'Ticket-kanaler (skrivebeskyttet)',
         value: [
-          `**Ticket Logs:** ${lifecycleChannel}`,
-          `**Transcripts:** ${transcriptChannel}`,
+          `**Ticket-logger:** ${lifecycleChannel}`,
+          `**Transkripsjoner:** ${transcriptChannel}`,
         ].join('\n'),
         inline: false,
       },
     )
-    .setFooter({ text: 'Ticket channels: configure via /ticket dashboard' })
+    .setFooter({ text: 'Ticket-kanaler: konfigurer via /ticket dashboard' })
     .setTimestamp();
 
   const components = createLoggingDashboardComponents(loggingStatus.enabledEvents, auditEnabled);
@@ -108,15 +109,15 @@ export async function buildLoggingCategoriesView(interaction, client) {
   }).join('\n');
 
   const embed = new EmbedBuilder()
-    .setTitle('📋 Event Categories')
+    .setTitle('📋 Handlingskategorier')
     .setDescription(
       auditEnabled
-        ? 'Toggle which types of events are logged to your audit channel.'
-        : '⚠️ Logging is disabled. Enable it from the main dashboard to send logs.',
+        ? 'Velg hvilke typer handlinger som skal logges til revisjonskanalen.'
+        : '⚠️ Logging er deaktivert. Aktiver det fra hovedpanelet for å sende logger.',
     )
     .setColor(getColor('info'))
-    .addFields({ name: 'Category Status', value: categoryLines, inline: false })
-    .setFooter({ text: 'Green = logging on · Red = logging off' })
+    .addFields({ name: 'Kategoristatus', value: categoryLines, inline: false })
+    .setFooter({ text: 'Grønn = logging på · Rød = logging av' })
     .setTimestamp();
 
   const components = createLoggingCategoryViewComponents(loggingStatus.enabledEvents, auditEnabled);
@@ -128,22 +129,22 @@ export async function buildLoggingFilterView(interaction, client) {
   const ignore = loggingStatus.ignore || { users: [], channels: [] };
 
   const userLines = (ignore.users || []).length
-    ? ignore.users.map((id) => `• User \`${id}\``).join('\n')
-    : '*No ignored users*';
+    ? ignore.users.map((id) => `• Bruker \`${id}\``).join('\n')
+    : '*Ingen ignorerte brukere*';
 
   const channelLines = (ignore.channels || []).length
-    ? ignore.channels.map((id) => `• Channel \`${id}\``).join('\n')
-    : '*No ignored channels*';
+    ? ignore.channels.map((id) => `• Kanal \`${id}\``).join('\n')
+    : '*Ingen ignorerte kanaler*';
 
   const embed = new EmbedBuilder()
-    .setTitle('🔇 Log Ignore Filters')
-    .setDescription('Users and channels on this list will be skipped when sending audit logs.')
+    .setTitle('🔇 Logg-ignoreringsfiltre')
+    .setDescription('Brukere og kanaler på denne listen vil bli hoppet over når revisjonslogger sendes.')
     .setColor(getColor('info'))
     .addFields(
-      { name: 'Ignored Users', value: userLines.slice(0, 1024), inline: false },
-      { name: 'Ignored Channels', value: channelLines.slice(0, 1024), inline: false },
+      { name: 'Ignorerte brukere', value: userLines.slice(0, 1024), inline: false },
+      { name: 'Ignorerte kanaler', value: channelLines.slice(0, 1024), inline: false },
     )
-    .setFooter({ text: 'Use the buttons below to add or remove filters' })
+    .setFooter({ text: 'Bruk knappene under for å legge til eller fjerne filtre' })
     .setTimestamp();
 
   const components = createLoggingFilterComponents();
@@ -151,11 +152,11 @@ export async function buildLoggingFilterView(interaction, client) {
 }
 
 export function isCategoriesView(interaction) {
-  return interaction.message?.embeds?.[0]?.title === '📋 Event Categories';
+  return interaction.message?.embeds?.[0]?.title === '📋 Handlingskategorier';
 }
 
 export function isFilterView(interaction) {
-  return interaction.message?.embeds?.[0]?.title === '🔇 Log Ignore Filters';
+  return interaction.message?.embeds?.[0]?.title === '🔇 Logg-ignoreringsfiltre';
 }
 
 export async function refreshDashboardMessage(interaction, client) {
@@ -180,7 +181,7 @@ export default {
   async execute(interaction, config, client) {
     try {
       if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-        return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need **Manage Server** permissions to view the logging dashboard.' });
+        return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Du trenger tillatelsen **Administrer server** for å se kontrollpanelet for logging.' });
       }
 
       await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
@@ -188,7 +189,7 @@ export default {
       await InteractionHelper.safeEditReply(interaction, { embeds: [embed], components });
     } catch (error) {
       logger.error('logging_dashboard error:', error);
-      await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Failed to load the logging dashboard.' });
+      await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Klarte ikke å laste inn kontrollpanelet for logging.' });
     }
   },
 };

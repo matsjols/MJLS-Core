@@ -6,43 +6,44 @@ import dashboard from './modules/logging_dashboard.js';
 import channel from './modules/logging_channel.js';
 
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
+
 export default {
     data: new SlashCommandBuilder()
-        .setName('logging')
-        .setDescription('Manage server logging — channels, filters, and event categories.')
+        .setName('logging') // Holder selve hovedkommandoen som 'logging' (brukes ofte også på norsk)
+        .setDescription('Administrer serverlogging — kanaler, filtre og handlingskategorier.')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .setDMPermission(false)
         .addSubcommand((subcommand) =>
             subcommand
                 .setName('dashboard')
-                .setDescription('Open the logging dashboard — set channels, filters, and toggle categories.'),
+                .setDescription('Åpne dashboardet for logging — sett kanaler, filtre og slå av/på kategorier.'),
         )
         .addSubcommand((subcommand) =>
             subcommand
-                .setName('channel')
-                .setDescription('Quick-set a log channel without opening the dashboard.')
+                .setName('kanal') // Endret fra 'channel'
+                .setDescription('Hurtigoppsett av en loggkanal uten å åpne dashboardet.')
                 .addStringOption((option) =>
                     option
-                        .setName('destination')
-                        .setDescription('Which log destination to configure.')
+                        .setName('destinasjon') // Endret fra 'destination'
+                        .setDescription('Hvilken loggdestinasjon som skal konfigureres.')
                         .setRequired(true)
                         .addChoices(
-                            { name: 'Audit (moderation, messages, members…)', value: 'audit' },
-                            { name: 'Applications', value: 'applications' },
-                            { name: 'Reports', value: 'reports' },
+                            { name: 'Revisjon (moderering, meldinger, medlemmer…)', value: 'audit' },
+                            { name: 'Søknader', value: 'applications' },
+                            { name: 'Rapporter', value: 'reports' },
                         ),
                 )
                 .addChannelOption((option) =>
                     option
-                        .setName('channel')
-                        .setDescription('The text channel for logs.')
+                        .setName('kanal') // Endret fra 'channel'
+                        .setDescription('Tekstkanalen for logger.')
                         .addChannelTypes(ChannelType.GuildText)
                         .setRequired(false),
                 )
                 .addBooleanOption((option) =>
                     option
-                        .setName('disable')
-                        .setDescription('Set to True to clear this log channel.')
+                        .setName('deaktiver') // Endret fra 'disable'
+                        .setDescription('Sett til True (Sann) for å fjerne denne loggkanalen.')
                         .setRequired(false),
                 ),
         ),
@@ -51,18 +52,18 @@ export default {
         try {
             const subcommand = interaction.options.getSubcommand();
 
-            if (subcommand === 'dashboard') {
+            if (subcommand === 'dashboard') { // Endret for å matche ny setName
                 return await dashboard.execute(interaction, config, client);
             }
 
-            if (subcommand === 'channel') {
+            if (subcommand === 'kanal') { // Endret for å matche ny setName
                 return await channel.execute(interaction, config, client);
             }
 
-            await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'This subcommand is not recognised.' });
+            await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Denne underkommandoen er ikke gjenkjent.' });
         } catch (error) {
             logger.error('logging command error:', error);
-            await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An unexpected error occurred.' }).catch(() => {});
+            await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'En uventet feil oppstod.' }).catch(() => {});
         }
     },
 };
