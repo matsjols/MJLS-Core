@@ -19,10 +19,10 @@ export default {
                     ticketData.status = 'deleted';
                     ticketData.closedAt = new Date().toISOString();
                     await saveTicketData(channel.guild.id, channel.id, ticketData);
-                    logger.info(`Ticket channel ${channel.id} was manually deleted in guild ${channel.guild.id}, marked as deleted`);
+                    logger.info(`Ticketkanal ${channel.id} ble manuelt slettet i server ${channel.guild.id}, markert som slettet`);
                 }
             } catch (err) {
-                logger.warn(`Could not clean up ticket record for deleted channel ${channel.id}:`, err);
+                logger.warn(`Kunne ikke rydde opp ticketen for slettet kanal ${channel.id}:`, err);
             }
         }
 

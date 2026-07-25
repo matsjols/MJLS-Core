@@ -11,7 +11,7 @@ export const botConfig = {
   // - "invisible" = appears offline
   presence: {
     // Current online state shown on Discord.
-    status: "online",
+    status: "dnd",
 
     // Activity lines shown under the bot name.
     // `type` number mapping from Discord:
@@ -24,8 +24,8 @@ export const botConfig = {
     activities: [
       {
         name: "Custom Status", // required by Discord API, not shown in the client
-        state: "stalking",     // this is what people actually see
-        type: 4,               // Custom
+        state: "ser over **matsjols**...",     // this is what people actually see
+        type: 3,               // Custom
       },
     ],
   },
@@ -61,9 +61,9 @@ export const botConfig = {
   applications: {
     // Default questions shown when someone fills out an application.
     defaultQuestions: [
-      { question: "What is your name?", required: true },
-      { question: "How old are you?", required: true },
-      { question: "Why do you want to join?", required: true },
+      { question: "Hva heter du?", required: true },
+      { question: "Hvor gammel er du?", required: true },
+      { question: "Hvorfor joinet du?", required: true },
     ],
 
     // Embed colors by application status.
@@ -83,7 +83,7 @@ export const botConfig = {
     deleteApprovedAfter: 30,
 
     // Role IDs allowed to manage applications.
-    managerRoles: [], // Will be populated from environment or database
+    managerRoles: [826392895355486229],  // Will be populated from environment or database
   },
 
   // =========================
@@ -161,9 +161,9 @@ export const botConfig = {
   economy: {
     currency: {
       // Currency display name.
-      name: "coins",
+      name: "MJLScoins",
       // Plural display name.
-      namePlural: "coins",
+      namePlural: "MJLScoins",
       // Currency symbol shown in balances.
       symbol: "$",
     },
@@ -217,7 +217,7 @@ export const botConfig = {
     defaultCategory: null,
 
     // Role IDs allowed to manage/support tickets.
-    supportRoles: [],
+    supportRoles: [826392895355486229],
 
     // Priority options users/staff can assign.
     priorities: {
@@ -277,7 +277,7 @@ export const botConfig = {
     maximumDuration: 2592000000,
 
     // Role IDs allowed to host giveaways.
-    allowedRoles: [],
+    allowedRoles: [826392895355486229],
 
     // Role IDs that bypass giveaway restrictions.
     bypassRoles: [],
@@ -302,10 +302,10 @@ export const botConfig = {
   // =========================
   verification: {
     // Message shown when posting the verification panel.
-    defaultMessage: "Click the button below to verify yourself and gain access to the server!",
+    defaultMessage: "Klikk på knappen nedenfor for å verifisere deg selv og få tilgang til serveren!",
 
     // Text on the verification button.
-    defaultButtonText: "Verify",
+    defaultButtonText: "Verifiser deg!",
 
     // Automatic verification behavior.
     autoVerify: {
@@ -332,9 +332,9 @@ export const botConfig = {
 
       // Human-readable descriptions for each criteria mode.
       criteria: {
-        account_age: "Account must be older than specified days",
-        server_size: "All users if server has less than 1000 members",
-        none: "All users immediately"
+        account_age: "Kontoen må være eldre enn det angitte antall dager.",
+        server_size: "Alle brukere hvis serveren har færre enn 1000 medlemmer",
+        none: "Alle brukere umiddelbart"
       }
     },
 
@@ -372,11 +372,11 @@ export const botConfig = {
     // Welcome template posted when a user joins.
     // Placeholders: {user}, {server}, {memberCount}
     defaultWelcomeMessage:
-      "Welcome {user} to {server}! We now have {memberCount} members!",
+      "Velkommen {user} til {server}'s server! Vi har nå {memberCount} medlemmer!",
     // Goodbye template posted when a user leaves.
     // Placeholders: {user}, {memberCount}
     defaultGoodbyeMessage:
-      "{user} has left the server. We now have {memberCount} members.",
+      "{user} har dessverre forlatt serveren. Vi har nå {memberCount} medlemmer.",
     // Channel ID for welcome messages.
     defaultWelcomeChannel: null,
     // Channel ID for goodbye messages.
@@ -411,19 +411,19 @@ export const botConfig = {
     types: {
       // Built-in counter types and how each count is calculated.
       members: {
-        name: "👥 Members",
-        description: "Total members in the server",
+        name: "👥 Medlemmer",
+        description: "Totalt antall medlemmer på serveren",
         getCount: (guild) => guild.memberCount.toString(),
       },
       bots: {
         name: "🤖 Bots",
-        description: "Total bot accounts in the server",
+        description: "Totalt antall bot-kontoer på serveren",
         getCount: (guild) =>
           guild.members.cache.filter((m) => m.user.bot).size.toString(),
       },
       members_only: {
-        name: "👤 Humans",
-        description: "Total human members (non-bots)",
+        name: "👤 Ekte folk",
+        description: "Totalt antall ekte medlemmer (ikke-boter)",
         getCount: (guild) =>
           guild.members.cache.filter((m) => !m.user.bot).size.toString(),
       },
@@ -434,13 +434,13 @@ export const botConfig = {
   // GENERIC BOT MESSAGES
   // =========================
   messages: {
-    noPermission: "You do not have permission to use this command.",
-    cooldownActive: "Please wait {time} before using this command again.",
-    errorOccurred: "An error occurred while executing this command.",
+    noPermission: "Du har ikke tillatelse til å bruke denne kommandoen.",
+    cooldownActive: "Vennligst vent {time} før du bruker denne kommandoen igjen.",
+    errorOccurred: "Det oppsto en feil under utførelsen av denne kommandoen.",
     missingPermissions:
-      "I am missing required permissions to perform this action.",
-    commandDisabled: "This command has been disabled.",
-    maintenanceMode: "The bot is currently in maintenance mode.",
+      "Jeg mangler nødvendige tillatelser for å utføre denne handlingen.",
+    commandDisabled: "Denne kommandoen er deaktivert.",
+    maintenanceMode: "Boten er for tiden i vedlikeholdsmodus.",
   },
 
   // =========================

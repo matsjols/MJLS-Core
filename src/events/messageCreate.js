@@ -166,7 +166,7 @@ async function handleCountingGame(message, client) {
         currentStreak: 0,
       });
 
-      const failureMessage = await message.channel.send(`❌ Count broken by <@${message.author.id}>. The sequence has been reset to **1**.`);
+      const failureMessage = await message.channel.send(`❌ Tellingen ble avbrutt av <@${message.author.id}>. Sekvensen er tilbakestilt til **1**.`);
       setTimeout(() => {
         failureMessage.delete().catch(() => {});
       }, 10000);
