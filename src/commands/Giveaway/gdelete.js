@@ -2,20 +2,25 @@ import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from 'discord.
 import { errorEmbed, successEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
-import { getGuildGiveaways, deleteGiveaway } from '../../utils/giveaways.js';
+import { getGuildGiveaways, saveGiveaway } from '../../utils/giveaways.js';
+import { 
+    endGiveaway as endGiveawayService,
+    createGiveawayEmbed, 
+    createGiveawayButtons 
+} from '../../services/giveawayService.js';
 import { logEvent, EVENT_TYPES } from '../../services/loggingService.js';
-
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+
 export default {
     data: new SlashCommandBuilder()
-        .setName("gdelete")
+        .setName("gend")
         .setDescription(
-            "Deletes a giveaway message and removes it from the database.",
+            "Avslutter en aktiv giveaway umiddelbart og trekker vinner(e).",
         )
         .addStringOption((option) =>
             option
                 .setName("messageid")
-                .setDescription("The message ID of the giveaway to delete.")
+                .setDescription("Melding-ID-en til giveawayen som skal avsluttes.")
                 .setRequired(true),
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
@@ -25,7 +30,7 @@ export default {
             throw new TitanBotError(
                 'Giveaway command used outside guild',
                 ErrorTypes.VALIDATION,
-                'This command can only be used in a server.',
+                'Denne kommandoen kan bare brukes på en server.',
                 { userId: interaction.user.id }
             );
         }
@@ -34,12 +39,12 @@ export default {
             throw new TitanBotError(
                 'User lacks ManageGuild permission',
                 ErrorTypes.PERMISSION,
-                "You need the 'Manage Server' permission to delete a giveaway.",
+                "Du trenger 'Håndter server'-rettigheten for å avslutte en giveaway.",
                 { userId: interaction.user.id, guildId: interaction.guildId }
             );
         }
 
-        logger.info(`Giveaway deletion started by ${interaction.user.tag} in guild ${interaction.guildId}`);
+        logger.info(`Giveaway end initiated by ${interaction.user.tag} in guild ${interaction.guildId}`);
 
         const messageId = interaction.options.getString("messageid");
 
@@ -47,7 +52,7 @@ export default {
             throw new TitanBotError(
                 'Invalid message ID format',
                 ErrorTypes.VALIDATION,
-                'Please provide a valid message ID.',
+                'Vennligst oppgi en gyldig melding-ID.',
                 { providedId: messageId }
             );
         }
@@ -59,128 +64,125 @@ export default {
             throw new TitanBotError(
                 `Giveaway not found: ${messageId}`,
                 ErrorTypes.VALIDATION,
-                "No giveaway was found with that message ID.",
+                "Ingen giveaway ble funnet med den melding-ID-en i databasen.",
                 { messageId, guildId: interaction.guildId }
             );
         }
 
-        let deletedMessage = false;
-        let channelName = "Unknown Channel";
-
-        const tryDeleteFromChannel = async (channel) => {
-            if (!channel || !channel.isTextBased() || !channel.messages?.fetch) {
-                return false;
-            }
-
-            const message = await channel.messages.fetch(messageId).catch(() => null);
-            if (!message) {
-                return false;
-            }
-
-            await message.delete();
-            channelName = channel.name || 'unknown-channel';
-            deletedMessage = true;
-            return true;
-        };
-
-        try {
-            const channel = await interaction.client.channels.fetch(giveaway.channelId).catch(() => null);
-            if (await tryDeleteFromChannel(channel)) {
-                logger.debug(`Deleted giveaway message ${messageId} from channel ${channelName}`);
-            }
-
-            if (!deletedMessage && interaction.guild) {
-                const textChannels = interaction.guild.channels.cache.filter(
-                    ch => ch.id !== giveaway.channelId && ch.isTextBased() && ch.messages?.fetch
-                );
-
-                for (const [, guildChannel] of textChannels) {
-                    const foundAndDeleted = await tryDeleteFromChannel(guildChannel).catch(() => false);
-                    if (foundAndDeleted) {
-                        logger.debug(`Deleted giveaway message ${messageId} via fallback lookup in #${channelName}`);
-                        break;
-                    }
-                }
-            }
-        } catch (error) {
-            logger.warn(`Could not delete giveaway message: ${error.message}`);
-        }
-
-        const removedFromDatabase = await deleteGiveaway(
+        const endResult = await endGiveawayService(
             interaction.client,
+            giveaway,
             interaction.guildId,
-            messageId,
+            interaction.user.id
         );
 
-        if (!removedFromDatabase) {
+        const updatedGiveaway = endResult.giveaway;
+        const winners = endResult.winners;
+
+        const channel = await interaction.client.channels.fetch(
+            updatedGiveaway.channelId,
+        ).catch(err => {
+            logger.warn(`Could not fetch channel ${updatedGiveaway.channelId}:`, err.message);
+            return null;
+        });
+
+        if (!channel || !channel.isTextBased()) {
             throw new TitanBotError(
-                `Failed to delete giveaway from database: ${messageId}`,
-                ErrorTypes.UNKNOWN,
-                'The giveaway could not be removed from the database. Please try again.',
-                { messageId, guildId: interaction.guildId }
+                `Channel not found: ${updatedGiveaway.channelId}`,
+                ErrorTypes.VALIDATION,
+                "Kunne ikke finne kanalen der giveawayen ble holdt. Giveaway-statusen har blitt oppdatert.",
+                { channelId: updatedGiveaway.channelId, messageId }
             );
         }
 
-        const giveawaysAfterDelete = await getGuildGiveaways(interaction.client, interaction.guildId);
-        const stillExistsInDatabase = giveawaysAfterDelete.some(g => g.messageId === messageId);
-
-        if (stillExistsInDatabase) {
-            throw new TitanBotError(
-                `Giveaway still exists after deletion: ${messageId}`,
-                ErrorTypes.UNKNOWN,
-                'Deletion did not persist in the database. Please try again.',
-                { messageId, guildId: interaction.guildId }
-            );
-        }
-
-        const statusMsg = deletedMessage
-            ? `and the message was deleted from #${channelName}`
-            : `but the message was already deleted or the channel was inaccessible.`;
-
-        const winnerIds = Array.isArray(giveaway.winnerIds) ? giveaway.winnerIds : [];
-        const hasWinners = winnerIds.length > 0;
-        const wasEnded = giveaway.ended === true || giveaway.isEnded === true || hasWinners;
-
-        const winnerStatusMsg = hasWinners
-            ? `This giveaway already had ${winnerIds.length} winner(s) selected.`
-            : wasEnded
-                ? 'This giveaway was ended with no valid winners.'
-                : 'No winner was picked before deletion.';
-
-        logger.info(`Giveaway deleted: ${messageId} in ${channelName}`);
-
-        try {
-            await logEvent({
-                client: interaction.client,
-                guildId: interaction.guildId,
-                eventType: EVENT_TYPES.GIVEAWAY_DELETE,
-                data: {
-                    description: `Giveaway deleted: ${giveaway.prize}`,
-                    channelId: giveaway.channelId,
-                    userId: interaction.user.id,
-                    fields: [
-                        {
-                            name: 'Prize',
-                            value: giveaway.prize || 'Unknown',
-                            inline: true
-                        },
-                        {
-                            name: 'Entries',
-                            value: (giveaway.participants?.length || 0).toString(),
-                            inline: true
-                        }
-                    ]
-                }
+        const message = await channel.messages
+            .fetch(messageId)
+            .catch(err => {
+                logger.warn(`Could not fetch message ${messageId}:`, err.message);
+                return null;
             });
-        } catch (logError) {
-            logger.debug('Error logging giveaway deletion:', logError);
+
+        if (!message) {
+            throw new TitanBotError(
+                `Message not found: ${messageId}`,
+                ErrorTypes.VALIDATION,
+                "Kunne ikke finne giveaway-meldingen. Giveaway-statusen har blitt oppdatert.",
+                { messageId, channelId: updatedGiveaway.channelId }
+            );
         }
+
+        await saveGiveaway(
+            interaction.client,
+            interaction.guildId,
+            updatedGiveaway,
+        );
+
+        const newEmbed = createGiveawayEmbed(updatedGiveaway, "ended", winners);
+        const newRow = createGiveawayButtons(true);
+
+        await message.edit({
+            content: "🎉 **GIVEAWAY AVSLUTTET** 🎉",
+            embeds: [newEmbed],
+            components: [newRow],
+        });
+
+        if (winners.length > 0) {
+            const winnerMentions = winners
+                .map((id) => `<@${id}>`)
+                .join(",");
+            const winnerPingMsg = await channel.send({
+                content: `🎉 GRATULERER ${winnerMentions}! Du vant **${updatedGiveaway.prize}**-giveawayen! Vennligst kontakt arrangøren <@${updatedGiveaway.hostId}> for å hente premien din.`,
+            });
+            updatedGiveaway.winnerPingMessageId = winnerPingMsg.id;
+            await saveGiveaway(interaction.client, interaction.guildId, updatedGiveaway);
+
+            logger.info(`Giveaway ended with ${winners.length} winner(s): ${messageId}`);
+
+            try {
+                await logEvent({
+                    client: interaction.client,
+                    guildId: interaction.guildId,
+                    eventType: EVENT_TYPES.GIVEAWAY_WINNER,
+                    data: {
+                        description: `Giveaway avsluttet med ${winners.length} vinner(e)`,
+                        channelId: channel.id,
+                        userId: interaction.user.id,
+                        fields: [
+                            {
+                                name: 'Premie',
+                                value: updatedGiveaway.prize || 'Mysteriepremie!',
+                                inline: true
+                            },
+                            {
+                                name: 'Vinnere',
+                                value: winnerMentions,
+                                inline: false
+                            },
+                            {
+                                name: 'Deltakere',
+                                value: endResult.participantCount.toString(),
+                                inline: true
+                            }
+                        ]
+                    }
+                });
+            } catch (logError) {
+                logger.debug('Error logging giveaway winner event:', logError);
+            }
+        } else {
+            await channel.send({
+                content: `Giveawayen for **${updatedGiveaway.prize}** har avsluttes uten noen gyldige deltakere.`,
+            });
+            logger.info(`Giveaway ended with no winners: ${messageId}`);
+        }
+
+        logger.info(`Giveaway successfully ended by ${interaction.user.tag}: ${messageId}`);
 
         return InteractionHelper.safeReply(interaction, {
             embeds: [
                 successEmbed(
-                    "Giveaway Deleted",
-                    `Successfully deleted the giveaway for **${giveaway.prize}** ${statusMsg}. ${winnerStatusMsg}`,
+                    "Giveaway avsluttet ✅",
+                    `Avsluttet giveawayen for **${updatedGiveaway.prize}** i ${channel}. Valgte ut ${winners.length} vinner(e) fra ${endResult.participantCount} deltakere.`,
                 ),
             ],
             flags: MessageFlags.Ephemeral,
