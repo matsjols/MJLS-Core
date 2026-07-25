@@ -16,12 +16,12 @@ export default {
           guildId: newMember.guild.id,
           eventType: EVENT_TYPES.MEMBER_NAME_CHANGE,
           data: {
-            title: 'Nickname changed',
+            title: 'Kallenavn endret',
             lines: [
-              `**User:** ${newMember.user.toString()} (${newMember.user.tag})`,
+              `**Bruker:** ${newMember.user.toString()} (${newMember.user.tag})`,
               `**ID:** \`${newMember.user.id}\``,
-              `**Before:** ${oldMember.nickname || '*(no nickname)*'}`,
-              `**After:** ${newMember.nickname || '*(no nickname)*'}`,
+              `**Før:** ${oldMember.nickname || '*(ingen kallenavn)*'}`,
+              `**Etter:** ${newMember.nickname || '*(ingen kallenavn)*'}`,
             ],
             thumbnail: newMember.user.displayAvatarURL({ dynamic: true }),
             userId: newMember.user.id,

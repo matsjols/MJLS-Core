@@ -26,7 +26,7 @@ export default {
             }
         }
 
-if (channel.type !== 2 && channel.type !== 4) {
+        if (channel.type !== 2 && channel.type !== 4) {
             return;
         }
 
@@ -38,15 +38,15 @@ if (channel.type !== 2 && channel.type !== 4) {
             const orphanedCounter = counters.find(c => c.channelId === channel.id);
             
             if (orphanedCounter) {
-                logger.info(`Counter channel ${channel.name} (${channel.id}) was deleted, removing counter ${orphanedCounter.id} from database`);
+                logger.info(`Teller-kanal ${channel.name} (${channel.id}) ble slettet, fjerner teller ${orphanedCounter.id} fra databasen`);
                 
                 const updatedCounters = counters.filter(c => c.channelId !== channel.id);
                 const success = await saveServerCounters(client, guildId, updatedCounters);
                 
                 if (success) {
-                    logger.info(`Successfully removed orphaned counter ${orphanedCounter.id} (type: ${orphanedCounter.type}) from guild ${guildId}`);
+                    logger.info(`Fjernet foreldreløs teller ${orphanedCounter.id} (type: ${orphanedCounter.type}) fra server ${guildId}`);
                 } else {
-                    logger.warn(`Failed to remove orphaned counter ${orphanedCounter.id} from guild ${guildId}`);
+                    logger.warn(`Kunne ikke fjerne foreldreløs teller ${orphanedCounter.id} fra server ${guildId}`);
                 }
             }
 
@@ -57,43 +57,43 @@ if (channel.type !== 2 && channel.type !== 4) {
             }
 
             if (config.triggerChannels.includes(channel.id)) {
-                logger.info(`Join to Create trigger channel ${channel.name} (${channel.id}) was deleted, removing from configuration`);
+                logger.info(`TempVoice trigger-kanal ${channel.name} (${channel.id}) ble slettet, fjerner fra konfigurasjonen`);
                 
                 const success = await removeJoinToCreateTrigger(client, guildId, channel.id);
                 if (success) {
-                    logger.info(`Successfully removed trigger channel ${channel.id} from Join to Create configuration`);
+                    logger.info(`Fjernet trigger-kanal ${channel.id} fra TempVoice-konfigurasjonen`);
                 } else {
-                    logger.warn(`Failed to remove trigger channel ${channel.id} from Join to Create configuration`);
+                    logger.warn(`Kunne ikke fjerne trigger-kanal ${channel.id} fra TempVoice-konfigurasjonen`);
                 }
             }
 
             if (config.temporaryChannels[channel.id]) {
-                logger.info(`Join to Create temporary channel ${channel.name} (${channel.id}) was deleted, cleaning up database`);
+                logger.info(`TempVoice midlertidig kanal ${channel.name} (${channel.id}) ble slettet, rydder opp i databasen`);
                 
                 const success = await unregisterTemporaryChannel(client, guildId, channel.id);
                 if (success) {
-                    logger.info(`Successfully cleaned up temporary channel ${channel.id} from database`);
+                    logger.info(`Ryddet opp midlertidig kanal ${channel.id} fra databasen`);
                 } else {
-                    logger.warn(`Failed to cleanup temporary channel ${channel.id} from database`);
+                    logger.warn(`Kunne ikke rydde opp midlertidig kanal ${channel.id} fra databasen`);
                 }
             }
 
             if (config.categoryId === channel.id) {
-                logger.warn(`Category ${channel.name} (${channel.id}) used for Join to Create temporary channels was deleted. Join to Create will be disabled.`);
+                logger.warn(`Kategori ${channel.name} (${channel.id}) brukt for TempVoice midlertidige kanaler ble slettet. TempVoice vil bli deaktivert.`);
                 
                 config.categoryId = null;
                 config.enabled = false;
                 
                 try {
                     await client.db.set(`guild:${guildId}:jointocreate`, config);
-                    logger.info(`Disabled Join to Create for guild ${guildId} due to category deletion`);
+                    logger.info(`Deaktiverte TempVoice for server ${guildId} på grunn av sletting av kategori`);
                 } catch (error) {
-                    logger.error(`Failed to disable Join to Create for guild ${guildId}:`, error);
+                    logger.error(`Kunne ikke deaktivere TempVoice for server ${guildId}:`, error);
                 }
             }
 
         } catch (error) {
-            logger.error(`Error in channelDelete event for guild ${guildId}:`, error);
+            logger.error(`Feil i channelDelete-hendelsen for server ${guildId}:`, error);
         }
     }
 };

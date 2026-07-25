@@ -6,7 +6,7 @@ export default {
   name: Events.GuildCreate,
   async execute(guild, client) {
     try {
-      logger.info('Bot joined guild', {
+      logger.info('Bot ble med i serveren', {
         event: 'guild.create',
         guildId: guild.id,
         guildName: guild.name,
@@ -16,7 +16,7 @@ export default {
       const config = await getGuildConfig(client, guild.id);
       await setGuildConfig(client, guild.id, config);
     } catch (error) {
-      logger.error(`Error initializing guild ${guild?.id} on join:`, error);
+      logger.error(`Feil under initialisering av server ${guild?.id} ved innmelding:`, error);
     }
   },
 };
