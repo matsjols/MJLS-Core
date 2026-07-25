@@ -51,7 +51,7 @@ export default {
       return InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(
           'Kanal oppdatert',
-          `**${DESTINATION_LABELS[destination]}**-logger vil bli sendt til ${channel}.\nBruk \`/logging kontrollpanel\` for å slå av/på handlingskategorier.`, // Endret /logging dashboard til /logging kontrollpanel
+          `**${DESTINATION_LABELS[destination]}**-logger vil bli sendt til ${channel}.\nBruk \`/logging dashboard\` for å slå av/på handlingskategorier.`,
         )],
       });
     } catch (error) {

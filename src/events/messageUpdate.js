@@ -16,14 +16,14 @@ export default {
       if (oldMessage.content === newMessage.content) return;
 
       const metaLines = [
-        formatLogLine('Channel', newMessage.channel ? `${newMessage.channel.name} ${newMessage.channel.toString()}` : 'Unknown'),
-        formatLogLine('Message ID', `\`${newMessage.id}\``),
-        formatLogLine('Message author', newMessage.author ? newMessage.author.toString() : 'Unknown'),
-        formatLogLine('Message created', `<t:${Math.floor(newMessage.createdTimestamp / 1000)}:R>`),
+        formatLogLine('Kanal', newMessage.channel ? `${newMessage.channel.name} ${newMessage.channel.toString()}` : 'Ukjent'),
+        formatLogLine('Meldings-ID', `\`${newMessage.id}\``),
+        formatLogLine('Meldingsforfatter', newMessage.author ? newMessage.author.toString() : 'Ukjent'),
+        formatLogLine('Melding opprettet', `<t:${Math.floor(newMessage.createdTimestamp / 1000)}:R>`),
       ];
 
-      const oldContent = oldMessage.content || '*(empty message)*';
-      const newContent = newMessage.content || '*(empty message)*';
+      const oldContent = oldMessage.content || '*(tom melding)*';
+      const newContent = newMessage.content || '*(tom melding)*';
       const oldContentTruncated = oldContent.length > MAX_LOGGED_EDIT_CONTENT_LENGTH
         ? `${oldContent.substring(0, MAX_LOGGED_EDIT_CONTENT_LENGTH - 3)}...`
         : oldContent;
@@ -36,12 +36,12 @@ export default {
         guildId: newMessage.guild.id,
         eventType: EVENT_TYPES.MESSAGE_EDIT,
         data: {
-          title: 'Message edited',
+          title: 'Melding redigert',
           lines: metaLines,
           quoted: true,
           fields: [
-            { name: 'Before', value: oldContentTruncated, inline: true },
-            { name: 'After', value: newContentTruncated, inline: true },
+            { name: 'Før', value: oldContentTruncated, inline: true },
+            { name: 'Etter', value: newContentTruncated, inline: true },
           ],
           userId: newMessage.author?.id,
           channelId: newMessage.channel.id,
