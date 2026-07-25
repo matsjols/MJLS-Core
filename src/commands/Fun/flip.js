@@ -6,7 +6,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 
 export default {
   data: new SlashCommandBuilder()
-    .setName("flip")
+    .setName("kron-eller-mynt")
     .setDescription("Kaster en mynt (Kron eller mynt)."),
   category: 'Fun',
 

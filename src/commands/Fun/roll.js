@@ -6,7 +6,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 
 export default {
   data: new SlashCommandBuilder()
-    .setName("roll")
+    .setName("rull-terning")
     .setDescription("Kaster terninger med standard notasjon (f.eks. 2d20, 1d6 + 5).")
     .addStringOption((option) =>
       option
@@ -21,7 +21,7 @@ export default {
     await InteractionHelper.safeDefer(interaction);
 
     const notation = interaction.options
-      .getString("notation")
+      .getString("notasjon")
       .toLowerCase()
       .replace(/\s/g, "");
 

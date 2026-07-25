@@ -12,7 +12,7 @@ export default {
     .setDescription("Starter en simulert 1v1 tekstbasert kamp.")
     .addUserOption((option) =>
       option
-        .setName("opponent")
+        .setName("slåss-mot")
         .setDescription("Brukeren du vil kjempe mot.")
         .setRequired(true),
     ),

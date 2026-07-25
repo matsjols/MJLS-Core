@@ -63,23 +63,23 @@ export default {
 
   async execute(interaction) {
     try {
-      const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
-      if (!deferSuccess) {
-        logger.warn('Count command defer failed', { userId: interaction.user.id, guildId: interaction.guildId });
-        return;
-      }
-
-      if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
-        return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Du trenger tillatelsen **Administrer server** for å bruke denne kommandoen.' });
-      }
-
       const guildId = interaction.guildId;
       const subcommand = interaction.options.getSubcommand();
-      const config = await getCountingGameConfig(interaction.client, guildId);
 
-      // Fikset: Sjekker nå etter det norske navnet 'sett-opp' i stedet for 'setup'
+      // For 'sett-opp' ønsker vi ikke at svaret skal være ephemeral (skjult), 
+      // så vi utsetter uten ephemeral-flagget for denne spesifikke kommandoen.
       if (subcommand === 'sett-opp') {
-        // Fikset: Henter 'kanal' i stedet for 'channel'
+        const deferSuccess = await InteractionHelper.safeDefer(interaction); // Fjernet ephemeral her
+        if (!deferSuccess) {
+          logger.warn('Count command defer failed', { userId: interaction.user.id, guildId: interaction.guildId });
+          return;
+        }
+
+        if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+          return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Du trenger tillatelsen **Administrer server** for å bruke denne kommandoen.' });
+        }
+
+        const config = await getCountingGameConfig(interaction.client, guildId);
         const channel = interaction.options.getChannel('kanal');
         const system = interaction.options.getString('system');
         
@@ -92,6 +92,7 @@ export default {
         }
 
         await activateCountingGame(interaction.client, guildId, channel.id, system);
+        
         return await InteractionHelper.safeEditReply(interaction, {
           embeds: [
             successEmbed(
@@ -102,7 +103,20 @@ export default {
         });
       }
 
-      // Fikset: Sjekker nå etter 'deaktiver' i stedet for 'disable'
+      // For alle andre underkommandoer beholder vi ephemeral, ettersom status, toppliste og deaktivering 
+      // som regel er finest om ikke sporer ned chatten for alle andre.
+      const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+      if (!deferSuccess) {
+        logger.warn('Count command defer failed', { userId: interaction.user.id, guildId: interaction.guildId });
+        return;
+      }
+
+      if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+        return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Du trenger tillatelsen **Administrer server** for å bruke denne kommandoen.' });
+      }
+
+      const config = await getCountingGameConfig(interaction.client, guildId);
+
       if (subcommand === 'deaktiver') {
         if (!config.enabled) {
           return await InteractionHelper.safeEditReply(interaction, {
@@ -157,7 +171,6 @@ export default {
         });
       }
 
-      // Fikset: Sjekker nå etter 'toppliste' i stedet for 'leaderboard'
       if (subcommand === 'toppliste') {
         const leaderboard = buildCountingLeaderboard(config, interaction.guild);
 
