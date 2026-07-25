@@ -13,7 +13,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 
 export default {
     data: new SlashCommandBuilder()
-        .setName("greroll")
+        .setName("giveaway-reroll")
         .setDescription("Trekker nye vinner(e) på nytt for en avsluttet giveaway.")
         .addStringOption((option) =>
             option

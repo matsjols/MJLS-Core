@@ -13,7 +13,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 
 export default {
     data: new SlashCommandBuilder()
-        .setName("gend")
+        .setName("giveaway-slett")
         .setDescription(
             "Avslutter en aktiv giveaway umiddelbart og trekker vinner(e).",
         )

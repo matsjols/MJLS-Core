@@ -20,11 +20,11 @@ const GIVEAWAY_MAX_WINNERS = botConfig.giveaways?.maximumWinners ?? 10;
 
 export default {
     data: new SlashCommandBuilder()
-        .setName("gcreate")
+        .setName("giveaway-lag")
         .setDescription("Starter en ny giveaway i en spesifisert kanal.")
         .addStringOption((option) =>
             option
-                .setName("duration")
+                .setName("lengde")
                 .setDescription(
                     "Hvor lenge giveawayen skal vare (f.eks. 1h, 30m, 5d).",
                 )
@@ -32,7 +32,7 @@ export default {
         )
         .addIntegerOption((option) =>
             option
-                .setName("winners")
+                .setName("vinnere")
                 .setDescription("Antall vinnere som skal trekkes.")
                 .setMinValue(GIVEAWAY_MIN_WINNERS)
                 .setMaxValue(GIVEAWAY_MAX_WINNERS)
@@ -40,13 +40,13 @@ export default {
         )
         .addStringOption((option) =>
             option
-                .setName("prize")
+                .setName("premie")
                 .setDescription("Premien som deles ut.")
                 .setRequired(true),
         )
         .addChannelOption((option) =>
             option
-                .setName("channel")
+                .setName("kanal")
                 .setDescription("Kanalen giveawayen skal sendes til (standard er gjeldende kanal).")
                 .addChannelTypes(ChannelType.GuildText)
                 .setRequired(false),
@@ -77,10 +77,10 @@ export default {
 
         logger.info(`Giveaway creation started by ${interaction.user.tag} in guild ${interaction.guildId}`);
 
-        const durationString = interaction.options.getString("duration");
-        const winnerCount = interaction.options.getInteger("winners");
-        const prize = interaction.options.getString("prize");
-        const targetChannel = interaction.options.getChannel("channel") || interaction.channel;
+        const durationString = interaction.options.getString("lengde");
+        const winnerCount = interaction.options.getInteger("vinnere");
+        const prize = interaction.options.getString("premie");
+        const targetChannel = interaction.options.getChannel("kanal") || interaction.channel;
 
         const durationMs = parseDuration(durationString);
         validateWinnerCount(winnerCount);
