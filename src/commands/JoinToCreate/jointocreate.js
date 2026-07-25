@@ -36,15 +36,15 @@ export default {
                         .setDescription("Velg en mal for navnsetting av midlertidige talekanaler.")
                         .addChoices(
                             { name: "{username}'s Rom (Standard)", value: "{username}'s Rom" },
-                            { name: "{username}'s Kanal", value: "{username}'s Channel" },
+                            { name: "{username}'s Kanal", value: "{username}'s Kanal" },
                             { name: "{username}'s Lounge", value: "{username}'s Lounge" },
                             { name: "{username}'s Space", value: "{username}'s Space" },
-                            { name: "{displayName}'s Rom", value: "{displayName}'s Room" },
+                            { name: "{displayName}'s Rom", value: "{displayName}'s Rom" },
                             { name: "{username}'s VC", value: "{username}'s VC" },
-                            { name: "{username}'s Musikkrom", value: "{username}'s Music Room" },
-                            { name: "{username}'s Spillrom", value: "{username}'s Gaming Room" },
-                            { name: "{username}'s Chatterom", value: "{username}'s Chat Room" },
-                            { name: "{username}'s Private Rom", value: "{username}'s Private Room" }
+                            { name: "{username}'s Musikkrom", value: "{username}'s Musikkrom" },
+                            { name: "{username}'s Spillrom", value: "{username}'s Gamingrom" },
+                            { name: "{username}'s Chatterom", value: "{username}'s Chatterom" },
+                            { name: "{username}'s Private Rom", value: "{username}'s Private Rom" }
                         )
                 )
                 .addIntegerOption((option) =>
@@ -119,7 +119,7 @@ export default {
 async function handleSetupSubcommand(interaction, client) {
     try {
         const category = interaction.options.getChannel('kategori');
-        const nameTemplate = interaction.options.getString('kanalnavn') || "{username}'s Room";
+        const nameTemplate = interaction.options.getString('kanalnavn') || "{username}'s Rom";
         const userLimit = interaction.options.getInteger('åpne-slots') || 0;
         const bitrate = interaction.options.getInteger('bitrate') || 64;
         const guildId = interaction.guild.id;
@@ -239,7 +239,7 @@ async function handleConfigSubcommand(interaction, client) {
             .addFields(
                 {
                     name: 'Mal for kanalnavn',
-                    value: `\`${channelConfig.nameTemplate || currentConfig.channelNameTemplate || "{username}'s Room"}\``,
+                    value: `\`${channelConfig.nameTemplate || currentConfig.channelNameTemplate || "{username}'s Rom"}\``,
                     inline: false
                 },
                 {
@@ -367,21 +367,21 @@ async function handleConfigSubcommand(interaction, client) {
 async function handleNameTemplateModal(interaction, triggerChannel, currentConfig, client) {
     try {
         const TEMPLATE_OPTIONS = [
-            { label: "{username}'s Rom (Standard)", value: "{username}'s Rom" },
-            { label: "{username}'s Kanal",        value: "{username}'s Channel" },
+            { label: "{username}'s Rom", value: "{username}'s Rom" },
+            { label: "{username}'s Kanal",        value: "{username}'s Kanal" },
             { label: "{username}'s Lounge",         value: "{username}'s Lounge" },
             { label: "{username}'s Space",          value: "{username}'s Space" },
-            { label: "{displayName}'s Rom",        value: "{displayName}'s Room" },
+            { label: "{displayName}'s Rom",        value: "{displayName}'s Rom" },
             { label: "{username}'s VC",             value: "{username}'s VC" },
-            { label: "{username}'s Musikkrom",  value: "{username}'s Music Room" },
-            { label: "{username}'s Spillrom", value: "{username}'s Gaming Room" },
-            { label: "{username}'s Chatterom",   value: "{username}'s Chat Room" },
-            { label: "{username}'s Private Rom",   value: "{username}'s Private Room" },
+            { label: "{username}'s Musikkrom",  value: "{username}'s Musikkrom" },
+            { label: "{username}'s Gamingrom", value: "{username}'s Gamingrom" },
+            { label: "{username}'s Chatterom",   value: "{username}'s Chatterom" },
+            { label: "{username}'s Private Rom",   value: "{username}'s Private Rom" },
         ];
 
         const currentTemplate = currentConfig.channelConfig?.nameTemplate
             || currentConfig.channelNameTemplate
-            || "{username}'s Room";
+            || "{username}'s Rom";
 
         const templateSelect = new StringSelectMenuBuilder()
             .setCustomId('template')
