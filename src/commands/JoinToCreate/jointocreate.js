@@ -118,9 +118,9 @@ export default {
 
 async function handleSetupSubcommand(interaction, client) {
     try {
-        const category = interaction.options.getChannel('category');
-        const nameTemplate = interaction.options.getString('channel_name') || "{username}'s Room";
-        const userLimit = interaction.options.getInteger('user_limit') || 0;
+        const category = interaction.options.getChannel('kategori');
+        const nameTemplate = interaction.options.getString('kanalnavn') || "{username}'s Room";
+        const userLimit = interaction.options.getInteger('åpne-slots') || 0;
         const bitrate = interaction.options.getInteger('bitrate') || 64;
         const guildId = interaction.guild.id;
 
