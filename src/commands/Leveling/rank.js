@@ -6,7 +6,7 @@ import { getUserLevelData, getLevelingConfig, getXpForLevel } from '../../servic
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
   data: new SlashCommandBuilder()
-    .setName('rank')
+    .setName('lvlrank')
     .setDescription("Sjekk din egen eller en annen brukers rangering og level")
     .addUserOption((option) =>
       option

@@ -6,7 +6,6 @@ import { botHasPermission } from '../../utils/permissionGuard.js';
 import { TitanBotError, ErrorTypes, replyUserError } from '../../utils/errorHandler.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { logger } from '../../utils/logger.js';
-import levelDashboard from './modules/level_dashboard.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -16,7 +15,7 @@ export default {
         .setDMPermission(false)
         .addSubcommand((subcommand) =>
             subcommand
-                .setName('setup')
+                .setName('sett-opp')
                 .setDescription('Sett opp levlingssystemet — dette aktiverer det også')
                 .addChannelOption((option) =>
                     option
@@ -58,11 +57,6 @@ export default {
                         .setMaxValue(3600)
                         .setRequired(false),
                 ),
-        )
-        .addSubcommand((subcommand) =>
-            subcommand
-                .setName('dashboard')
-                .setDescription('Åpne det interaktive konfigurasjons-dashboardet for levling'),
         ),
     category: 'Leveling',
 
@@ -78,11 +72,7 @@ export default {
 
         const subcommand = interaction.options.getSubcommand();
 
-        if (subcommand === 'dashboard') {
-            return levelDashboard.execute(interaction, config, client);
-        }
-
-        if (subcommand === 'setup') {
+        if (subcommand === 'sett-opp') {
             const channel = interaction.options.getChannel('channel');
             const xpMin = interaction.options.getInteger('xp_min') ?? 15;
             const xpMax = interaction.options.getInteger('xp_max') ?? 25;
@@ -106,7 +96,7 @@ export default {
             const existingConfig = await getLevelingConfig(client, interaction.guildId);
 
             if (existingConfig.configured) {
-                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `Levlingssystemet er allerede satt opp på denne serveren (level-up varsler går til <#${existingConfig.levelUpChannel}>).\n\nBruk \`/level dashboard\` for å justere innstillingene.` });
+                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `Levlingssystemet er allerede satt opp på denne serveren (level-up varsler går til <#${existingConfig.levelUpChannel}>).\n\nBruk \`/lvl-dashboard\` for å justere innstillingene.` });
             }
 
             const newConfig = {
@@ -140,7 +130,7 @@ export default {
                             `**XP per melding:** ${xpMin} – ${xpMax}\n` +
                             `**XP-nedkjøling:** ${xpCooldown}s\n` +
                             `**Level-up melding:** \`${message}\`\n\n` +
-                            `Bruk \`/level dashboard\` for å justere disse innstillingene når som helst.`,
+                            `Bruk \`/lvl-dashboard\` for å justere disse innstillingene når som helst.`,
                         color: 'success',
                     }),
                 ],

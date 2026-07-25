@@ -6,7 +6,7 @@ import { getLeaderboard, getLevelingConfig, getXpForLevel } from '../../services
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
   data: new SlashCommandBuilder()
-    .setName('leaderboard')
+    .setName('lvl-toppliste')
     .setDescription("Viser serverens level-ledertavle")
     .setDMPermission(false),
   category: 'Leveling',

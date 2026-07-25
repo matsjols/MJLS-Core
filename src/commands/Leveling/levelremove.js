@@ -8,7 +8,7 @@ import { createEmbed } from '../../utils/embeds.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
   data: new SlashCommandBuilder()
-    .setName('levelremove')
+    .setName('lvl-ned')
     .setDescription('Fjern levels fra en bruker')
     .addUserOption((option) =>
       option

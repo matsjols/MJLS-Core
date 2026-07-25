@@ -15,6 +15,8 @@ import {
     MessageFlags,
     ComponentType,
     EmbedBuilder,
+    SlashCommandBuilder,
+    PermissionFlagsBits
 } from 'discord.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { successEmbed } from '../../../utils/embeds.js';
@@ -142,8 +144,22 @@ async function refreshDashboard(rootInteraction, cfg, guildId) {
 }
 
 export default {
-    prefixOnly: false,
+    data: new SlashCommandBuilder()
+        .setName('lvl-dashboard')
+        .setDescription('Åpne det interaktive konfigurasjons-dashboardet for levling')
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+        .setDMPermission(false),
+    category: 'Leveling',
     async execute(interaction, config, client) {
+        const deferred = await InteractionHelper.safeDefer(interaction, {
+            flags: MessageFlags.Ephemeral,
+        });
+        if (!deferred) return;
+
+        if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+            return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Du trenger tillatelsen **Administrer server** for å bruke denne kommandoen.' });
+        }
+
         try {
             const guildId = interaction.guild.id;
             const cfg = await getLevelingConfig(client, guildId);
@@ -152,7 +168,7 @@ export default {
                 throw new TitanBotError(
                     'Leveling system not configured',
                     ErrorTypes.CONFIGURATION,
-                    'Levlingssystemet har ikke blitt satt opp enda. Kjør `/level setup` først for å konfigurere det.',
+                    'Levlingssystemet har ikke blitt satt opp enda. Kjør `/level sett-opp` først for å konfigurere det.',
                 );
             }
 

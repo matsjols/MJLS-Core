@@ -8,7 +8,7 @@ import { createEmbed } from '../../utils/embeds.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
   data: new SlashCommandBuilder()
-    .setName('leveladd')
+    .setName('lvl-opp')
     .setDescription('Legg til levels på en bruker')
     .addUserOption((option) =>
       option
