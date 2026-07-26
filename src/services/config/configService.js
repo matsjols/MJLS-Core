@@ -1,5 +1,3 @@
-// configService.js
-
 import { logger } from '../../utils/logger.js';
 import { getGuildConfig, setGuildConfig } from './guildConfig.js';
 import { PermissionFlagsBits } from 'discord.js';
@@ -99,30 +97,30 @@ class ConfigService {
     static validateConfigKeySafety(key) {
         if (typeof key !== 'string' || key.trim().length === 0) {
             throw createError(
-                'Invalid setting key',
+                'Ugyldig innstillingsnøkkel',
                 ErrorTypes.VALIDATION,
-                'Setting key must be a non-empty string.',
+                'Innstillingsnøkkelen må være en tekststreng som ikke er tom.',
                 { key }
             );
         }
 
         if (this.UNSAFE_KEYS.includes(key)) {
             throw createError(
-                'Unsafe setting key',
+                'Utrygg innstillingsnøkkel',
                 ErrorTypes.VALIDATION,
-                'This setting key is not allowed for security reasons.',
+                'Denne innstillingsnøkkelen er ikke tillatt av sikkerhetsmessige årsaker.',
                 { key }
             );
         }
     }
 
     static async validateConfigValue(key, value, guild) {
-        logger.debug(`[CONFIG_SERVICE] Validating config value`, { key, type: typeof value });
+        logger.debug(`[CONFIG_SERVICE] Validerer konfigurasjonsverdi`, { key, type: typeof value });
 
         const rule = CONFIG_VALIDATION_RULES[key];
         
         if (!rule) {
-            logger.warn(`[CONFIG_SERVICE] No validation rule for key: ${key}`);
+            logger.warn(`[CONFIG_SERVICE] Ingen valideringsregel for nøkkel: ${key}`);
             return true; 
         }
 
@@ -135,9 +133,9 @@ class ConfigService {
             const parsed = zodSchema.safeParse(value);
             if (!parsed.success) {
                 throw createError(
-                    'Invalid configuration value',
+                    'Ugyldig konfigurasjonsverdi',
                     ErrorTypes.VALIDATION,
-                    'Provided configuration value is invalid.',
+                    'Den oppgitte konfigurasjonsverdien er ugyldig.',
                     {
                         key,
                         errorCode: 'VALIDATION_FAILED',
@@ -154,9 +152,9 @@ class ConfigService {
         if (rule.type === 'channel') {
             if (typeof value !== 'string' && typeof value !== 'object') {
                 throw createError(
-                    'Invalid channel',
+                    'Ugyldig kanal',
                     ErrorTypes.VALIDATION,
-                    'Channel ID must be a string.',
+                    'Kanal-ID må være en tekststreng.',
                     { key, provided: typeof value }
                 );
             }
@@ -166,18 +164,18 @@ class ConfigService {
 
             if (!channel) {
                 throw createError(
-                    'Channel not found',
+                    'Kanal ikke funnet',
                     ErrorTypes.VALIDATION,
-                    'The specified channel does not exist.',
+                    'Den spesifiserte kanalen eksisterer ikke.',
                     { key, channelId }
                 );
             }
 
             if (!channel.isTextBased?.()) {
                 throw createError(
-                    'Invalid channel type',
+                    'Ugyldig kanaltype',
                     ErrorTypes.VALIDATION,
-                    'Only text channels are allowed.',
+                    'Kun tekstkanaler er tillatt.',
                     { key, channelId, channelType: channel.type }
                 );
             }
@@ -188,9 +186,9 @@ class ConfigService {
         if (rule.type === 'role') {
             if (typeof value !== 'string' && typeof value !== 'object') {
                 throw createError(
-                    'Invalid role',
+                    'Ugyldig rolle',
                     ErrorTypes.VALIDATION,
-                    'Role ID must be a string.',
+                    'Rolle-ID må være en tekststreng.',
                     { key, provided: typeof value }
                 );
             }
@@ -200,9 +198,9 @@ class ConfigService {
 
             if (!role) {
                 throw createError(
-                    'Role not found',
+                    'Rolle ikke funnet',
                     ErrorTypes.VALIDATION,
-                    'The specified role does not exist.',
+                    'Den spesifiserte rollen eksisterer ikke.',
                     { key, roleId }
                 );
             }
@@ -210,9 +208,9 @@ class ConfigService {
             const botHighestRole = guild.members.me?.roles.highest;
             if (role.position >= botHighestRole?.position) {
                 throw createError(
-                    'Role too high',
+                    'For høy rolle',
                     ErrorTypes.VALIDATION,
-                    "Can't set roles higher than my highest role.",
+                    'Kan ikke angi roller som er høyere enn min høyeste rolle.',
                     { key, roleId, rolePosition: role.position }
                 );
             }
@@ -223,9 +221,9 @@ class ConfigService {
         if (rule.type === 'string') {
             if (typeof value !== 'string') {
                 throw createError(
-                    'Invalid value type',
+                    'Ugyldig verditype',
                     ErrorTypes.VALIDATION,
-                    'Value must be a string.',
+                    'Verdien må være en tekststreng.',
                     { key, provided: typeof value }
                 );
             }
@@ -233,18 +231,18 @@ class ConfigService {
             const length = value.length;
             if (rule.maxLength && length > rule.maxLength) {
                 throw createError(
-                    'Value too long',
+                    'Verdien er for lang',
                     ErrorTypes.VALIDATION,
-                    `Value cannot exceed **${rule.maxLength}** characters.`,
+                    `Verdien kan ikke overskride **${rule.maxLength}** tegn.`,
                     { key, current: length, max: rule.maxLength }
                 );
             }
 
             if (rule.minLength && length < rule.minLength) {
                 throw createError(
-                    'Value too short',
+                    'Verdien er for kort',
                     ErrorTypes.VALIDATION,
-                    `Value must be at least **${rule.minLength}** character(s).`,
+                    `Verdien må være på minst **${rule.minLength}** tegn.`,
                     { key, current: length, min: rule.minLength }
                 );
             }
@@ -255,27 +253,27 @@ class ConfigService {
         if (rule.type === 'number') {
             if (typeof value !== 'number') {
                 throw createError(
-                    'Invalid value type',
+                    'Ugyldig verditype',
                     ErrorTypes.VALIDATION,
-                    'Value must be a number.',
+                    'Verdien må være et tall.',
                     { key, provided: typeof value }
                 );
             }
 
             if (rule.min !== undefined && value < rule.min) {
                 throw createError(
-                    'Value too low',
+                    'Verdien er for lav',
                     ErrorTypes.VALIDATION,
-                    `Value must be at least **${rule.min}**.`,
+                    `Verdien må være minst **${rule.min}**.`,
                     { key, value, min: rule.min }
                 );
             }
 
             if (rule.max !== undefined && value > rule.max) {
                 throw createError(
-                    'Value too high',
+                    'Verdien er for høy',
                     ErrorTypes.VALIDATION,
-                    `Value cannot exceed **${rule.max}**.`,
+                    `Verdien kan ikke overskride **${rule.max}**.`,
                     { key, value, max: rule.max }
                 );
             }
@@ -286,9 +284,9 @@ class ConfigService {
         if (rule.type === 'boolean') {
             if (typeof value !== 'boolean') {
                 throw createError(
-                    'Invalid value type',
+                    'Ugyldig verditype',
                     ErrorTypes.VALIDATION,
-                    'Value must be true or false.',
+                    'Verdien må være enten sant (true) eller usant (false).',
                     { key, provided: typeof value }
                 );
             }
@@ -299,9 +297,9 @@ class ConfigService {
         if (rule.type === 'object') {
             if (typeof value !== 'object' || value === null) {
                 throw createError(
-                    'Invalid value type',
+                    'Ugyldig verditype',
                     ErrorTypes.VALIDATION,
-                    'Value must be an object.',
+                    'Verdien må være et objekt.',
                     { key, provided: typeof value }
                 );
             }
@@ -313,7 +311,7 @@ class ConfigService {
     }
 
     static detectConflicts(currentConfig, key, value) {
-        logger.debug(`[CONFIG_SERVICE] Checking for config conflicts`, { key });
+        logger.debug(`[CONFIG_SERVICE] Sjekker etter konfigurasjonskonflikter`, { key });
 
         const conflicts = [];
         const relatedSettings = SETTING_CONFLICTS[key] || [];
@@ -323,7 +321,7 @@ class ConfigService {
                 
                 if (currentConfig.logging?.enabled) {
                     conflicts.push(
-                        `Disabling log channel but logging system is still enabled. Consider disabling logging first.`
+                        `Deaktiverer loggkanal, men loggingssystemet er fortsatt aktivert. Vurder å deaktivere logging først.`
                     );
                 }
             }
@@ -333,7 +331,7 @@ class ConfigService {
     }
 
     static async updateSetting(client, guildId, key, value, adminId) {
-        logger.info(`[CONFIG_SERVICE] Updating setting`, {
+        logger.info(`[CONFIG_SERVICE] Oppdaterer innstilling`, {
             guildId,
             key,
             adminId,
@@ -343,15 +341,15 @@ class ConfigService {
         this.validateConfigKeySafety(key);
 
         if (this.PROTECTED_SETTINGS.includes(key)) {
-            logger.warn(`[CONFIG_SERVICE] Attempted to modify protected setting`, {
+            logger.warn(`[CONFIG_SERVICE] Forsøkte å endre beskyttet innstilling`, {
                 key,
                 guildId,
                 adminId
             });
             throw createError(
-                'Protected setting',
+                'Beskyttet innstilling',
                 ErrorTypes.VALIDATION,
-                `The setting **${key}** cannot be modified.`,
+                `Innstillingen **${key}** kan ikke endres.`,
                 { key }
             );
         }
@@ -359,9 +357,9 @@ class ConfigService {
         const guild = client.guilds.cache.get(guildId);
         if (!guild) {
             throw createError(
-                'Guild not found',
+                'Server ikke funnet',
                 ErrorTypes.VALIDATION,
-                'Guild does not exist.',
+                'Serveren eksisterer ikke.',
                 { guildId }
             );
         }
@@ -372,7 +370,7 @@ class ConfigService {
 
         const conflicts = this.detectConflicts(currentConfig, key, value);
         if (conflicts.length > 0) {
-            logger.warn(`[CONFIG_SERVICE] Config conflicts detected`, {
+            logger.warn(`[CONFIG_SERVICE] Konfigurasjonskonflikter oppdaget`, {
                 guildId,
                 key,
                 conflicts
@@ -396,7 +394,7 @@ class ConfigService {
             conflicts
         });
 
-        logger.info(`[CONFIG_SERVICE] Setting updated successfully`, {
+        logger.info(`[CONFIG_SERVICE] Innstilling oppdatert`, {
             guildId,
             key,
             adminId,
@@ -415,7 +413,7 @@ class ConfigService {
     }
 
     static async bulkUpdate(client, guildId, updates, adminId) {
-        logger.info(`[CONFIG_SERVICE] Bulk updating settings`, {
+        logger.info(`[CONFIG_SERVICE] Masseoppdaterer innstillinger`, {
             guildId,
             updateCount: Object.keys(updates).length,
             adminId
@@ -424,9 +422,9 @@ class ConfigService {
         const guild = client.guilds.cache.get(guildId);
         if (!guild) {
             throw createError(
-                'Guild not found',
+                'Server ikke funnet',
                 ErrorTypes.VALIDATION,
-                'Guild does not exist.',
+                'Serveren eksisterer ikke.',
                 { guildId }
             );
         }
@@ -439,26 +437,26 @@ class ConfigService {
                 this.validateConfigKeySafety(key);
 
                 if (this.PROTECTED_SETTINGS.includes(key)) {
-                    validationErrors.push(`${key}: Protected setting cannot be modified`);
+                    validationErrors.push(`${key}: Beskyttet innstilling kan ikke endres`);
                     continue;
                 }
 
                 await this.validateConfigValue(key, value, guild);
                 validatedUpdates[key] = value;
             } catch (error) {
-                validationErrors.push(`${key}: ${error.details?.message || error.message}`);
+                validationErrors.push(`${key}:${error.details?.message || error.message}`);
             }
         }
 
         if (validationErrors.length > 0) {
-            logger.warn(`[CONFIG_SERVICE] Bulk update validation failed`, {
+            logger.warn(`[CONFIG_SERVICE] Masseoppdatering feilet validering`, {
                 guildId,
                 errors: validationErrors
             });
             throw createError(
-                'Validation failed',
+                'Validering feilet',
                 ErrorTypes.VALIDATION,
-                `Some settings failed validation:\n• ${validationErrors.join('\n• ')}`,
+                `Noen innstillinger feilet valideringen:\n• ${validationErrors.join('\n• ')}`,
                 { errors: validationErrors }
             );
         }
@@ -479,7 +477,7 @@ class ConfigService {
             });
         }
 
-        logger.info(`[CONFIG_SERVICE] Bulk update completed`, {
+        logger.info(`[CONFIG_SERVICE] Masseoppdatering fullført`, {
             guildId,
             adminId,
             appliedCount: Object.keys(validatedUpdates).length,
@@ -507,7 +505,7 @@ class ConfigService {
             history.shift();
         }
 
-        logger.debug(`[CONFIG_SERVICE] Change recorded for audit trail`, {
+        logger.debug(`[CONFIG_SERVICE] Endring registrert for revisjonslogg`, {
             guildId,
             key: changeData.key,
             historySize: history.length
@@ -520,7 +518,7 @@ class ConfigService {
     }
 
     static async resetSetting(client, guildId, key, adminId) {
-        logger.info(`[CONFIG_SERVICE] Resetting setting`, {
+        logger.info(`[CONFIG_SERVICE] Tilbakestiller innstilling`, {
             guildId,
             key,
             adminId
@@ -543,7 +541,7 @@ class ConfigService {
             timestamp: new Date().toISOString()
         });
 
-        logger.info(`[CONFIG_SERVICE] Setting reset successfully`, {
+        logger.info(`[CONFIG_SERVICE] Innstilling tilbakestilt`, {
             guildId,
             key,
             adminId,
@@ -559,16 +557,16 @@ class ConfigService {
     }
 
     static async getConfigSummary(client, guildId) {
-        logger.debug(`[CONFIG_SERVICE] Fetching config summary`, { guildId });
+        logger.debug(`[CONFIG_SERVICE] Henter konfigurasjonssammendrag`, { guildId });
 
         const config = await getGuildConfig(client, guildId);
         const guild = client.guilds.cache.get(guildId);
 
         if (!guild) {
             throw createError(
-                'Guild not found',
+                'Server ikke funnet',
                 ErrorTypes.VALIDATION,
-                'Guild does not exist.',
+                'Serveren eksisterer ikke.',
                 { guildId }
             );
         }
@@ -585,15 +583,15 @@ class ConfigService {
                 const channel = guild.channels.cache.get(value);
                 summary[key] = {
                     id: value,
-                    name: channel?.name || 'Unknown',
-                    status: channel ? 'Valid' : 'Missing'
+                    name: channel?.name || 'Ukjent',
+                    status: channel ? 'Gyldig' : 'Mangler'
                 };
             } else if (rule.type === 'role' && value) {
                 const role = guild.roles.cache.get(value);
                 summary[key] = {
                     id: value,
-                    name: role?.name || 'Unknown',
-                    status: role ? 'Valid' : 'Missing'
+                    name: role?.name || 'Ukjent',
+                    status: role ? 'Gyldig' : 'Mangler'
                 };
             } else {
                 summary[key] = value;
@@ -618,8 +616,8 @@ class ConfigService {
 wrapServiceClassMethods(ConfigService, (methodName) => ({
     service: 'ConfigService',
     operation: methodName,
-    message: `Configuration service operation failed: ${methodName}`,
-    userMessage: 'A configuration operation failed. Please try again in a moment.'
+    message: `Konfigurasjonstjeneste-operasjon feilet: ${methodName}`,
+    userMessage: 'En konfigurasjonsoperasjon feilet. Vennligst prøv igjen om et øyeblikk.'
 }));
 
 export default ConfigService;

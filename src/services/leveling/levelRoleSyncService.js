@@ -29,7 +29,7 @@ async function tryAwardRole(member, roleId, level) {
     const role = member.guild.roles.cache.get(roleId) || (await member.guild.roles.fetch(roleId).catch(() => null));
     if (!role || member.roles.cache.has(roleId)) return false;
 
-    await member.roles.add(role, `Level ${level} reward (startup sync)`);
+    await member.roles.add(role, `Belønning for level ${level} (oppstartsynkronisering)`);
     return true;
 }
 
@@ -65,7 +65,7 @@ export async function reconcileLevelRoles(client, guildId = null) {
                     configChanged = true;
                     summary.prunedRewardEntries += 1;
                     logger.warn(
-                        `Removed missing level ${level} reward role ${roleId} from config in guild ${guild.id}`,
+                        `Fjernet manglende rollebelønning for level ${level} (${roleId}) fra konfigurasjonen i server ${guild.id}`,
                     );
                 }
             }
@@ -94,7 +94,7 @@ export async function reconcileLevelRoles(client, guildId = null) {
                     } catch (awardError) {
                         summary.errors += 1;
                         logger.warn(
-                            `Could not re-award level ${requiredLevel} role to ${userId} in guild ${guild.id}:`,
+                            `Kunne ikke tildele level ${requiredLevel}-rolle til ${userId} på nytt i server ${guild.id}:`,
                             awardError.message,
                         );
                     }
@@ -102,7 +102,7 @@ export async function reconcileLevelRoles(client, guildId = null) {
             }
         } catch (error) {
             summary.errors += 1;
-            logger.warn(`Level role sync failed for guild ${guild.id}:`, error.message);
+            logger.warn(`Synkronisering av level-roller feilet for server ${guild.id}:`, error.message);
         }
     }
 
