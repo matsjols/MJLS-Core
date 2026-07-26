@@ -8,7 +8,6 @@ const BASE_WIN_CHANCE = 0.4;
 const CLOVER_WIN_BONUS = 0.1;
 const CHARM_WIN_BONUS = 0.08;
 const PAYOUT_MULTIPLIER = 2.0;
-const GAMBLE_COOLDOWN = 5 * 60 * 1000;
 
 export default {
     data: new SlashCommandBuilder()
@@ -29,25 +28,10 @@ export default {
             const userId = interaction.user.id;
             const guildId = interaction.guildId;
             const betAmount = interaction.options.getInteger("beløp");
-            const now = Date.now();
 
             const userData = await getEconomyData(client, guildId, userId);
-            const lastGamble = userData.lastGamble || 0;
             let cloverCount = userData.inventory["lucky_clover"] || 0;
             let charmCount = userData.inventory["lucky_charm"] || 0;
-
-            if (now < lastGamble + GAMBLE_COOLDOWN) {
-                const remaining = lastGamble + GAMBLE_COOLDOWN - now;
-                const minutes = Math.floor(remaining / (1000 * 60));
-                const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
-
-                throw createError(
-                    "Cooldown for pengespill aktiv",
-                    ErrorTypes.RATE_LIMIT,
-                    `Du må roe deg ned før du gambler igjen. Vent i **${minutes}m ${seconds}s**.`,
-                    { remaining, cooldownType: 'gamble' }
-                );
-            }
 
             if (userData.wallet < betAmount) {
                 throw createError(
@@ -98,7 +82,6 @@ export default {
             }
 
             userData.wallet = (userData.wallet || 0) + cashChange;
-            userData.lastGamble = now;
 
             await setEconomyData(client, guildId, userId, userData);
 
@@ -120,7 +103,7 @@ export default {
                 });
             } else {
                 resultEmbed.setFooter({
-                    text: `Neste spillegang tilgjengelig om 5 minutter. Basissjanse: ${Math.round(BASE_WIN_CHANCE * 100)}%.`,
+                    text: `Basissjanse: ${Math.round(BASE_WIN_CHANCE * 100)}%.`,
                 });
             }
 

@@ -1,16 +1,13 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { createEmbed, errorEmbed, successEmbed, infoEmbed, warningEmbed } from '../../utils/embeds.js';
 import { getEconomyData, setEconomyData } from '../../utils/economy.js';
-import { getGuildConfig } from '../../services/config/guildConfig.js';
-import { formatDuration } from '../../utils/embeds.js';
 import { withErrorHandling, createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
-import { botConfig } from '../../config/bot.js';
 
-const DAILY_COOLDOWN = 24 * 60 * 60 * 1000;
-const DAILY_AMOUNT = botConfig.economy?.dailyAmount ?? 100;
-const PREMIUM_BONUS_PERCENTAGE = 0.1;
+const DAILY_REWARD = 1000;
+const DAILY_STREAK_BONUS = 100;
+const DAILY_COOLDOWN = 24 * 60 * 60 * 1000; 
 
 export default {
     data: new SlashCommandBuilder()
@@ -18,87 +15,89 @@ export default {
         .setDescription('Hent din daglige belønning'),
 
     execute: withErrorHandling(async (interaction, config, client) => {
-        const deferred = await InteractionHelper.safeDefer(interaction);
+        // flags: 64 gjør at responsen blir ephemeral (kun synlig for brukeren)
+        const deferred = await InteractionHelper.safeDefer(interaction, { flags: 64 });
         if (!deferred) return;
-            
-        const userId = interaction.user.id;
-        const guildId = interaction.guildId;
-        const now = Date.now();
 
-        logger.debug(`[ECONOMY] Daglig belønning startet for ${userId}`, { userId, guildId });
+            const userId = interaction.user.id;
+            const guildId = interaction.guildId;
+            const now = Date.now();
 
-        const userData = await getEconomyData(client, guildId, userId);
-        
-        if (!userData) {
-            throw createError(
-                "Kunne ikke laste økonomidata for daily",
-                ErrorTypes.DATABASE,
-                "Kunne ikke laste inn økonomidataene dine. Vennligst prøv igjen senere.",
-                { userId, guildId }
-            );
-        }
-        
-        const lastDaily = userData.lastDaily || 0;
+            logger.debug(`[ECONOMY] Daglig belønning forespurt for ${userId}`, { userId, guildId });
 
-        if (now < lastDaily + DAILY_COOLDOWN) {
-            const timeRemaining = lastDaily + DAILY_COOLDOWN - now;
-            throw createError(
-                "Daglig cooldown aktiv",
-                ErrorTypes.RATE_LIMIT,
-                `Du må vente før du kan hente den daglige belønningen igjen. Prøv igjen om **${formatDuration(timeRemaining)}**.`,
-                { timeRemaining, cooldownType: 'daily' }
-            );
-        }
+            const userData = await getEconomyData(client, guildId, userId);
 
-        const guildConfig = await getGuildConfig(client, guildId);
-        const PREMIUM_ROLE_ID = guildConfig.premiumRoleId;
+            if (!userData) {
+                throw createError(
+                    "Kunne ikke laste økonomidata for daglig belønning",
+                    ErrorTypes.DATABASE,
+                    "Kunne ikke laste inn økonomidataene dine. Vennligst prøv igjen senere.",
+                    { userId, guildId }
+                );
+            }
 
-        let earned = DAILY_AMOUNT;
-        let bonusMessage = "";
-        let hasPremiumRole = false;
+            const lastDaily = userData.lastDaily || 0;
+            const currentStreak = userData.dailyStreak || 0;
 
-        if (
-            PREMIUM_ROLE_ID &&
-            interaction.member &&
-            interaction.member.roles.cache.has(PREMIUM_ROLE_ID)
-        ) {
-            const bonusAmount = Math.floor(
-                DAILY_AMOUNT * PREMIUM_BONUS_PERCENTAGE,
-            );
-            earned += bonusAmount;
-            bonusMessage = `\n✨ **Premiumbonus:** +$${bonusAmount.toLocaleString()}`;
-            hasPremiumRole = true;
-        }
+            if (now < lastDaily + DAILY_COOLDOWN) {
+                const remaining = lastDaily + DAILY_COOLDOWN - now;
+                const hours = Math.floor(remaining / (1000 * 60 * 60));
+                const minutes = Math.floor(
+                    (remaining % (1000 * 60 * 60)) / (1000 * 60),
+                );
 
-        userData.wallet = (userData.wallet || 0) + earned;
-        userData.lastDaily = now;
+                throw createError(
+                    "Daglig belønning er allerede hentet",
+                    ErrorTypes.RATE_LIMIT,
+                    `Du har allerede hentet din daglige belønning i dag. Kom tilbake om **${hours}t ${minutes}m**.`,
+                    { remaining, cooldownType: 'daily' }
+                );
+            }
 
-        await setEconomyData(client, guildId, userId, userData);
+            let newStreak = currentStreak;
+            if (now > lastDaily + DAILY_COOLDOWN * 2) {
+                newStreak = 1;
+            } else {
+                newStreak += 1;
+            }
 
-        logger.info(`[ECONOMY_TRANSACTION] Daglig belønning hentet`, {
-            userId,
-            guildId,
-            amount: earned,
-            newWallet: userData.wallet,
-            hasPremium: hasPremiumRole,
-            timestamp: new Date().toISOString()
-        });
+            const streakBonus = (newStreak - 1) * DAILY_STREAK_BONUS;
+            const totalReward = DAILY_REWARD + streakBonus;
 
-        const embed = successEmbed(
-            "✅ Daglig belønning hentet!",
-            `Du har hentet dine daglige **$${earned.toLocaleString()}**!${bonusMessage}`
-        )
-            .addFields({
-                name: "Ny kontantsaldo",
-                value: `$${userData.wallet.toLocaleString()}`,
-                inline: true,
-            })
-            .setFooter({
-                text: hasPremiumRole
-                    ? `Neste krav om 24 timer. (Premium aktiv)`
-                    : `Neste krav om 24 timer.`,
+            userData.wallet += totalReward;
+            userData.lastDaily = now;
+            userData.dailyStreak = newStreak;
+
+            await setEconomyData(client, guildId, userId, userData);
+
+            logger.info(`[ECONOMY] Daglig belønning hentet`, {
+                userId,
+                guildId,
+                reward: totalReward,
+                streak: newStreak,
+                newWallet: userData.wallet
             });
 
-        await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
+            const embed = successEmbed(
+                "🎁 Daglig belønning mottatt!",
+                `Du mottok **$${DAILY_REWARD.toLocaleString()}**${streakBonus > 0 ? ` + **$${streakBonus.toLocaleString()}** i streak-bonus` : ''}!`,
+            )
+                .addFields(
+                    {
+                        name: "Ny kontantsaldo",
+                        value: `$${userData.wallet.toLocaleString()}`,
+                        inline: true,
+                    },
+                    {
+                        name: "Daglig streak",
+                        value: `🔥 ${newStreak} dag(er)`,
+                        inline: true,
+                    },
+                )
+                .setFooter({
+                    text: `Husk å hente belønningen din igjen om 24 timer!`,
+                });
+
+            await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
     }, { command: 'daglig' })
 };
