@@ -1,5 +1,3 @@
-// commandAccessService.js
-
 import { getGuildConfig, updateGuildConfig } from './config/guildConfig.js';
 import {
   normalizeCategoryKey,
@@ -47,15 +45,15 @@ export function buildCommandRegistry(client) {
       });
     }
 
-    // Add the main command
+    // Legg til hovedkommandoen
     categories.get(categoryKey).commands.push({
       name: command.data.name,
-      description: command.data.description || 'No description',
+      description: command.data.description || 'Ingen beskrivelse tilgjengelig',
       protected: PROTECTED_COMMANDS.has(command.data.name.toLowerCase()),
       isSubcommand: false,
     });
 
-    // Add subcommands if they exist
+    // Legg til underkommandoer dersom de finnes
     const commandJson = command.data.toJSON?.() || {};
 
     for (const option of commandJson.options || []) {
@@ -63,7 +61,7 @@ export function buildCommandRegistry(client) {
         const subcommandName = `${command.data.name} ${option.name}`;
         categories.get(categoryKey).commands.push({
           name: subcommandName,
-          description: option.description || 'No description',
+          description: option.description || 'Ingen beskrivelse tilgjengelig',
           protected: false,
           isSubcommand: true,
           parentCommand: command.data.name,
@@ -76,7 +74,7 @@ export function buildCommandRegistry(client) {
             const subcommandName = `${command.data.name} ${option.name} ${sub.name}`;
             categories.get(categoryKey).commands.push({
               name: subcommandName,
-              description: sub.description || 'No description',
+              description: sub.description || 'Ingen beskrivelse tilgjengelig',
               protected: false,
               isSubcommand: true,
               parentCommand: command.data.name,
@@ -111,11 +109,9 @@ export function isProtectedCommand(commandName) {
 export function isCommandEnabledInConfig(config, commandName, category) {
   const normalizedName = String(commandName || '').toLowerCase();
 
-  // Check if it's a subcommand (contains space)
   const isSubcommand = normalizedName.includes(' ');
   const baseCommand = isSubcommand ? normalizedName.split(' ')[0] : normalizedName;
 
-  // Protected commands (only applies to base commands, not subcommands)
   if (!isSubcommand && isProtectedCommand(baseCommand)) {
     return true;
   }
@@ -123,17 +119,14 @@ export function isCommandEnabledInConfig(config, commandName, category) {
   const disabledCommands = normalizeToggleRecord(config?.disabledCommands);
   const disabledCategories = normalizeToggleRecord(config?.disabledCategories);
 
-  // Check if the specific command/subcommand is disabled
   if (disabledCommands[normalizedName]) {
     return false;
   }
 
-  // For subcommands, also check if the base command is disabled
   if (isSubcommand && disabledCommands[baseCommand]) {
     return false;
   }
 
-  // Check if the category is disabled
   if (disabledCategories[normalizeCategoryKey(category)]) {
     return false;
   }
@@ -223,11 +216,11 @@ export async function disableCommand(client, guildId, commandName, context = {})
   const target = resolveCommandTarget(client, normalizedName);
 
   if (!target) {
-    throw new Error(`Unknown command: \`${normalizedName}\`.`);
+    throw new Error(`Ukjent kommando: \`${normalizedName}\`.`);
   }
 
   if (!target.isSubcommand && isProtectedCommand(normalizedName)) {
-    throw new Error(`The \`${normalizedName}\` command cannot be disabled.`);
+    throw new Error(`Kommandoen \`${normalizedName}\` er beskyttet og kan ikke deaktiveres.`);
   }
 
   const config = await getGuildConfig(client, guildId, context);
@@ -243,7 +236,7 @@ export async function enableCommand(client, guildId, commandName, context = {}) 
   const target = resolveCommandTarget(client, normalizedName);
 
   if (!target) {
-    throw new Error(`Unknown command: \`${normalizedName}\`.`);
+    throw new Error(`Ukjent kommando: \`${normalizedName}\`.`);
   }
 
   const config = await getGuildConfig(client, guildId, context);
@@ -259,7 +252,7 @@ export async function disableCategory(client, guildId, categoryKey, context = {}
   const category = getCategoryRegistry(client, normalizedKey);
 
   if (!category) {
-    throw new Error(`Unknown category: \`${categoryKey}\`.`);
+    throw new Error(`Ukjent kategori: \`${categoryKey}\`.`);
   }
 
   const config = await getGuildConfig(client, guildId, context);
@@ -275,7 +268,7 @@ export async function enableCategory(client, guildId, categoryKey, context = {})
   const category = getCategoryRegistry(client, normalizedKey);
 
   if (!category) {
-    throw new Error(`Unknown category: \`${categoryKey}\`.`);
+    throw new Error(`Ukjent kategori: \`${categoryKey}\`.`);
   }
 
   const config = await getGuildConfig(client, guildId, context);
@@ -291,7 +284,7 @@ export async function resetCategoryCommands(client, guildId, categoryKey, contex
   const category = getCategoryRegistry(client, normalizedKey);
 
   if (!category) {
-    throw new Error(`Unknown category: \`${categoryKey}\`.`);
+    throw new Error(`Ukjent kategori: \`${categoryKey}\`.`);
   }
 
   const config = await getGuildConfig(client, guildId, context);

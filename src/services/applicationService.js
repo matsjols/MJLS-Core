@@ -1,5 +1,3 @@
-// applicationService.js
-
 import { logger } from '../utils/logger.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { PermissionFlagsBits } from 'discord.js';
@@ -28,18 +26,18 @@ class ApplicationService {
     static validateApplicationSubmission(data) {
         if (!data.guildId || !data.userId || !data.roleId) {
             throw createError(
-                'Missing required fields for application submission',
+                'Mangler obligatoriske felt for å sende inn søknad',
                 ErrorTypes.VALIDATION,
-                'Invalid application data. Please try again.',
+                'Ugyldige søknadsdata. Vennligst prøv igjen.',
                 { data }
             );
         }
 
         if (!data.answers || !Array.isArray(data.answers) || data.answers.length === 0) {
             throw createError(
-                'Application must have answers',
+                'Søknaden må ha svar',
                 ErrorTypes.VALIDATION,
-                'You must answer all application questions.',
+                'Du må svare på alle søknadsspørsmålene.',
                 { data }
             );
         }
@@ -50,27 +48,27 @@ class ApplicationService {
 
             if (!sanitizedQuestion || !sanitizedAnswer) {
                 throw createError(
-                    'Invalid answer format',
+                    'Ugyldig svarformat',
                     ErrorTypes.VALIDATION,
-                    'All questions must have answers.',
+                    'Alle spørsmål må besvares.',
                     { answer }
                 );
             }
 
             if (sanitizedAnswer.length > 1000) {
                 throw createError(
-                    'Answer too long',
+                    'Svaret er for langt',
                     ErrorTypes.VALIDATION,
-                    'Each answer must be less than 1000 characters.',
+                    'Hvert svar må inneholde mindre enn 1000 tegn.',
                     { length: sanitizedAnswer.length }
                 );
             }
 
             if (sanitizedAnswer.trim().length < 10) {
                 throw createError(
-                    'Answer too short',
+                    'Svaret er for kort',
                     ErrorTypes.VALIDATION,
-                    'Please provide meaningful answers (at least 10 characters).',
+                    'Vennligst oppgi mer utfyllende svar (minst 10 tegn).',
                     { length: sanitizedAnswer.length }
                 );
             }
@@ -87,9 +85,9 @@ class ApplicationService {
         if (lastSubmit && now - lastSubmit < APPLICATION_SUBMIT_COOLDOWN) {
             const remainingTime = Math.ceil((APPLICATION_SUBMIT_COOLDOWN - (now - lastSubmit)) / 1000);
             throw createError(
-                'Application submission on cooldown',
+                'Søknadinnsending har cooldown',
                 ErrorTypes.RATE_LIMIT,
-                `Please wait ${Math.ceil(remainingTime / 60)} minute(s) before submitting another application.`,
+                `Vennligst vent ${Math.ceil(remainingTime / 60)} minutt(er) før du sender inn en ny søknad.`,
                 { remainingTime, userId }
             );
         }
@@ -108,9 +106,9 @@ class ApplicationService {
 
         if (!isManager) {
             throw createError(
-                'User lacks permission to manage applications',
+                'Bruker mangler rettigheter til å administrere søknader',
                 ErrorTypes.PERMISSION,
-                'You do not have permission to manage applications.',
+                'Du har ikke tillatelse til å behandle søknader.',
                 { userId: member.id, guildId }
             );
         }
@@ -120,17 +118,15 @@ class ApplicationService {
 
     static async submitApplication(client, data) {
         try {
-            
             this.validateApplicationSubmission(data);
-
             this.checkApplicationCooldown(data.userId);
 
             const settings = await getApplicationSettings(client, data.guildId);
             if (!settings.enabled) {
                 throw createError(
-                    'Applications are disabled',
+                    'Søknader er deaktivert',
                     ErrorTypes.CONFIGURATION,
-                    'Applications are currently disabled in this server.',
+                    'Søknadssystemet er for øyeblikket deaktivert på denne serveren.',
                     { guildId: data.guildId }
                 );
             }
@@ -140,9 +136,9 @@ class ApplicationService {
 
             if (pendingApp) {
                 throw createError(
-                    'User already has pending application',
+                    'Brukeren har allerede en ventende søknad',
                     ErrorTypes.VALIDATION,
-                    'You already have a pending application. Please wait for it to be reviewed.',
+                    'Du har allerede en søknad under behandling. Vennligst vent til den er behandlet.',
                     { userId: data.userId, pendingAppId: pendingApp.id }
                 );
             }
@@ -157,7 +153,7 @@ class ApplicationService {
 
             const application = await createApplication(client, sanitizedData);
 
-            logger.info('Application submitted', {
+            logger.info('Søknad levert', {
                 applicationId: application.id,
                 userId: data.userId,
                 guildId: data.guildId,
@@ -167,7 +163,7 @@ class ApplicationService {
 
             return application;
         } catch (error) {
-            logger.error('Error submitting application', {
+            logger.error('Feil ved innsending av søknad', {
                 error: error.message,
                 userId: data.userId,
                 guildId: data.guildId,
@@ -183,9 +179,9 @@ class ApplicationService {
 
             if (!['approve', 'deny'].includes(action)) {
                 throw createError(
-                    'Invalid review action',
+                    'Ugyldig behandlingshandling',
                     ErrorTypes.VALIDATION,
-                    'Review action must be either approve or deny.',
+                    'Behandling må enten være godkjenn eller avslå.',
                     { action }
                 );
             }
@@ -193,24 +189,24 @@ class ApplicationService {
             const application = await getApplication(client, guildId, applicationId);
             if (!application) {
                 throw createError(
-                    'Application not found',
+                    'Søknaden ble ikke funnet',
                     ErrorTypes.CONFIGURATION,
-                    'The application you are trying to review does not exist.',
+                    'Søknaden du prøver å behandle eksisterer ikke.',
                     { applicationId, guildId }
                 );
             }
 
             if (application.status !== 'pending') {
                 throw createError(
-                    'Application already processed',
+                    'Søknaden er allerede behandlet',
                     ErrorTypes.VALIDATION,
-                    'This application has already been reviewed.',
+                    'Denne søknaden har allerede blitt behandlet.',
                     { applicationId, status: application.status }
                 );
             }
 
             const status = action === 'approve' ? 'approved' : 'denied';
-            const sanitizedReason = reason ? reason.trim().substring(0, 500) : 'No reason provided.';
+            const sanitizedReason = reason ? reason.trim().substring(0, 500) : 'Ingen begrunnelse oppgitt.';
 
             const updatedApplication = await updateApplication(client, guildId, applicationId, {
                 status,
@@ -219,7 +215,7 @@ class ApplicationService {
                 reviewedAt: new Date().toISOString()
             });
 
-            logger.info('Application reviewed', {
+            logger.info('Søknad behandlet', {
                 applicationId,
                 guildId,
                 status,
@@ -229,7 +225,7 @@ class ApplicationService {
 
             return updatedApplication;
         } catch (error) {
-            logger.error('Error reviewing application', {
+            logger.error('Feil ved behandling av søknad', {
                 error: error.message,
                 applicationId,
                 guildId,
@@ -243,7 +239,7 @@ class ApplicationService {
         try {
             const applications = await getApplications(client, guildId, filters);
 
-            logger.debug('Applications retrieved', {
+            logger.debug('Søknadsliste hentet', {
                 guildId,
                 count: applications.length,
                 filters
@@ -251,16 +247,16 @@ class ApplicationService {
 
             return applications;
         } catch (error) {
-            logger.error('Error getting applications list', {
+            logger.error('Feil ved henting av søknadsliste', {
                 error: error.message,
                 guildId,
                 filters,
                 stack: error.stack
             });
             throw createError(
-                'Failed to retrieve applications',
+                'Klarte ikke å hente søknader',
                 ErrorTypes.DATABASE,
-                'An error occurred while retrieving applications.',
+                'Det oppstod en feil under henting av søknadene.',
                 { guildId, filters }
             );
         }
@@ -268,21 +264,20 @@ class ApplicationService {
 
     static async updateSettings(client, guildId, updates) {
         try {
-            
             if (updates.logChannelId && typeof updates.logChannelId !== 'string') {
                 throw createError(
-                    'Invalid log channel ID',
+                    'Ugyldig ID for loggkanal',
                     ErrorTypes.VALIDATION,
-                    'Invalid channel ID provided.',
+                    'Ugyldig kanal-ID oppgitt.',
                     { logChannelId: updates.logChannelId }
                 );
             }
 
             if (updates.managerRoles && !Array.isArray(updates.managerRoles)) {
                 throw createError(
-                    'Invalid manager roles format',
+                    'Ugyldig format for administratorroller',
                     ErrorTypes.VALIDATION,
-                    'Manager roles must be an array.',
+                    'Administratorroller må oppgis som en liste.',
                     { managerRoles: updates.managerRoles }
                 );
             }
@@ -290,9 +285,9 @@ class ApplicationService {
             if (updates.questions) {
                 if (!Array.isArray(updates.questions) || updates.questions.length === 0) {
                     throw createError(
-                        'Invalid questions format',
+                        'Ugyldig spørsmålsformat',
                         ErrorTypes.VALIDATION,
-                        'Questions must be a non-empty array.',
+                        'Spørsmål må oppgis som en liste og kan ikke være tom.',
                         { questions: updates.questions }
                     );
                 }
@@ -305,14 +300,14 @@ class ApplicationService {
             await saveApplicationSettings(client, guildId, updates);
             const updatedSettings = await getApplicationSettings(client, guildId);
 
-            logger.info('Application settings updated', {
+            logger.info('Søknadsinnstillinger oppdatert', {
                 guildId,
                 updates: Object.keys(updates)
             });
 
             return updatedSettings;
         } catch (error) {
-            logger.error('Error updating application settings', {
+            logger.error('Feil ved oppdatering av søknadsinnstillinger', {
                 error: error.message,
                 guildId,
                 updates,
@@ -331,30 +326,30 @@ class ApplicationService {
             if (action === 'add') {
                 if (!roleId) {
                     throw createError(
-                        'Missing role ID',
+                        'Mangler rolle-ID',
                         ErrorTypes.VALIDATION,
-                        'You must specify a role to add.',
+                        'Du må spesifisere en rolle som skal legges til.',
                         { action }
                     );
                 }
 
                 if (currentRoles.some(appRole => appRole.roleId === roleId)) {
                     throw createError(
-                        'Role already configured',
+                        'Rollen er allerede konfigurert',
                         ErrorTypes.VALIDATION,
-                        'This role is already configured for applications.',
+                        'Denne rollen er allerede konfigurert for søknader.',
                         { roleId }
                     );
                 }
 
                 currentRoles.push({
                     roleId,
-                    name: name ? name.trim().substring(0, 50) : 'Application Role'
+                    name: name ? name.trim().substring(0, 50) : 'Søknadsrolle'
                 });
 
                 await saveApplicationRoles(client, guildId, currentRoles);
 
-                logger.info('Application role added', {
+                logger.info('Søknadsrolle lagt til', {
                     guildId,
                     roleId,
                     name
@@ -362,9 +357,9 @@ class ApplicationService {
             } else if (action === 'remove') {
                 if (!roleId) {
                     throw createError(
-                        'Missing role ID',
+                        'Mangler rolle-ID',
                         ErrorTypes.VALIDATION,
-                        'You must specify a role to remove.',
+                        'Du må spesifisere en rolle som skal fjernes.',
                         { action }
                     );
                 }
@@ -372,9 +367,9 @@ class ApplicationService {
                 const roleIndex = currentRoles.findIndex(appRole => appRole.roleId === roleId);
                 if (roleIndex === -1) {
                     throw createError(
-                        'Role not configured',
+                        'Rollen er ikke konfigurert',
                         ErrorTypes.VALIDATION,
-                        'This role is not configured for applications.',
+                        'Denne rollen er ikke konfigurert for søknader.',
                         { roleId }
                     );
                 }
@@ -382,7 +377,7 @@ class ApplicationService {
                 currentRoles.splice(roleIndex, 1);
                 await saveApplicationRoles(client, guildId, currentRoles);
 
-                logger.info('Application role removed', {
+                logger.info('Søknadsrolle fjernet', {
                     guildId,
                     roleId
                 });
@@ -390,7 +385,7 @@ class ApplicationService {
 
             return currentRoles;
         } catch (error) {
-            logger.error('Error managing application roles', {
+            logger.error('Feil ved administrering av søknadsroller', {
                 error: error.message,
                 guildId,
                 data,
@@ -404,7 +399,7 @@ class ApplicationService {
         try {
             const applications = await getUserApplications(client, guildId, userId);
 
-            logger.debug('User applications retrieved', {
+            logger.debug('Brukers søknader hentet', {
                 guildId,
                 userId,
                 count: applications.length
@@ -412,16 +407,16 @@ class ApplicationService {
 
             return applications;
         } catch (error) {
-            logger.error('Error getting user applications', {
+            logger.error('Feil ved henting av brukers søknader', {
                 error: error.message,
                 guildId,
                 userId,
                 stack: error.stack
             });
             throw createError(
-                'Failed to retrieve your applications',
+                'Klarte ikke å hente dine søknader',
                 ErrorTypes.DATABASE,
-                'An error occurred while retrieving your applications.',
+                'Det oppstod en feil under henting av dine søknader.',
                 { guildId, userId }
             );
         }
@@ -433,16 +428,16 @@ class ApplicationService {
 
             if (!application) {
                 throw createError(
-                    'Application not found',
+                    'Søknaden ble ikke funnet',
                     ErrorTypes.CONFIGURATION,
-                    'The application you are looking for does not exist.',
+                    'Søknaden du leter etter eksisterer ikke.',
                     { applicationId, guildId }
                 );
             }
 
             return application;
         } catch (error) {
-            logger.error('Error getting application', {
+            logger.error('Feil ved henting av søknad', {
                 error: error.message,
                 applicationId,
                 guildId,

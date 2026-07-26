@@ -1,5 +1,3 @@
-// loggingService.js
-
 import { ChannelType } from 'discord.js';
 import { getGuildConfig, updateGuildConfig } from './config/guildConfig.js';
 import { logger } from '../utils/logger.js';
@@ -209,7 +207,7 @@ export async function logEvent({
       await client.guilds.fetch(guildId).catch(() => null);
 
     if (!guild) {
-      logger.warn(`logEvent: Guild not found: ${guildId}`);
+      logger.warn(`logEvent: Finner ikke serveren: ${guildId}`);
       return null;
     }
 
@@ -236,13 +234,13 @@ export async function logEvent({
       await guild.channels.fetch(logChannelId).catch(() => null);
 
     if (!channel || channel.type !== ChannelType.GuildText) {
-      logger.warn(`logEvent: Invalid log channel ${logChannelId} for guild ${guildId}`);
+      logger.warn(`logEvent: Ugyldig loggkanal ${logChannelId} for server ${guildId}`);
       return null;
     }
 
     const permissions = channel.permissionsFor(guild.members.me);
     if (!permissions || !permissions.has(['SendMessages', 'EmbedLinks'])) {
-      logger.warn(`logEvent: Missing permissions in channel ${logChannelId}`);
+      logger.warn(`logEvent: Mangler nødvendige rettigheter i kanal ${logChannelId}`);
       return null;
     }
 
@@ -257,10 +255,10 @@ export async function logEvent({
     }
 
     const sent = await channel.send(messageOptions);
-    logger.info(`Event logged: ${eventType} in guild ${guildId}`);
+    logger.info(`Hendelse logget: ${eventType} på server ${guildId}`);
     return sent;
   } catch (error) {
-    logger.error('Error in logEvent:', error);
+    logger.error('Feil i logEvent:', error);
     return null;
   }
 }
@@ -283,8 +281,8 @@ function createLogEmbed(guild, eventType, data) {
 
     if (data.fields?.length) {
       const { before, after } = splitComparisonFields(data.fields);
-      if (before !== null) inlineFields.push({ name: 'Before', value: before, inline: true });
-      if (after !== null) inlineFields.push({ name: 'After', value: after, inline: true });
+      if (before !== null) inlineFields.push({ name: 'Før', value: before, inline: true });
+      if (after !== null) inlineFields.push({ name: 'Etter', value: after, inline: true });
     }
   } else if (data.fields?.length) {
     const { before, after, rest } = splitComparisonFields(data.fields);
@@ -298,10 +296,10 @@ function createLogEmbed(guild, eventType, data) {
       });
 
       if (before !== null) {
-        inlineFields.push({ name: 'Before', value: before, inline: true });
+        inlineFields.push({ name: 'Før', value: before, inline: true });
       }
       if (after !== null) {
-        inlineFields.push({ name: 'After', value: after, inline: true });
+        inlineFields.push({ name: 'Etter', value: after, inline: true });
       }
     } else {
       description = buildLogDescription({
@@ -318,7 +316,7 @@ function createLogEmbed(guild, eventType, data) {
   }
 
   if (data.section?.body) {
-    description = appendContentSection(description, data.section.title || 'Message', data.section.body);
+    description = appendContentSection(description, data.section.title || 'Melding', data.section.body);
   }
 
   if (data.inlineFields?.length) {
@@ -340,7 +338,7 @@ function createLogEmbed(guild, eventType, data) {
 
 function formatEventType(eventType) {
   if (!eventType || typeof eventType !== 'string') {
-    return 'Unknown Event';
+    return 'Ukjent hendelse';
   }
 
   return eventType
@@ -387,14 +385,14 @@ export async function toggleEventLogging(client, guildId, eventTypes, enabled) {
     await updateGuildConfig(client, guildId, { logging });
     return true;
   } catch (error) {
-    logger.error('Error toggling event logging:', error);
+    logger.error('Feil ved veksling av hendelseslogging:', error);
     return false;
   }
 }
 
 export async function setLogChannel(client, guildId, destination, channelId) {
   if (!LOG_DESTINATIONS.includes(destination)) {
-    throw new Error(`Invalid log destination: ${destination}`);
+    throw new Error(`Ugyldig loggmål: ${destination}`);
   }
 
   try {
@@ -411,12 +409,12 @@ export async function setLogChannel(client, guildId, destination, channelId) {
     await updateGuildConfig(client, guildId, { logging });
     return true;
   } catch (error) {
-    logger.error('Error setting log channel:', error);
+    logger.error('Feil ved opprettelse/endring av loggkanal:', error);
     return false;
   }
 }
 
-/** @deprecated Use setLogChannel(client, guildId, 'audit', channelId) */
+/** @deprecated Bruk setLogChannel(client, guildId, 'audit', channelId) */
 export async function setLoggingChannel(client, guildId, channelId) {
   return setLogChannel(client, guildId, 'audit', channelId);
 }
@@ -428,7 +426,7 @@ export async function setLoggingEnabled(client, guildId, enabled) {
     await updateGuildConfig(client, guildId, { logging });
     return true;
   } catch (error) {
-    logger.error('Error setting logging enabled:', error);
+    logger.error('Feil ved aktivering/deaktivering av logging:', error);
     return false;
   }
 }
@@ -455,7 +453,7 @@ export async function updateIgnoreList(client, guildId, { action, type, id }) {
     await updateGuildConfig(client, guildId, { logging });
     return true;
   } catch (error) {
-    logger.error('Error updating ignore list:', error);
+    logger.error('Feil ved oppdatering av excludeliste:', error);
     return false;
   }
 }

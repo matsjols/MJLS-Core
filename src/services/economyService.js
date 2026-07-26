@@ -1,5 +1,3 @@
-// economyService.js
-
 import { logger } from '../utils/logger.js';
 import { getEconomyData, setEconomyData, getMaxBankCapacity } from '../utils/economy.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
@@ -22,24 +20,24 @@ class EconomyService {
   static assertSafeBalance(value, context = {}) {
     if (!Number.isSafeInteger(value) || value < 0 || value > this.MAX_SAFE_INTEGER) {
       throw createError(
-        "Invalid balance state",
+        "Ugyldig kontostatus",
         ErrorTypes.VALIDATION,
-        "Operation would create an invalid account balance.",
+        "Handlingen ville føre til en ugyldig kontosaldo.",
         { value, ...context }
       );
     }
   }
 
   static async claimDaily(client, guildId, userId) {
-    logger.debug(`[ECONOMY_SERVICE] claimDaily requested`, { userId, guildId });
+    logger.debug(`[ECONOMY_SERVICE] claimDaily forespurt`, { userId, guildId });
     
     const userData = await getEconomyData(client, guildId, userId);
     if (!userData) {
-      logger.error(`[ECONOMY_SERVICE] Failed to load economy data for daily`);
+      logger.error(`[ECONOMY_SERVICE] Klarte ikke å laste økonomidata for daglig belønning`);
       throw createError(
-        "Failed to load economy data",
+        "Klarte ikke å laste økonomidata",
         ErrorTypes.DATABASE,
-        "Failed to load your economy data. Please try again later.",
+        "Klarte ikke å laste inn dine økonomidata. Vennligst prøv igjen senere.",
         { userId, guildId }
       );
     }
@@ -49,14 +47,14 @@ class EconomyService {
     const remaining = lastDaily + this.DAILY_COOLDOWN - now;
 
     if (remaining > 0) {
-      logger.warn(`[ECONOMY_SERVICE] Daily cooldown active`, {
+      logger.warn(`[ECONOMY_SERVICE] Cooldown for daglig belønning er aktiv`, {
         userId,
         timeRemaining: remaining
       });
       throw createError(
-        "Daily cooldown active",
+        "Cooldown er aktiv",
         ErrorTypes.RATE_LIMIT,
-        `You need to wait before claiming daily again. Try again in **${this.formatDuration(remaining)}**.`,
+        `Du må vente før du kan hente daglig belønning igjen. Prøv igjen om **${this.formatDuration(remaining)}**.`,
         { remaining, cooldownType: 'daily' }
       );
     }
@@ -70,7 +68,7 @@ class EconomyService {
     try {
       await setEconomyData(client, guildId, userId, userData);
       
-      logger.info(`[ECONOMY_TRANSACTION] Daily claimed`, {
+      logger.info(`[ECONOMY_TRANSACTION] Daglig belønning hentet`, {
         userId,
         guildId,
         amount: earned,
@@ -85,22 +83,22 @@ class EconomyService {
         nextClaimTime: new Date(now + this.DAILY_COOLDOWN)
       };
     } catch (error) {
-      logger.error(`[ECONOMY_SERVICE] Failed to save daily claim`, error, {
+      logger.error(`[ECONOMY_SERVICE] Klarte ikke å lagre daglig belønning`, error, {
         userId,
         guildId,
         amount: earned
       });
       throw createError(
-        "Failed to save daily claim",
+        "Klarte ikke å lagre belønning",
         ErrorTypes.DATABASE,
-        "Failed to process your daily. Please try again.",
+        "Feil oppstod under behandling av daglig belønning. Vennligst prøv igjen.",
         { userId, guildId }
       );
     }
   }
 
   static async transferMoney(client, guildId, senderId, receiverId, amount) {
-    logger.debug(`[ECONOMY_SERVICE] transferMoney requested`, {
+    logger.debug(`[ECONOMY_SERVICE] transferMoney forespurt`, {
       senderId,
       receiverId,
       amount,
@@ -109,18 +107,18 @@ class EconomyService {
 
     if (amount <= 0) {
       throw createError(
-        "Invalid transfer amount",
+        "Ugyldig overføringsbeløp",
         ErrorTypes.VALIDATION,
-        "Amount must be greater than zero.",
+        "Beløpet må være større enn null.",
         { amount, senderId }
       );
     }
 
     if (senderId === receiverId) {
       throw createError(
-        "Cannot pay self",
+        "Kan ikke overføre til deg selv",
         ErrorTypes.VALIDATION,
-        "You cannot pay yourself.",
+        "Du kan ikke sende penger til din egen konto.",
         { senderId, receiverId }
       );
     }
@@ -133,28 +131,28 @@ class EconomyService {
     ]);
 
     if (!senderData || !receiverData) {
-      logger.error(`[ECONOMY_SERVICE] Failed to load economy data for transfer`, {
+      logger.error(`[ECONOMY_SERVICE] Klarte ikke å laste økonomidata for overføring`, {
         senderLoaded: !!senderData,
         receiverLoaded: !!receiverData
       });
       throw createError(
-        "Failed to load economy data",
+        "Klarte ikke å laste økonomidata",
         ErrorTypes.DATABASE,
-        "Failed to load economy data. Please try again later.",
+        "Klarte ikke å laste økonomidata. Vennligst prøv igjen senere.",
         { senderId, receiverId, guildId }
       );
     }
 
     if (senderData.wallet < amount) {
-      logger.warn(`[ECONOMY_SERVICE] Insufficient funds for transfer`, {
+      logger.warn(`[ECONOMY_SERVICE] Utilstrekkelige midler for overføring`, {
         senderId,
         required: amount,
         available: senderData.wallet
       });
       throw createError(
-        "Insufficient funds",
+        "Utilstrekkelige midler",
         ErrorTypes.VALIDATION,
-        `You only have **$${senderData.wallet.toLocaleString()}** in cash.`,
+        `Du har bare **$${senderData.wallet.toLocaleString()}** i kontanter.`,
         { required: amount, available: senderData.wallet, senderId }
       );
     }
@@ -170,29 +168,25 @@ class EconomyService {
     receiverData.wallet = receiverNext;
 
     try {
-      
       await setEconomyData(client, guildId, senderId, senderData);
       
       try {
-        
         await setEconomyData(client, guildId, receiverId, receiverData);
       } catch (receiverError) {
-        
-        logger.error(`[ECONOMY_CRITICAL] Failed to credit receiver ${receiverId}. Attempting rollback for sender ${senderId}...`, receiverError);
+        logger.error(`[ECONOMY_CRITICAL] Klarte ikke å kreditere mottaker ${receiverId}. Forsøker å rulle tilbake for avsender ${senderId}...`, receiverError);
         
         senderData.wallet = walletBefore;
         try {
           await setEconomyData(client, guildId, senderId, senderData);
-          logger.info(`[ECONOMY_ROLLBACK] Successfully rolled back sender ${senderId} after receiver credit failure.`);
+          logger.info(`[ECONOMY_ROLLBACK] Vellykket tilbakerulling for avsender ${senderId}.`);
         } catch (rollbackError) {
-          logger.error(`[ECONOMY_FATAL] ROLLBACK FAILED for sender ${senderId}! Data is now inconsistent.`, rollbackError);
-          
+          logger.error(`[ECONOMY_FATAL] TILBAKERULLING MISLYKTES for avsender ${senderId}! Data er uoverensstemmende.`, rollbackError);
         }
         
         throw receiverError;
       }
 
-      logger.info(`[ECONOMY_TRANSACTION] Money transferred`, {
+      logger.info(`[ECONOMY_TRANSACTION] Penger overført`, {
         type: 'transfer',
         senderId,
         receiverId,
@@ -208,7 +202,7 @@ class EconomyService {
         receiverNewBalance: receiverData.wallet
       };
     } catch (error) {
-      logger.error(`[ECONOMY_SERVICE] Transfer execution failed, DATA MAY BE INCONSISTENT`, error, {
+      logger.error(`[ECONOMY_SERVICE] Overføring mislyktes, DATA KAN VÆRE UOVERENSSTEMMENDE`, error, {
         senderId,
         receiverId,
         amount,
@@ -218,9 +212,9 @@ class EconomyService {
         receiverAfter: receiverData.wallet
       });
       throw createError(
-        "Failed to save transfer",
+        "Klarte ikke å lagre overføring",
         ErrorTypes.DATABASE,
-        "Failed to process transfer. Please try again.",
+        "Det oppstod en feil under overføringen. Vennligst prøv igjen.",
         { senderId, receiverId, amount }
       );
     }
@@ -229,9 +223,9 @@ class EconomyService {
   static async addMoney(client, guildId, userId, amount, source = 'unknown') {
     if (amount <= 0) {
       throw createError(
-        "Invalid amount",
+        "Ugyldig beløp",
         ErrorTypes.VALIDATION,
-        "Amount must be positive",
+        "Beløpet må være positivt",
         { amount, userId, source }
       );
     }
@@ -246,7 +240,7 @@ class EconomyService {
 
     await setEconomyData(client, guildId, userId, userData);
 
-    logger.info(`[ECONOMY_TRANSACTION] Money added`, {
+    logger.info(`[ECONOMY_TRANSACTION] Penger lagt til`, {
       userId,
       guildId,
       amount,
@@ -263,9 +257,9 @@ class EconomyService {
   static async removeMoney(client, guildId, userId, amount, reason = 'unknown') {
     if (amount <= 0) {
       throw createError(
-        "Invalid amount",
+        "Ugyldig beløp",
         ErrorTypes.VALIDATION,
-        "Amount must be positive",
+        "Beløpet må være positivt",
         { amount, userId, reason }
       );
     }
@@ -277,9 +271,9 @@ class EconomyService {
 
     if (balanceBefore < amount) {
       throw createError(
-        "Insufficient funds",
+        "Utilstrekkelige midler",
         ErrorTypes.VALIDATION,
-        `You only have **$${balanceBefore.toLocaleString()}**.`,
+        `Du har bare **$${balanceBefore.toLocaleString()}**.`,
         { required: amount, available: balanceBefore, reason }
       );
     }
@@ -288,7 +282,7 @@ class EconomyService {
 
     await setEconomyData(client, guildId, userId, userData);
 
-    logger.info(`[ECONOMY_TRANSACTION] Money removed`, {
+    logger.info(`[ECONOMY_TRANSACTION] Penger fjernet`, {
       userId,
       guildId,
       amount,
@@ -310,9 +304,9 @@ class EconomyService {
 
     if (userData.wallet < amount) {
       throw createError(
-        "Insufficient cash",
+        "Utilstrekkelige kontanter",
         ErrorTypes.VALIDATION,
-        `You only have **$${userData.wallet.toLocaleString()}** in cash.`,
+        `Du har bare **$${userData.wallet.toLocaleString()}** i kontanter.`,
         { required: amount, available: userData.wallet }
       );
     }
@@ -320,9 +314,9 @@ class EconomyService {
     const currentBank = userData.bank || 0;
     if (currentBank + amount > maxBank) {
       throw createError(
-        "Bank capacity exceeded",
+        "Bankkapasitet overskredet",
         ErrorTypes.VALIDATION,
-        `Your bank can only hold **$${maxBank.toLocaleString()}**. You would exceed capacity by **$${(currentBank + amount - maxBank).toLocaleString()}**.`,
+        `Banken din har maksimal plass til **$${maxBank.toLocaleString()}**. Du vil overskride kapasiteten med **$${(currentBank + amount - maxBank).toLocaleString()}**.`,
         { capacity: maxBank, current: currentBank, requested: amount }
       );
     }
@@ -338,7 +332,7 @@ class EconomyService {
 
     await setEconomyData(client, guildId, userId, userData);
 
-    logger.info(`[ECONOMY_TRANSACTION] Money deposited to bank`, {
+    logger.info(`[ECONOMY_TRANSACTION] Penger satt inn i banken`, {
       userId,
       guildId,
       amount,
@@ -358,9 +352,9 @@ class EconomyService {
 
     if (bank < amount) {
       throw createError(
-        "Insufficient bank balance",
+        "Utilstrekkelig bankbalanse",
         ErrorTypes.VALIDATION,
-        `You only have **$${bank.toLocaleString()}** in your bank.`,
+        `Du har bare **$${bank.toLocaleString()}** i banken.`,
         { required: amount, available: bank }
       );
     }
@@ -376,7 +370,7 @@ class EconomyService {
 
     await setEconomyData(client, guildId, userId, userData);
 
-    logger.info(`[ECONOMY_TRANSACTION] Money withdrawn from bank`, {
+    logger.info(`[ECONOMY_TRANSACTION] Penger tatt ut fra banken`, {
       userId,
       guildId,
       amount,
@@ -405,28 +399,28 @@ class EconomyService {
   static validateAmount(amount, context = {}) {
     if (!Number.isInteger(amount)) {
       throw createError(
-        "Invalid amount - not an integer",
+        "Ugyldig beløp - må være et heltall",
         ErrorTypes.VALIDATION,
-        "Amount must be a whole number",
+        "Beløpet må være et heltall",
         context
       );
     }
 
     if (amount <= 0) {
       throw createError(
-        "Invalid amount - not positive",
+        "Ugyldig beløp - må være positivt",
         ErrorTypes.VALIDATION,
-        "Amount must be positive",
+        "Beløpet må være større enn 0",
         context
       );
     }
 
     if (amount > this.MAX_SAFE_INTEGER) {
-      logger.error(`[ECONOMY] Amount exceeds MAX_SAFE_INTEGER`, { amount, context });
+      logger.error(`[ECONOMY] Beløpet overskrider MAX_SAFE_INTEGER`, { amount, context });
       throw createError(
-        "Amount too large",
+        "Beløpet er for stort",
         ErrorTypes.VALIDATION,
-        "The amount is too large to process",
+        "Beløpet er for høyt til å kunne behandles",
         context
       );
     }
@@ -439,7 +433,7 @@ class EconomyService {
     const seconds = totalSeconds % 60;
 
     if (hours > 0) {
-      return `${hours}h ${minutes}m ${seconds}s`;
+      return `${hours}t ${minutes}m ${seconds}s`;
     }
     if (minutes > 0) {
       return `${minutes}m ${seconds}s`;
@@ -456,8 +450,8 @@ class EconomyService {
 wrapServiceClassMethods(EconomyService, (methodName) => ({
   service: 'EconomyService',
   operation: methodName,
-  message: `Economy service operation failed: ${methodName}`,
-  userMessage: 'An economy operation failed. Please try again in a moment.'
+  message: `Feil under økonomihåndtering: ${methodName}`,
+  userMessage: 'Det oppstod en feil i økonomisystemet. Vennligst prøv igjen om et øyeblikk.'
 }));
 
 export default EconomyService;

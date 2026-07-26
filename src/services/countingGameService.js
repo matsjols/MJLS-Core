@@ -203,7 +203,7 @@ export async function getCountingGameConfig(client, guildId) {
     const rawState = await client.db.get(getStorageKey(guildId));
     return normalizeCountingGame(rawState);
   } catch (error) {
-    logger.error('Failed to load counting game config:', { guildId, error });
+    logger.error('Klarte ikke å laste inn konfigurasjon for telleleken:', { guildId, error });
     return normalizeCountingGame();
   }
 }
@@ -306,7 +306,6 @@ export function buildCountingLeaderboard(config, guild) {
     .map(([userId, count], index) => {
       const member = guild?.members?.cache?.get(userId);
       const username = member ? `${member.user.username}#${member.user.discriminator}` : `<@${userId}>`;
-      // Oversatt her slik at ledertavlen viser riktig norsk tekst ("tall" i stedet for "count/counts")
       return `**${index + 1}.** ${username} — ${count} riktige tall`;
     });
 }

@@ -1,30 +1,27 @@
-// birthdayService.js
-
 import { getGuildConfig } from './config/guildConfig.js';
 import { getGuildBirthdays, setBirthday as dbSetBirthday, deleteBirthday as dbDeleteBirthday, getMonthName, getBirthdayTrackingKey } from '../utils/database.js';
 import { logger } from '../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../utils/errorHandler.js';
 
 export function validateBirthday(month, day) {
-  
   if (typeof month !== 'number' || typeof day !== 'number') {
     return {
       isValid: false,
-      error: 'Month and day must be numbers'
+      error: 'Måned og dag må være tall'
     };
   }
 
   if (month < 1 || month > 12) {
     return {
       isValid: false,
-      error: 'Month must be between 1 and 12'
+      error: 'Måned må være mellom 1 og 12'
     };
   }
 
   if (day < 1 || day > 31) {
     return {
       isValid: false,
-      error: 'Day must be between 1 and 31'
+      error: 'Dag må være mellom 1 og 31'
     };
   }
 
@@ -34,7 +31,7 @@ export function validateBirthday(month, day) {
   if (isNaN(date.getTime()) || date.getMonth() !== month - 1 || date.getDate() !== day) {
     return {
       isValid: false,
-      error: 'Invalid date. Please check the month and day combination (e.g., February 29th only exists in leap years)'
+      error: 'Ugyldig dato. Sjekk at kombinasjonen av måned og dag er korrekt (f.eks. finnes 29. februar kun i skuddår).'
     };
   }
 
@@ -43,10 +40,9 @@ export function validateBirthday(month, day) {
 
 export async function setBirthday(client, guildId, userId, month, day) {
   try {
-    
     const validation = validateBirthday(month, day);
     if (!validation.isValid) {
-      logger.warn('Birthday validation failed', {
+      logger.warn('Validering av fødselsdag mislyktes', {
         userId,
         guildId,
         month,
@@ -66,14 +62,14 @@ export async function setBirthday(client, guildId, userId, month, day) {
     
     if (!success) {
       throw new TitanBotError(
-        'Failed to save birthday to database',
+        'Klarte ikke å lagre fødselsdag i databasen',
         ErrorTypes.DATABASE,
-        'Failed to set your birthday. Please try again later.',
+        'Klarte ikke å registrere fødselsdagen din. Vennligst prøv igjen senere.',
         { userId, guildId, month, day }
       );
     }
 
-    logger.info('Birthday set successfully', {
+    logger.info('Fødselsdag registrert', {
       userId,
       guildId,
       month,
@@ -89,7 +85,7 @@ export async function setBirthday(client, guildId, userId, month, day) {
       }
     };
   } catch (error) {
-    logger.error('Error in setBirthday service', {
+    logger.error('Feil i setBirthday-tjenesten', {
       error: error.message,
       stack: error.stack,
       userId,
@@ -117,7 +113,7 @@ export async function getUserBirthday(client, guildId, userId) {
       monthName: getMonthName(birthdayData.month)
     };
   } catch (error) {
-    logger.error('Error in getUserBirthday service', {
+    logger.error('Feil i getUserBirthday-tjenesten', {
       error: error.message,
       userId,
       guildId
@@ -148,7 +144,7 @@ export async function getAllBirthdays(client, guildId) {
 
     return sortedBirthdays;
   } catch (error) {
-    logger.error('Error in getAllBirthdays service', {
+    logger.error('Feil i getAllBirthdays-tjenesten', {
       error: error.message,
       guildId
     });
@@ -158,7 +154,6 @@ export async function getAllBirthdays(client, guildId) {
 
 export async function deleteBirthday(client, guildId, userId) {
   try {
-    
     const birthday = await getUserBirthday(client, guildId, userId);
     
     if (!birthday) {
@@ -171,14 +166,14 @@ export async function deleteBirthday(client, guildId, userId) {
     
     if (!success) {
       throw new TitanBotError(
-        'Failed to delete birthday from database',
+        'Klarte ikke å slette fødselsdag fra databasen',
         ErrorTypes.DATABASE,
-        'Failed to remove your birthday. Please try again.',
+        'Klarte ikke å fjerne fødselsdagen din. Vennligst prøv igjen.',
         { userId, guildId }
       );
     }
 
-    logger.info('Birthday removed successfully', {
+    logger.info('Fødselsdag fjernet', {
       userId,
       guildId
     });
@@ -187,7 +182,7 @@ export async function deleteBirthday(client, guildId, userId) {
       status: 'removed',
     };
   } catch (error) {
-    logger.error('Error in deleteBirthday service', {
+    logger.error('Feil i deleteBirthday-tjenesten', {
       error: error.message,
       userId,
       guildId
@@ -232,7 +227,7 @@ export async function getUpcomingBirthdays(client, guildId, limit = 5) {
 
     return upcomingBirthdays.slice(0, limit);
   } catch (error) {
-    logger.error('Error in getUpcomingBirthdays service', {
+    logger.error('Feil i getUpcomingBirthdays-tjenesten', {
       error: error.message,
       guildId,
       limit
@@ -263,7 +258,7 @@ export async function getTodaysBirthdays(client, guildId) {
 
     return todaysBirthdays;
   } catch (error) {
-    logger.error('Error in getTodaysBirthdays service', {
+    logger.error('Feil i getTodaysBirthdays-tjenesten', {
       error: error.message,
       guildId
     });
@@ -277,7 +272,7 @@ export async function checkBirthdays(client) {
   const currentDay = today.getUTCDate();
 
   if (process.env.NODE_ENV !== 'production') {
-    logger.debug(`🎂 Running daily birthday check for UTC: ${currentMonth}/${currentDay}.`);
+    logger.debug(`🎂 Kjører daglig fødselsdagsjekk for UTC: ${currentMonth}/${currentDay}.`);
   }
 
   for (const [guildId, guild] of client.guilds.cache) {
@@ -285,10 +280,9 @@ export async function checkBirthdays(client) {
       const config = await getGuildConfig(client, guildId);
       const { birthdayChannelId, birthdayRoleId } = config;
 
-      // A channel is required for announcements; the birthday role is optional.
       if (!birthdayChannelId) {
         if (process.env.NODE_ENV !== 'production') {
-          logger.debug(`Skipping birthday check for ${guild.name}: Missing channel config.`);
+          logger.debug(`Hopper over fødselsdagsjekk for ${guild.name}: Mangler kanal-konfigurasjon.`);
         }
         continue;
       }
@@ -305,12 +299,12 @@ export async function checkBirthdays(client) {
           if (birthdayRoleId) {
             const member = await guild.members.fetch(userId).catch(() => null);
             if (member && member.roles.cache.has(birthdayRoleId)) {
-              await member.roles.remove(birthdayRoleId, "Birthday role expired");
+              await member.roles.remove(birthdayRoleId, "Fødselsdagsrolle utløpt");
             }
           }
           delete updatedTrackingData[userId];
         } catch (error) {
-           logger.error(`Error removing birthday role from ${userId}:`, error);
+           logger.error(`Feil ved fjerning av fødselsdagsrolle fra ${userId}:`, error);
         }
       }
 
@@ -318,7 +312,6 @@ export async function checkBirthdays(client) {
         await client.db.set(trackingKey, updatedTrackingData);
       }
 
-      // Use the canonical birthday storage (guild:<id>:birthdays) that set/remove commands write to.
       const birthdays = (await getGuildBirthdays(client, guildId)) || {};
       const birthdayMembers = [];
       for (const [userId, userData] of Object.entries(birthdays)) {
@@ -328,10 +321,10 @@ export async function checkBirthdays(client) {
             birthdayMembers.push(member);
             if (birthdayRoleId) {
               try {
-                await member.roles.add(birthdayRoleId, "Happy Birthday! 🎉");
+                await member.roles.add(birthdayRoleId, "Gratulerer med dagen! 🎉");
                 updatedTrackingData[userId] = true;
               } catch (error) {
-                  logger.error(`Error adding birthday role to ${member.user.tag}:`, error);
+                  logger.error(`Feil ved tildeling av fødselsdagsrolle til ${member.user.tag}:`, error);
               }
             }
           }
@@ -344,16 +337,16 @@ export async function checkBirthdays(client) {
         
         await channel.send({
           embeds: [{
-            title: '🎉 Happy Birthday! 🎂',
-            description: `A very happy birthday to ${mentionList}! Wishing you an amazing day! 🎈`,
+            title: '🎉 Gratulerer med dagen! 🎂',
+            description: `En ekstra hyggelig gratulasjon går til ${mentionList}! Håper du får en fantastisk dag! 🎈`,
             color: 0xff69b4,
-            footer: { text: 'Birthday Bot' },
+            footer: { text: 'Fødselsdagsbot' },
             timestamp: new Date()
           }]
         });
       }
     } catch (error) {
-      logger.error(`Error processing birthdays for guild ${guildId}:`, error);
+      logger.error(`Feil ved behandling av fødselsdager for server ${guildId}:`, error);
     }
   }
 }
