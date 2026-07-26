@@ -12,12 +12,12 @@ const FINE_PERCENTAGE = 0.1;
 
 export default {
     data: new SlashCommandBuilder()
-        .setName('rob')
-        .setDescription('Attempt to rob another user (very risky)')
+        .setName('ran')
+        .setDescription('Forsøk å rane en annen bruker (veldig risikabelt)')
         .addUserOption(option =>
             option
-                .setName('user')
-                .setDescription('User to rob')
+                .setName('bruker')
+                .setDescription('Brukeren du vil rane')
                 .setRequired(true)
         ),
 
@@ -26,24 +26,24 @@ export default {
         if (!deferred) return;
             
             const robberId = interaction.user.id;
-            const victimUser = interaction.options.getUser("user");
+            const victimUser = interaction.options.getUser("bruker");
             const guildId = interaction.guildId;
             const now = Date.now();
 
             if (robberId === victimUser.id) {
                 throw createError(
-                    "Cannot rob self",
+                    "Kan ikke rane deg selv",
                     ErrorTypes.VALIDATION,
-                    "You cannot rob yourself.",
+                    "Du kan ikke rane deg selv.",
                     { robberId, victimId: victimUser.id }
                 );
             }
             
             if (victimUser.bot) {
                 throw createError(
-                    "Cannot rob bot",
+                    "Kan ikke rane bot",
                     ErrorTypes.VALIDATION,
-                    "You cannot rob a bot.",
+                    "Du kan ikke rane en bot.",
                     { victimId: victimUser.id, isBot: true }
                 );
             }
@@ -53,9 +53,9 @@ export default {
             
             if (!robberData || !victimData) {
                 throw createError(
-                    "Failed to load economy data",
+                    "Kunne ikke laste økonomidata",
                     ErrorTypes.DATABASE,
-                    "Failed to load economy data. Please try again later.",
+                    "Kunne ikke laste inn økonomidataene. Vennligst prøv igjen senere.",
                     { robberId: !!robberData, victimId: !!victimData, guildId }
                 );
             }
@@ -68,18 +68,18 @@ export default {
                 const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
 
                 throw createError(
-                    "Robbery cooldown active",
+                    "Cooldown for ran aktiv",
                     ErrorTypes.RATE_LIMIT,
-                    `You need to lay low. Wait **${hours}h ${minutes}m** before attempting another robbery.`,
+                    `Du må holde deg i ro litt. Vent i **${hours}t ${minutes}m** før du prøver på et nytt ran.`,
                     { remaining, hours, minutes, cooldownType: 'rob' }
                 );
             }
 
             if (victimData.wallet < 500) {
                 throw createError(
-                    "Victim too poor",
+                    "Offeret har for lite penger",
                     ErrorTypes.VALIDATION,
-                    `${victimUser.username} is too poor. They need at least $500 cash to be worth robbing.`,
+                    `${victimUser.username} er for fattig. De må ha minst $500 i kontanter for at det skal være verdt å rane dem.`,
                     { victimWallet: victimData.wallet, required: 500 }
                 );
             }
@@ -93,8 +93,8 @@ export default {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         warningEmbed(
-                            'Robbery Blocked',
-                            `${victimUser.username} was prepared! Your attempt failed because they own a **Personal Safe**. You got away clean but didn't gain anything.`
+                            'Ranet mislyktes',
+                            `${victimUser.username} var forberedt! Ranet mislyktes fordi vedkommende har en **Personlig safe**. Du kom deg unna, men fikk ingenting.`
                         )
                     ],
                 });
@@ -110,8 +110,8 @@ export default {
                 victimData.wallet = (victimData.wallet || 0) - amountStolen;
 
                 resultEmbed = successEmbed(
-                    'Robbery Successful',
-                    `You successfully stole **$${amountStolen.toLocaleString()}** from ${victimUser.username}!`
+                    'Ranet var vellykket',
+                    `Du klarte å stjele **$${amountStolen.toLocaleString()}** fra ${victimUser.username}!`
                 );
             } else {
                 const fineAmount = Math.floor((robberData.wallet || 0) * FINE_PERCENTAGE);
@@ -124,8 +124,8 @@ export default {
 
                 resultEmbed = buildUserErrorEmbed(
                     'unknown',
-                    `You failed the robbery and were caught! You were fined **$${fineAmount.toLocaleString()}** of your own cash.`,
-                    { titleOverride: 'Robbery Failed' }
+                    `Du mislyktes med ranet og ble tatt! Du fikk en bot på **$${fineAmount.toLocaleString()}** fra dine egne kontanter.`,
+                    { titleOverride: 'Ranet mislyktes' }
                 );
             }
 
@@ -137,18 +137,18 @@ export default {
             resultEmbed
                 .addFields(
                     {
-                        name: `Your New Cash (${interaction.user.username})`,
+                        name: `Dine nye kontanter (${interaction.user.username})`,
                         value: `$${robberData.wallet.toLocaleString()}`,
                         inline: true,
                     },
                     {
-                        name: `Victim's New Cash (${victimUser.username})`,
+                        name: `Offerets nye kontanter (${victimUser.username})`,
                         value: `$${victimData.wallet.toLocaleString()}`,
                         inline: true,
                     },
                 )
-                .setFooter({ text: `Next robbery available in ${Math.ceil(ROB_COOLDOWN / (60 * 60 * 1000))} hours.` });
+                .setFooter({ text: `Neste ran er tilgjengelig om ${Math.ceil(ROB_COOLDOWN / (60 * 60 * 1000))} timer.` });
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [resultEmbed] });
-    }, { command: 'rob' })
+    }, { command: 'ran' })
 };

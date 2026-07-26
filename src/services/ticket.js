@@ -175,7 +175,7 @@ export async function createTicket(guild, member, categoryId, reason = 'Ingen gr
       color: priorityInfo.color,
       fields: [
         { name: 'Status', value: '🟢 Åpen', inline: true },
-        { name: 'Clamed av', value: 'Ikke claimed', inline: true },
+        { name: 'Claimed av', value: 'Ikke claimed', inline: true },
         { name: 'Opprettet', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
       ],
     });

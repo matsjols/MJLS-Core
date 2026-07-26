@@ -7,8 +7,8 @@ import { getEconomyPrefix } from '../../utils/database.js';
 
 export default {
     data: new SlashCommandBuilder()
-        .setName("eleaderboard")
-        .setDescription("View the server's top 10 richest users.")
+        .setName("økonomitopp")
+        .setDescription("Vis serverens topp 10 rikeste brukere.")
         .setDMPermission(false),
 
     execute: withErrorHandling(async (interaction, config, client) => {
@@ -17,7 +17,7 @@ export default {
 
             const guildId = interaction.guildId;
 
-            logger.debug(`[ECONOMY] Leaderboard requested`, { guildId });
+            logger.debug(`[ECONOMY] Toppliste forespurt`, { guildId });
 
             const prefix = getEconomyPrefix(guildId);
 
@@ -29,9 +29,9 @@ export default {
 
             if (allKeys.length === 0) {
                 throw createError(
-                    "No economy data found",
+                    "Ingen økonomidata funnet",
                     ErrorTypes.VALIDATION,
-                    "No economy data found for this server."
+                    "Ingen økonomidata funnet for denne serveren."
                 );
             }
 
@@ -64,11 +64,11 @@ export default {
                 const emoji = rankEmoji[i] || `**#${rank}**`;
 
                 leaderboardEntries.push(
-                    `${emoji} <@${user.userId}> - 🏦 ${user.net_worth.toLocaleString()}`,
+                    `${emoji} <@${user.userId}> - 🏦 $${user.net_worth.toLocaleString()}`,
                 );
             }
 
-            logger.info(`[ECONOMY] Leaderboard generated`, { 
+            logger.info(`[ECONOMY] Toppliste generert`, { 
                 guildId, 
                 userCount: allUserData.length,
                 userRank 
@@ -76,14 +76,14 @@ export default {
 
             const description = leaderboardEntries.length > 0
                 ? leaderboardEntries.join("\n")
-                : "No economy data is available for this server yet.";
+                : "Ingen økonomidata er tilgjengelig for denne serveren ennå.";
 
             const embed = createEmbed({
-                title: `Economy Leaderboard`,
+                title: `Økonomi-toppliste`,
                 description,
-                footer: `Your Rank: ${userRank > 0 ?`#${userRank}`: "No ranking data available"}`,
+                footer: `Din plassering: ${userRank > 0 ? `#${userRank}` : "Ingen plassering tilgjengelig"}`,
             });
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
-    }, { command: 'eleaderboard' })
+    }, { command: 'økonomitopp' })
 };

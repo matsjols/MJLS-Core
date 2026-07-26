@@ -8,18 +8,18 @@ import EconomyService from '../../services/economyService.js';
 
 export default {
     data: new SlashCommandBuilder()
-        .setName('pay')
-        .setDescription('Pay another user some of your cash')
+        .setName('betal')
+        .setDescription('Betal en annen bruker noen av kontantene dine')
         .addUserOption(option =>
             option
-                .setName('user')
-                .setDescription('User to pay')
+                .setName('bruker')
+                .setDescription('Brukeren du vil betale')
                 .setRequired(true)
         )
         .addIntegerOption(option =>
             option
-                .setName('amount')
-                .setDescription('Amount to pay')
+                .setName('beløp')
+                .setDescription('Beløpet du vil betale')
                 .setRequired(true)
                 .setMinValue(1)
         ),
@@ -29,11 +29,11 @@ export default {
         if (!deferred) return;
             
             const senderId = interaction.user.id;
-            const receiver = interaction.options.getUser("user");
-            const amount = interaction.options.getInteger("amount");
+            const receiver = interaction.options.getUser("bruker");
+            const amount = interaction.options.getInteger("beløp");
             const guildId = interaction.guildId;
 
-            logger.debug(`[ECONOMY] Pay command initiated`, { 
+            logger.debug(`[ECONOMY] Betalingskommando startet`, { 
                 senderId, 
                 receiverId: receiver.id,
                 amount,
@@ -42,27 +42,27 @@ export default {
 
             if (receiver.bot) {
                 throw createError(
-                    "Cannot pay bot",
+                    "Kan ikke betale bot",
                     ErrorTypes.VALIDATION,
-                    "You cannot pay a bot.",
+                    "Du kan ikke betale penger til en bot.",
                     { receiverId: receiver.id, isBot: true }
                 );
             }
             
             if (receiver.id === senderId) {
                 throw createError(
-                    "Cannot pay self",
+                    "Kan ikke betale deg selv",
                     ErrorTypes.VALIDATION,
-                    "You cannot pay yourself.",
+                    "Du kan ikke overføre penger til deg selv.",
                     { senderId, receiverId: receiver.id }
                 );
             }
             
             if (amount <= 0) {
                 throw createError(
-                    "Invalid payment amount",
+                    "Ugyldig betalingsbeløp",
                     ErrorTypes.VALIDATION,
-                    "Amount must be greater than zero.",
+                    "Beløpet må være større enn null.",
                     { amount, senderId }
                 );
             }
@@ -74,18 +74,18 @@ export default {
 
             if (!senderData) {
                 throw createError(
-                    "Failed to load sender economy data",
+                    "Kunne ikke laste avsenderens økonomidata",
                     ErrorTypes.DATABASE,
-                    "Failed to load your economy data. Please try again later.",
+                    "Kunne ikke laste inn økonomidataene dine. Vennligst prøv igjen senere.",
                     { userId: senderId, guildId }
                 );
             }
             
             if (!receiverData) {
                 throw createError(
-                    "Failed to load receiver economy data",
+                    "Kunne ikke laste mottakerens økonomidata",
                     ErrorTypes.DATABASE,
-                    "Failed to load the receiver's economy data. Please try again later.",
+                    "Kunne ikke laste inn økonomidataene til mottakeren. Vennligst prøv igjen senere.",
                     { userId: receiver.id, guildId }
                 );
             }
@@ -102,29 +102,29 @@ export default {
             const updatedReceiverData = await getEconomyData(client, guildId, receiver.id);
 
             const embed = successEmbed(
-                'Payment Successful',
-                `You successfully paid **${receiver.username}** the amount of **$${amount.toLocaleString()}**!`
+                'Betaling vellykket',
+                `Du har overført **$${amount.toLocaleString()}** til **${receiver.username}**!`
             )
                 .addFields(
                     {
-                        name: "Payment Amount",
+                        name: "Overført beløp",
                         value: `$${amount.toLocaleString()}`,
                         inline: true,
                     },
                     {
-                        name: "Your New Balance",
+                        name: "Din nye saldo",
                         value: `$${updatedSenderData.wallet.toLocaleString()}`,
                         inline: true,
                     },
                 )
                 .setFooter({
-                    text: `Paid to ${receiver.tag}`,
+                    text: `Betalt til ${receiver.tag}`,
                     iconURL: receiver.displayAvatarURL(),
                 });
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
 
-            logger.info(`[ECONOMY] Payment sent successfully`, {
+            logger.info(`[ECONOMY] Betaling utført`, {
                 senderId,
                 receiverId: receiver.id,
                 amount,
@@ -134,16 +134,16 @@ export default {
 
             try {
                 const receiverEmbed = createEmbed({ 
-                    title: "Incoming Payment!", 
-                    description: `${interaction.user.username} paid you **$${amount.toLocaleString()}**.` 
+                    title: "Innkommende betaling!", 
+                    description: `${interaction.user.username} betalte deg **$${amount.toLocaleString()}**.` 
                 }).addFields({
-                    name: "Your New Cash",
+                    name: "Dine nye kontanter",
                     value: `$${updatedReceiverData.wallet.toLocaleString()}`,
                     inline: true,
                 });
                 await receiver.send({ embeds: [receiverEmbed] });
             } catch (e) {
-                    logger.warn(`Could not DM user ${receiver.id}: ${e.message}`);
+                    logger.warn(`Kunne ikke sende DM til bruker ${receiver.id}: ${e.message}`);
             }
-    }, { command: 'pay' })
+    }, { command: 'betal' })
 };

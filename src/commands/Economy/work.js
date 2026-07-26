@@ -11,22 +11,22 @@ const MIN_WORK_AMOUNT = botConfig.economy?.workMin ?? 10;
 const MAX_WORK_AMOUNT = botConfig.economy?.workMax ?? 100;
 const LAPTOP_MULTIPLIER = 1.5;
 const WORK_JOBS = [
-    "Software Developer",
+    "Programvareutvikler",
     "Barista",
-    "Janitor",
-    "YouTuber",
-    "Discord Bot Developer",
-    "Cashier",
-    "Pizza Delivery Driver",
-    "Librarian",
-    "Gardener",
-    "Data Analyst",
+    "Renholder",
+    "Youtuber",
+    "Discord-bot-utvikler",
+    "Kasserer",
+    "Pizzabud",
+    "Bibliotekar",
+    "Gartner",
+    "Dataanalytiker",
 ];
 
 export default {
     data: new SlashCommandBuilder()
-        .setName('work')
-        .setDescription('Work to earn some money'),
+        .setName('jobb')
+        .setDescription('Jobb for å tjene litt penger'),
 
     execute: withErrorHandling(async (interaction, config, client) => {
         const deferred = await InteractionHelper.safeDefer(interaction);
@@ -40,14 +40,14 @@ export default {
 
             if (!userData) {
                 throw createError(
-                    "Failed to load economy data for work",
+                    "Kunne ikke laste økonomidata for jobb",
                     ErrorTypes.DATABASE,
-                    "Failed to load your economy data. Please try again later.",
+                    "Kunne ikke laste inn økonomidataene dine. Vennligst prøv igjen senere.",
                     { userId, guildId }
                 );
             }
 
-            logger.debug(`[ECONOMY] Work command started for ${userId}`, { userId, guildId });
+            logger.debug(`[ECONOMY] Jobbkommando startet for ${userId}`, { userId, guildId });
 
             const lastWork = userData.lastWork || 0;
             const inventory = userData.inventory || {};
@@ -64,9 +64,9 @@ export default {
                 } else {
                     const remaining = lastWork + WORK_COOLDOWN - now;
                     throw createError(
-                        "Work cooldown active",
+                        "Cooldown for jobb aktiv",
                         ErrorTypes.RATE_LIMIT,
-                        `You're working too fast! Wait **${Math.floor(remaining / 3600000)}h ${Math.floor((remaining % 3600000) / 60000)}m** before working again.`,
+                        `Du jobber for raskt! Vent i **${Math.floor(remaining / 3600000)}t ${Math.floor((remaining % 3600000) / 60000)}m** før du jobber igjen.`,
                         { timeRemaining: remaining, cooldownType: 'work' }
                     );
                 }
@@ -78,7 +78,7 @@ export default {
             let multiplierMessage = "";
             if (hasLaptop > 0) {
                 earned = Math.floor(earned * LAPTOP_MULTIPLIER);
-                multiplierMessage = "\n💻 **Laptop Bonus:** +50% earnings!";
+                multiplierMessage = "\n💻 **Bærbar PC-bonus:** +50% inntekt!";
             }
 
             userData.wallet = (userData.wallet || 0) + earned;
@@ -86,7 +86,7 @@ export default {
 
             await setEconomyData(client, guildId, userId, userData);
 
-            logger.info(`[ECONOMY_TRANSACTION] Work completed`, {
+            logger.info(`[ECONOMY_TRANSACTION] Jobb fullført`, {
                 userId,
                 guildId,
                 amount: earned,
@@ -98,26 +98,26 @@ export default {
             });
 
             const embed = successEmbed(
-                "💼 Work Complete!",
-                `You worked as a **${job}** and earned **$${earned.toLocaleString()}**!${multiplierMessage}`
+                "💼 Jobb fullført!",
+                `Du jobbet som **${job}** og tjente **$${earned.toLocaleString()}**!${multiplierMessage}`
             )
                 .addFields(
                     {
-                        name: "New Balance",
+                        name: "Ny saldo",
                         value: `$${userData.wallet.toLocaleString()}`,
                         inline: true,
                     },
                     {
-                        name: "Next Work",
+                        name: "Neste jobb",
                         value: `<t:${Math.floor((now + WORK_COOLDOWN) / 1000)}:R>`,
                         inline: true,
                     }
                 )
                 .setFooter({
-                    text: `Requested by ${interaction.user.tag}`,
+                    text: `Forespurt av ${interaction.user.tag}`,
                     iconURL: interaction.user.displayAvatarURL(),
                 });
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
-    }, { command: 'work' })
+    }, { command: 'jobb' })
 };

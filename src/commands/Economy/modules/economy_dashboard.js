@@ -52,49 +52,49 @@ async function buildDashboardEmbed(guild, client) {
             }
         }
     } catch (error) {
-        logger.error('Error calculating economy stats:', error);
+        logger.error('Feil ved beregning av økonomistatistikk:', error);
     }
 
     const avgBalance = userCount > 0 ? Math.floor(totalInCirculation / userCount) : 0;
 
     return new EmbedBuilder()
-        .setTitle('💰 Economy Dashboard')
-        .setDescription(`Manage the economy system for **${guild.name}**.\nSelect an option below to perform an action.`)
+        .setTitle('💰 Økonomikontrollpanel')
+        .setDescription(`Administrer økonomisystemet for **${guild.name}**.\nVelg et alternativ nedenfor for å utføre en handling.`)
         .setColor(getColor('economy'))
         .addFields(
-            { name: '💰 Total in Circulation', value: `\`${currencySymbol}${totalInCirculation.toLocaleString()}\``, inline: true },
-            { name: '👥 Active Users', value: `\`${userCount.toLocaleString()}\``, inline: true },
-            { name: '📊 Average Balance', value: `\`${currencySymbol}${avgBalance.toLocaleString()}\``, inline: true },
-            { name: '💱 Currency Symbol', value: `\`${currencySymbol}\``, inline: true },
-            { name: '📝 Currency Name', value: `\`${currencyName}\``, inline: true },
+            { name: '💰 Totalt i omløp', value: `\`${currencySymbol}${totalInCirculation.toLocaleString()}\``, inline: true },
+            { name: '👥 Aktive brukere', value: `\`${userCount.toLocaleString()}\``, inline: true },
+            { name: '📊 Gjennomsnittlig saldo', value: `\`${currencySymbol}${avgBalance.toLocaleString()}\``, inline: true },
+            { name: '💱 Valutasymbol', value: `\`${currencySymbol}\``, inline: true },
+            { name: '📝 Valutanavn', value: `\`${currencyName}\``, inline: true },
         )
-        .setFooter({ text: 'Dashboard closes after 10 minutes of inactivity' })
+        .setFooter({ text: 'Kontrollpanelet lukkes etter 10 minutter med inaktivitet' })
         .setTimestamp();
 }
 
 function buildSelectMenu(guildId) {
     return new StringSelectMenuBuilder()
         .setCustomId(`economy_dashboard_${guildId}`)
-        .setPlaceholder('Select an action...')
+        .setPlaceholder('Velg en handling...')
         .addOptions(
             new StringSelectMenuOptionBuilder()
-                .setLabel('Add Currency')
-                .setDescription('Add currency to a user\'s wallet or bank')
+                .setLabel('Legg til valuta')
+                .setDescription('Legg til valuta i en brukers lommebok eller bank')
                 .setValue('add_currency')
                 .setEmoji('💰'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Remove Currency')
-                .setDescription('Remove currency from a user\'s wallet or bank')
+                .setLabel('Fjern valuta')
+                .setDescription('Fjern valuta fra en brukers lommebok eller bank')
                 .setValue('remove_currency')
                 .setEmoji('💸'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Change Currency Symbol')
-                .setDescription('Change the currency symbol (e.g., $, €, £)')
+                .setLabel('Endre valutasymbol')
+                .setDescription('Endre valutasymbolet (f.eks. $, €, £, kr)')
                 .setValue('change_currency')
                 .setEmoji('💱'),
             new StringSelectMenuOptionBuilder()
-                .setLabel('Change Currency Name')
-                .setDescription('Change the currency name (e.g., coins, credits)')
+                .setLabel('Endre valutanavn')
+                .setDescription('Endre valutanavnet (f.eks. mynter, kreditter, kroner)')
                 .setValue('change_name')
                 .setEmoji('📝'),
         );
@@ -127,14 +127,14 @@ async function updateConfigFile(currencySymbol, currencyName) {
 
         configContent = configContent.replace(
             /namePlural:\s*"[^"]*",\s*\/\/\s*Plural display name/,
-            `namePlural: "${currencyName}s", // Plural display name`
+            `namePlural: "${currencyName}er", // Plural display name`
         );
         
         await fs.writeFile(configPath, configContent, 'utf-8');
-        logger.info('Config file updated successfully');
+        logger.info('Konfigurasjonsfil oppdatert');
         return true;
     } catch (error) {
-        logger.error('Error updating config file:', error);
+        logger.error('Feil ved oppdatering av konfigurasjonsfil:', error);
         return false;
     }
 }
@@ -178,15 +178,15 @@ export default {
                     }
                 } catch (error) {
                     if (error instanceof TitanBotError) {
-                        logger.debug(`Economy dashboard validation error: ${error.message}`);
+                        logger.debug(`Valideringsfeil i økonomikontrollpanel: ${error.message}`);
                     } else {
-                        logger.error('Unexpected economy dashboard error:', error);
+                        logger.error('Uventet feil i økonomikontrollpanel:', error);
                     }
 
                     const errorMessage =
                         error instanceof TitanBotError
-                            ? error.userMessage || 'An error occurred while processing your selection.'
-                            : 'An unexpected error occurred while processing your request.';
+                            ? error.userMessage || 'Det oppstod en feil under behandling av valget ditt.'
+                            : 'Det oppstod en uventet feil under behandling av forespørselen din.';
 
                     if (!selectInteraction.replied && !selectInteraction.deferred) {
                         await selectInteraction.deferUpdate().catch(() => {});
@@ -202,8 +202,8 @@ export default {
             collector.on('end', async (collected, reason) => {
                 if (reason === 'time') {
                     const timeoutEmbed = new EmbedBuilder()
-                        .setTitle('Dashboard Timed Out')
-                        .setDescription('This dashboard has been closed due to inactivity. Please run the command again to continue.')
+                        .setTitle('Kontrollpanelet utløp på tid')
+                        .setDescription('Dette kontrollpanelet har blitt lukket på grunn av inaktivitet. Kjør kommandoen på nytt for å fortsette.')
                         .setColor(getColor('error'));
                     
                     await InteractionHelper.safeEditReply(interaction, {
@@ -214,11 +214,11 @@ export default {
             });
         } catch (error) {
             if (error instanceof TitanBotError) throw error;
-            logger.error('Unexpected error in economy_dashboard:', error);
+            logger.error('Uventet feil i economy_dashboard:', error);
             throw new TitanBotError(
-                `Economy dashboard failed: ${error.message}`,
+                `Økonomikontrollpanel mislyktes: ${error.message}`,
                 ErrorTypes.UNKNOWN,
-                'Failed to open the economy dashboard.',
+                'Kunne ikke åpne økonomikontrollpanelet.',
             );
         }
     },
@@ -227,23 +227,23 @@ export default {
 async function handleAddCurrency(selectInteraction, rootInteraction, guild, client) {
     const modal = new ModalBuilder()
         .setCustomId(`economy_add_currency_${guild.id}`)
-        .setTitle('Add Currency');
+        .setTitle('Legg til valuta');
 
     const userSelect = new UserSelectMenuBuilder()
         .setCustomId('target_user')
-        .setPlaceholder('Select a user...')
+        .setPlaceholder('Velg en bruker...')
         .setMinValues(1)
         .setMaxValues(1)
         .setRequired(true);
 
     const userLabel = new LabelBuilder()
-        .setLabel('Target User')
-        .setDescription('User to add currency to')
+        .setLabel('Målbruker')
+        .setDescription('Bruker som skal motta valuta')
         .setUserSelectMenuComponent(userSelect);
 
     const amountInput = new TextInputBuilder()
         .setCustomId('amount')
-        .setLabel('Amount to add')
+        .setLabel('Beløp som skal legges til')
         .setStyle(TextInputStyle.Short)
         .setPlaceholder('100')
         .setMinLength(1)
@@ -252,11 +252,11 @@ async function handleAddCurrency(selectInteraction, rootInteraction, guild, clie
 
     const typeInput = new TextInputBuilder()
         .setCustomId('type')
-        .setLabel('Type (wallet or bank)')
+        .setLabel('Type (wallet eller bank)')
         .setStyle(TextInputStyle.Short)
         .setPlaceholder('wallet')
         .setMinLength(1)
-        .setMaxLength(5)
+        .setMaxLength(6)
         .setRequired(true);
 
     modal.addLabelComponents(userLabel);
@@ -281,23 +281,23 @@ async function handleAddCurrency(selectInteraction, rootInteraction, guild, clie
     const type = submitted.fields.getTextInputValue('type').trim().toLowerCase();
 
     if (isNaN(amount) || amount <= 0) {
-        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'Amount must be a positive number.' });
+        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'Beløpet må være et positivt tall.' });
         return;
     }
 
     if (type !== 'wallet' && type !== 'bank') {
-        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'Type must be either "wallet" or "bank".' });
+        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'Type må enten være "wallet" eller "bank".' });
         return;
     }
 
     const member = await guild.members.fetch(userId).catch(() => null);
     if (!member) {
-        await replyUserError(submitted, { type: ErrorTypes.USER_INPUT, message: 'The specified user is not in this server.' });
+        await replyUserError(submitted, { type: ErrorTypes.USER_INPUT, message: 'Den angitte brukeren er ikke i denne serveren.' });
         return;
     }
 
     if (member.user.bot) {
-        await replyUserError(submitted, { type: ErrorTypes.UNKNOWN, message: 'Bots do not have economy accounts.' });
+        await replyUserError(submitted, { type: ErrorTypes.UNKNOWN, message: 'Botter har ikke økonomikontoer.' });
         return;
     }
 
@@ -306,11 +306,11 @@ async function handleAddCurrency(selectInteraction, rootInteraction, guild, clie
     const currencySymbol = BotConfig.economy.currency.symbol;
 
     await submitted.reply({
-        embeds: [successEmbed('Currency Added', `Successfully added ${currencySymbol}${amount.toLocaleString()} to ${member.user.tag}'s ${type}.\n**New Balance:** ${currencySymbol}${newBalance.toLocaleString()}`)],
+        embeds: [successEmbed('Valuta lagt til', `Lagt til ${currencySymbol}${amount.toLocaleString()} i ${member.user.tag} sin ${type === 'wallet' ? 'lommebok' : 'bank'}.\n**Ny saldo:** ${currencySymbol}${newBalance.toLocaleString()}`)],
         flags: MessageFlags.Ephemeral,
     });
 
-    logger.info(`[ECONOMY_DASHBOARD] Currency added`, {
+    logger.info(`[ECONOMY_DASHBOARD] Valuta lagt til`, {
         adminId: submitted.user.id,
         targetUserId: userId,
         amount,
@@ -324,23 +324,23 @@ async function handleAddCurrency(selectInteraction, rootInteraction, guild, clie
 async function handleRemoveCurrency(selectInteraction, rootInteraction, guild, client) {
     const modal = new ModalBuilder()
         .setCustomId(`economy_remove_currency_${guild.id}`)
-        .setTitle('Remove Currency');
+        .setTitle('Fjern valuta');
 
     const userSelect = new UserSelectMenuBuilder()
         .setCustomId('target_user')
-        .setPlaceholder('Select a user...')
+        .setPlaceholder('Velg en bruker...')
         .setMinValues(1)
         .setMaxValues(1)
         .setRequired(true);
 
     const userLabel = new LabelBuilder()
-        .setLabel('Target User')
-        .setDescription('User to remove currency from')
+        .setLabel('Målbruker')
+        .setDescription('Bruker det skal fjernes valuta fra')
         .setUserSelectMenuComponent(userSelect);
 
     const amountInput = new TextInputBuilder()
         .setCustomId('amount')
-        .setLabel('Amount to remove')
+        .setLabel('Beløp som skal fjernes')
         .setStyle(TextInputStyle.Short)
         .setPlaceholder('100')
         .setMinLength(1)
@@ -349,11 +349,11 @@ async function handleRemoveCurrency(selectInteraction, rootInteraction, guild, c
 
     const typeInput = new TextInputBuilder()
         .setCustomId('type')
-        .setLabel('Type (wallet or bank)')
+        .setLabel('Type (wallet eller bank)')
         .setStyle(TextInputStyle.Short)
         .setPlaceholder('wallet')
         .setMinLength(1)
-        .setMaxLength(5)
+        .setMaxLength(6)
         .setRequired(true);
 
     modal.addLabelComponents(userLabel);
@@ -378,23 +378,23 @@ async function handleRemoveCurrency(selectInteraction, rootInteraction, guild, c
     const type = submitted.fields.getTextInputValue('type').trim().toLowerCase();
 
     if (isNaN(amount) || amount <= 0) {
-        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'Amount must be a positive number.' });
+        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'Beløpet må være et positivt tall.' });
         return;
     }
 
     if (type !== 'wallet' && type !== 'bank') {
-        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'Type must be either "wallet" or "bank".' });
+        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'Type må enten være "wallet" eller "bank".' });
         return;
     }
 
     const member = await guild.members.fetch(userId).catch(() => null);
     if (!member) {
-        await replyUserError(submitted, { type: ErrorTypes.USER_INPUT, message: 'The specified user is not in this server.' });
+        await replyUserError(submitted, { type: ErrorTypes.USER_INPUT, message: 'Den angitte brukeren er ikke i denne serveren.' });
         return;
     }
 
     if (member.user.bot) {
-        await replyUserError(submitted, { type: ErrorTypes.UNKNOWN, message: 'Bots do not have economy accounts.' });
+        await replyUserError(submitted, { type: ErrorTypes.UNKNOWN, message: 'Botter har ikke økonomikontoer.' });
         return;
     }
 
@@ -403,11 +403,11 @@ async function handleRemoveCurrency(selectInteraction, rootInteraction, guild, c
     const currencySymbol = BotConfig.economy.currency.symbol;
 
     await submitted.reply({
-        embeds: [successEmbed('Currency Removed', `Successfully removed ${currencySymbol}${amount.toLocaleString()} from ${member.user.tag}'s ${type}.\n**New Balance:** ${currencySymbol}${newBalance.toLocaleString()}`)],
+        embeds: [successEmbed('Valuta fjernet', `Fjernet ${currencySymbol}${amount.toLocaleString()} fra ${member.user.tag} sin ${type === 'wallet' ? 'lommebok' : 'bank'}.\n**Ny saldo:** ${currencySymbol}${newBalance.toLocaleString()}`)],
         flags: MessageFlags.Ephemeral,
     });
 
-    logger.info(`[ECONOMY_DASHBOARD] Currency removed`, {
+    logger.info(`[ECONOMY_DASHBOARD] Valuta fjernet`, {
         adminId: submitted.user.id,
         targetUserId: userId,
         amount,
@@ -421,11 +421,11 @@ async function handleRemoveCurrency(selectInteraction, rootInteraction, guild, c
 async function handleChangeCurrency(selectInteraction, rootInteraction, guild) {
     const modal = new ModalBuilder()
         .setCustomId(`economy_change_currency_${guild.id}`)
-        .setTitle('Change Currency Symbol');
+        .setTitle('Endre valutasymbol');
 
     const symbolInput = new TextInputBuilder()
         .setCustomId('currency_symbol')
-        .setLabel('New Currency Symbol')
+        .setLabel('Nytt valutasymbol')
         .setStyle(TextInputStyle.Short)
         .setValue(BotConfig.economy.currency.symbol)
         .setPlaceholder('$')
@@ -449,23 +449,23 @@ async function handleChangeCurrency(selectInteraction, rootInteraction, guild) {
     const newSymbol = submitted.fields.getTextInputValue('currency_symbol').trim();
 
     if (newSymbol.length === 0 || newSymbol.length > 3) {
-        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'Currency symbol must be 1-3 characters long.' });
+        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'Valutasymbolet må være 1–3 tegn langt.' });
         return;
     }
 
     const success = await updateConfigFile(newSymbol, BotConfig.economy.currency.name);
 
     if (!success) {
-        await replyUserError(submitted, { type: ErrorTypes.UNKNOWN, message: 'Could not update the config file. Please check the logs.' });
+        await replyUserError(submitted, { type: ErrorTypes.UNKNOWN, message: 'Kunne ikke oppdatere konfigurasjonsfilen. Sjekk loggene.' });
         return;
     }
 
     await submitted.reply({
-        embeds: [successEmbed('Currency Symbol Updated', `Currency symbol changed to **${newSymbol}**.\n\n**Note:** The bot needs to be restarted for changes to take effect.`)],
+        embeds: [successEmbed('Valutasymbol oppdatert', `Valutasymbolet ble endret til **${newSymbol}**.\n\n**Merk:** Botten må startes på nytt før endringene trer i kraft.`)],
         flags: MessageFlags.Ephemeral,
     });
 
-    logger.info(`[ECONOMY_DASHBOARD] Currency symbol changed`, {
+    logger.info(`[ECONOMY_DASHBOARD] Valutasymbol endret`, {
         adminId: submitted.user.id,
         oldSymbol: BotConfig.economy.currency.symbol,
         newSymbol
@@ -475,14 +475,14 @@ async function handleChangeCurrency(selectInteraction, rootInteraction, guild) {
 async function handleChangeName(selectInteraction, rootInteraction, guild) {
     const modal = new ModalBuilder()
         .setCustomId(`economy_change_name_${guild.id}`)
-        .setTitle('Change Currency Name');
+        .setTitle('Endre valutanavn');
 
     const nameInput = new TextInputBuilder()
         .setCustomId('currency_name')
-        .setLabel('New Currency Name')
+        .setLabel('Nytt valutanavn')
         .setStyle(TextInputStyle.Short)
         .setValue(BotConfig.economy.currency.name)
-        .setPlaceholder('coins')
+        .setPlaceholder('mynter')
         .setMinLength(1)
         .setMaxLength(20)
         .setRequired(true);
@@ -503,23 +503,23 @@ async function handleChangeName(selectInteraction, rootInteraction, guild) {
     const newName = submitted.fields.getTextInputValue('currency_name').trim();
 
     if (newName.length === 0 || newName.length > 20) {
-        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'Currency name must be 1-20 characters long.' });
+        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'Valutanavnet må være 1–20 tegn langt.' });
         return;
     }
 
     const success = await updateConfigFile(BotConfig.economy.currency.symbol, newName);
 
     if (!success) {
-        await replyUserError(submitted, { type: ErrorTypes.UNKNOWN, message: 'Could not update the config file. Please check the logs.' });
+        await replyUserError(submitted, { type: ErrorTypes.UNKNOWN, message: 'Kunne ikke oppdatere konfigurasjonsfilen. Sjekk loggene.' });
         return;
     }
 
     await submitted.reply({
-        embeds: [successEmbed('Currency Name Updated', `Currency name changed to **${newName}**.\n\n**Note:** The bot needs to be restarted for changes to take effect.`)],
+        embeds: [successEmbed('Valutanavn oppdatert', `Valutanavnet ble endret til **${newName}**.\n\n**Merk:** Botten må startes på nytt før endringene trer i kraft.`)],
         flags: MessageFlags.Ephemeral,
     });
 
-    logger.info(`[ECONOMY_DASHBOARD] Currency name changed`, {
+    logger.info(`[ECONOMY_DASHBOARD] Valutanavn endret`, {
         adminId: submitted.user.id,
         oldName: BotConfig.economy.currency.name,
         newName

@@ -10,8 +10,8 @@ const SHOP_ITEMS = shopItems;
 
 export default {
     data: new SlashCommandBuilder()
-        .setName('inventory')
-        .setDescription('View your economy inventory'),
+        .setName('lager')
+        .setDescription('Se lagret ditt med gjenstander'),
 
     execute: withErrorHandling(async (interaction, config, client) => {
         const deferred = await InteractionHelper.safeDefer(interaction);
@@ -20,22 +20,22 @@ export default {
             const userId = interaction.user.id;
             const guildId = interaction.guildId;
 
-            logger.debug(`[ECONOMY] Inventory requested for ${userId}`, { userId, guildId });
+            logger.debug(`[ECONOMY] Lager forespurt for ${userId}`, { userId, guildId });
 
             const userData = await getEconomyData(client, guildId, userId);
 
             if (!userData) {
                 throw createError(
-                    "Failed to load economy data for inventory",
+                    "Kunne ikke laste økonomidata for lager",
                     ErrorTypes.DATABASE,
-                    "Failed to load your economy data. Please try again later.",
+                    "Kunne ikke laste inn økonomidataene dine. Vennligst prøv igjen senere.",
                     { userId, guildId }
                 );
             }
 
             const inventory = userData.inventory || {};
 
-            let inventoryDescription = "Your inventory is currently empty.";
+            let inventoryDescription = "Lageret ditt er for øyeblikket tomt.";
 
             if (Object.keys(inventory).length > 0) {
                 inventoryDescription = Object.entries(inventory)
@@ -54,17 +54,17 @@ export default {
                     .join("\n");
             }
 
-            logger.info(`[ECONOMY] Inventory retrieved`, { 
+            logger.info(`[ECONOMY] Lager hentet`, { 
                 userId, 
                 guildId,
                 itemCount: Object.keys(inventory).length
             });
 
             const embed = createEmbed({ 
-                title: `🎒 ${interaction.user.username}'s Inventory`, 
+                title: `🎒 Lageret til ${interaction.user.username}`, 
                 description: inventoryDescription, 
             }).setThumbnail(interaction.user.displayAvatarURL());
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
-    }, { command: 'inventory' })
+    }, { command: 'lager' })
 };

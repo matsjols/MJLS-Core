@@ -8,36 +8,36 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 const SLUT_COOLDOWN = 45 * 60 * 1000;
 
 const SLUT_ACTIVITIES = [
-    { name: "Cam Stream", min: 120, max: 450, risk: 0.2 },
-    { name: "Private Dance Session", min: 220, max: 700, risk: 0.25 },
-    { name: "After-Hours Club Host", min: 320, max: 900, risk: 0.3 },
-    { name: "VIP Companion Booking", min: 550, max: 1400, risk: 0.35 },
-    { name: "Exclusive Livestream", min: 850, max: 2200, risk: 0.4 },
+    { name: "Kamerastreaming", min: 120, max: 450, risk: 0.2 },
+    { name: "Privat dansesession", min: 220, max: 700, risk: 0.25 },
+    { name: "Vert på nattklubb", min: 320, max: 900, risk: 0.3 },
+    { name: "VIP-selskapsbooking", min: 550, max: 1400, risk: 0.35 },
+    { name: "Eksklusiv direktesending", min: 850, max: 2200, risk: 0.4 },
 ];
 
 const POSITIVE_OUTCOMES = [
-    "Your stream blew up and tips poured in.",
-    "A VIP booking paid far above average.",
-    "Your after-hours shift was packed and profitable.",
-    "Premium requests came through and your payout jumped.",
+    "Sendingen din tok av og tipsene rant inn.",
+    "En VIP-booking betalte langt over gjennomsnittet.",
+    "Nattskiftet ditt var stappfullt og svært lønnsomt.",
+    "Premium-forespørsler strømmet inn og utbetalingen økte.",
 ];
 
 const FINE_OUTCOMES = [
-    "Venue security issued a compliance fine.",
-    "A moderation strike triggered a platform fee.",
-    "You were flagged and had to pay a penalty.",
+    "Sikkerhetspersonell ga deg et gebyr for regelbrudd.",
+    "En moderatørstengning utløste et plattformgebyr.",
+    "Du ble rapportert og måtte betale et straffegebyr.",
 ];
 
 const ROBBED_OUTCOMES = [
-    "A fake buyer chargeback wiped part of your earnings.",
-    "A scam booking cleaned out a chunk of your cash.",
-    "You got baited by a fraud account and lost money.",
+    "En falsk kjøper ba om tilbakeføring av penger og svekket inntekten din.",
+    "En svindelskift tømte en god del av kontantene dine.",
+    "Du ble lurt av en falsk konto og tapte penger.",
 ];
 
 const LOSS_OUTCOMES = [
-    "The set flopped and you had to cover operating costs.",
-    "You burned budget on prep and made no return.",
-    "The shift went sideways and left you in the red.",
+    "Opplegget floppet og du måtte dekke driftskostnadene selv.",
+    "Du brukte penger på forberedelser uten å få noe igjen.",
+    "Skiftet gikk helt feil vei og etterlot deg i minus.",
 ];
 
 function randomInt(min, max) {
@@ -60,7 +60,7 @@ function resolveOutcome(activity, wallet) {
             type: 'payout',
             delta: amount,
             message: randomChoice(POSITIVE_OUTCOMES),
-            title: `${activity.name} - Payout`
+            title: `${activity.name} - Utbetaling`
         };
     }
 
@@ -74,7 +74,7 @@ function resolveOutcome(activity, wallet) {
             type: 'fine',
             delta: -amount,
             message: randomChoice(FINE_OUTCOMES),
-            title: `${activity.name} - Fined`
+            title: `${activity.name} - Ilagt bot`
         };
     }
 
@@ -86,7 +86,7 @@ function resolveOutcome(activity, wallet) {
             type: 'robbed',
             delta: -amount,
             message: randomChoice(ROBBED_OUTCOMES),
-            title: `${activity.name} - Robbed`
+            title: `${activity.name} - Ranet`
         };
     }
 
@@ -97,14 +97,14 @@ function resolveOutcome(activity, wallet) {
         type: 'loss',
         delta: -amount,
         message: randomChoice(LOSS_OUTCOMES),
-        title: `${activity.name} - Loss`
+        title: `${activity.name} - Tap`
     };
 }
 
 export default {
     data: new SlashCommandBuilder()
-        .setName('slut')
-        .setDescription('Take a risky provocative job for random payout or loss'),
+        .setName('voksenjobb')
+        .setDescription('Ta en dristig og risikabel jobb for tilfeldig utbetaling eller tap'),
 
     execute: withErrorHandling(async (interaction, config, client) => {
         const deferred = await InteractionHelper.safeDefer(interaction);
@@ -114,15 +114,15 @@ export default {
             const guildId = interaction.guildId;
             const now = Date.now();
 
-            logger.debug(`[ECONOMY] Slut command started for ${userId}`, { userId, guildId });
+            logger.debug(`[ECONOMY] Voksenjobb-kommando startet for ${userId}`, { userId, guildId });
 
             const userData = await getEconomyData(client, guildId, userId);
 
             if (!userData) {
                 throw createError(
-                    "Failed to load economy data for slut command",
+                    "Kunne ikke laste økonomidata for voksenjobb",
                     ErrorTypes.DATABASE,
-                    "Failed to load your economy data. Please try again later.",
+                    "Kunne ikke laste inn økonomidataene dine. Vennligst prøv igjen senere.",
                     { userId, guildId }
                 );
             }
@@ -132,9 +132,9 @@ export default {
             if (now - lastSlut < SLUT_COOLDOWN) {
                 const remainingTime = lastSlut + SLUT_COOLDOWN - now;
                 throw createError(
-                    "Slut cooldown active",
+                    "Cooldown for voksenjobb aktiv",
                     ErrorTypes.RATE_LIMIT,
-                    `You need to wait before you can work again! Try again in **${Math.ceil(remainingTime / 60000)}** minutes.`,
+                    `Du må vente før du kan jobbe igjen! Prøv igjen om **${Math.ceil(remainingTime / 60000)}** minutter.`,
                     { timeRemaining: remainingTime, cooldownType: 'slut' }
                 );
             }
@@ -156,7 +156,7 @@ export default {
 
             await setEconomyData(client, guildId, userId, userData);
 
-            logger.info(`[ECONOMY_TRANSACTION] Slut activity resolved`, {
+            logger.info(`[ECONOMY_TRANSACTION] Voksenjobb fullført`, {
                 userId,
                 guildId,
                 activity: activity.name,
@@ -169,11 +169,11 @@ export default {
             const amountLabel = `${outcome.delta >= 0 ? '+' : '-'}$${Math.abs(outcome.delta).toLocaleString()}`;
             const summaryLines = [
                 `${outcome.message}`,
-                `💸 **Net Result:** ${amountLabel}`,
-                `💳 **Current Balance:** $${userData.wallet.toLocaleString()}`,
-                `📊 **Total Sessions:** ${userData.totalSluts}`,
-                `💵 **Total Earned:** $${(userData.totalSlutEarnings || 0).toLocaleString()}`,
-                `🧾 **Total Lost:** $${(userData.totalSlutLosses || 0).toLocaleString()}`
+                `💸 **Netto resultat:** ${amountLabel}`,
+                `💳 **Nåværende saldo:** $${userData.wallet.toLocaleString()}`,
+                `📊 **Totale økter:** ${userData.totalSluts}`,
+                `💵 **Totalt tjent:** $${(userData.totalSlutEarnings || 0).toLocaleString()}`,
+                `🧾 **Totalt tapt:** $${(userData.totalSlutLosses || 0).toLocaleString()}`
             ];
 
             const embed = createEmbed({
@@ -184,5 +184,5 @@ export default {
             });
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
-    }, { command: 'slut' })
+    }, { command: 'voksenjobb' })
 };

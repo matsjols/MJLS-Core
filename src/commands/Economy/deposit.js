@@ -6,12 +6,12 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 
 export default {
     data: new SlashCommandBuilder()
-        .setName('deposit')
-        .setDescription('Deposit money from your wallet into your bank')
+        .setName('innskudd')
+        .setDescription('Sett inn penger fra lommeboka til banken')
         .addStringOption(option =>
             option
-                .setName('amount')
-                .setDescription('Amount to deposit (number or "all")')
+                .setName('beløp')
+                .setDescription('Beløp å sette inn (tall eller "alt")')
                 .setRequired(true)
         ),
 
@@ -20,119 +20,119 @@ export default {
         if (!deferred) return;
         
         const userId = interaction.user.id;
-            const guildId = interaction.guildId;
-            const amountInput = interaction.options.getString("amount");
+        const guildId = interaction.guildId;
+        const amountInput = interaction.options.getString("beløp");
 
-            const userData = await getEconomyData(client, guildId, userId);
-            
-            if (!userData) {
+        const userData = await getEconomyData(client, guildId, userId);
+        
+        if (!userData) {
+            throw createError(
+                "Kunne ikke laste økonomidata",
+                ErrorTypes.DATABASE,
+                "Kunne ikke laste inn økonomidataene dine. Vennligst prøv igjen senere.",
+                { userId, guildId }
+            );
+        }
+        
+        const maxBank = getMaxBankCapacity(userData);
+        let depositAmount;
+
+        if (amountInput.toLowerCase() === "all" || amountInput.toLowerCase() === "alt") {
+            depositAmount = userData.wallet;
+        } else {
+            depositAmount = parseInt(amountInput);
+
+            if (isNaN(depositAmount) || depositAmount <= 0) {
                 throw createError(
-                    "Failed to load economy data",
-                    ErrorTypes.DATABASE,
-                    "Failed to load your economy data. Please try again later.",
-                    { userId, guildId }
-                );
-            }
-            
-            const maxBank = getMaxBankCapacity(userData);
-            let depositAmount;
-
-            if (amountInput.toLowerCase() === "all") {
-                depositAmount = userData.wallet;
-            } else {
-                depositAmount = parseInt(amountInput);
-
-                if (isNaN(depositAmount) || depositAmount <= 0) {
-                    throw createError(
-                        "Invalid deposit amount",
-                        ErrorTypes.VALIDATION,
-                        `Please enter a valid number or 'all'. You entered: \`${amountInput}\``,
-                        { amountInput, userId }
-                    );
-                }
-            }
-
-            if (depositAmount === 0) {
-                throw createError(
-                    "Zero deposit amount",
+                    "Ugyldig innskuddsbeløp",
                     ErrorTypes.VALIDATION,
-                    "You have no cash to deposit.",
-                    { userId, walletBalance: userData.wallet }
+                    `Vennligst oppgi et gyldig tall eller 'alt'. Du skrev: \`${amountInput}\``,
+                    { amountInput, userId }
                 );
             }
+        }
 
-            if (depositAmount > userData.wallet) {
-                depositAmount = userData.wallet;
+        if (depositAmount === 0) {
+            throw createError(
+                "Innskuddsbeløp er null",
+                ErrorTypes.VALIDATION,
+                "Du har ingen kontanter å sette inn.",
+                { userId, walletBalance: userData.wallet }
+            );
+        }
+
+        if (depositAmount > userData.wallet) {
+            depositAmount = userData.wallet;
+            await interaction.followUp({
+                embeds: [
+                    buildUserErrorEmbed(
+                        'validation',
+                        `Du prøvde å sette inn mer enn du har. Setter inn dine gjenværende kontanter: **$${depositAmount.toLocaleString()}**`
+                    )
+                ],
+                flags: MessageFlags.Ephemeral,
+            });
+        }
+
+        const availableSpace = maxBank - userData.bank;
+
+        if (availableSpace <= 0) {
+            throw createError(
+                "Banken er full",
+                ErrorTypes.VALIDATION,
+                `Banken din er for øyeblikket full (Maks kapasitet: $${maxBank.toLocaleString()}). Kjøp en **Bankoppgradering** for å øke grensen din.`,
+                { maxBank, currentBank: userData.bank, userId }
+            );
+        }
+
+        if (depositAmount > availableSpace) {
+            const originalDepositAmount = depositAmount;
+            depositAmount = availableSpace;
+
+            if (amountInput.toLowerCase() !== "all" && amountInput.toLowerCase() !== "alt") {
                 await interaction.followUp({
                     embeds: [
                         buildUserErrorEmbed(
                             'validation',
-                            `You tried to deposit more than you have. Depositing your remaining cash: **$${depositAmount.toLocaleString()}**`
+                            `Du hadde bare plass til **$${depositAmount.toLocaleString()}** i bankkontoen din (Maks: $${maxBank.toLocaleString()}). Resten blir stående i kontanter.`
                         )
                     ],
                     flags: MessageFlags.Ephemeral,
                 });
             }
+        }
 
-            const availableSpace = maxBank - userData.bank;
+        if (depositAmount === 0) {
+            throw createError(
+                "Ingen plass eller kontanter for innskudd",
+                ErrorTypes.VALIDATION,
+                "Beløpet du prøvde å sette inn var enten 0 eller overskred bankkapasiteten din etter kontroll av kontantsaldoen.",
+                { depositAmount, availableSpace, walletBalance: userData.wallet }
+            );
+        }
 
-            if (availableSpace <= 0) {
-                throw createError(
-                    "Bank is full",
-                    ErrorTypes.VALIDATION,
-                    `Your bank is currently full (Max Capacity: $${maxBank.toLocaleString()}). Purchase a **Bank Upgrade** to increase your limit.`,
-                    { maxBank, currentBank: userData.bank, userId }
-                );
-            }
+        userData.wallet -= depositAmount;
+        userData.bank += depositAmount;
 
-            if (depositAmount > availableSpace) {
-                const originalDepositAmount = depositAmount;
-                depositAmount = availableSpace;
+        await setEconomyData(client, guildId, userId, userData);
 
-                if (amountInput.toLowerCase() !== "all") {
-                    await interaction.followUp({
-                        embeds: [
-                            buildUserErrorEmbed(
-                                'validation',
-                                `You only had space for **$${depositAmount.toLocaleString()}** in your bank account (Max: $${maxBank.toLocaleString()}). The rest remains in your cash.`
-                            )
-                        ],
-                        flags: MessageFlags.Ephemeral,
-                    });
-                }
-            }
+        const embed = successEmbed(
+            'Innskudd vellykket',
+            `Du har satt inn **$${depositAmount.toLocaleString()}** i banken din.`
+        )
+            .addFields(
+                {
+                    name: "Ny kontantsaldo",
+                    value: `$${userData.wallet.toLocaleString()}`,
+                    inline: true,
+                },
+                {
+                    name: "Ny banksaldo",
+                    value: `$${userData.bank.toLocaleString()} / $${maxBank.toLocaleString()}`,
+                    inline: true,
+                },
+            );
 
-            if (depositAmount === 0) {
-                throw createError(
-                    "No space or cash for deposit",
-                    ErrorTypes.VALIDATION,
-                    "The amount you tried to deposit was either 0 or exceeded your bank capacity after checking your cash balance.",
-                    { depositAmount, availableSpace, walletBalance: userData.wallet }
-                );
-            }
-
-            userData.wallet -= depositAmount;
-            userData.bank += depositAmount;
-
-            await setEconomyData(client, guildId, userId, userData);
-
-            const embed = successEmbed(
-                'Deposit Successful',
-                `You successfully deposited **$${depositAmount.toLocaleString()}** into your bank.`
-            )
-                .addFields(
-                    {
-                        name: "New Cash Balance",
-                        value: `$${userData.wallet.toLocaleString()}`,
-                        inline: true,
-                    },
-                    {
-                        name: "New Bank Balance",
-                        value: `$${userData.bank.toLocaleString()} / $${maxBank.toLocaleString()}`,
-                        inline: true,
-                    },
-                );
-
-            await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
-    }, { command: 'deposit' })
+        await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
+    }, { command: 'innskudd' })
 };

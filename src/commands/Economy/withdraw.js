@@ -2,16 +2,16 @@ import { SlashCommandBuilder } from 'discord.js';
 import { createEmbed, errorEmbed, successEmbed, infoEmbed, warningEmbed } from '../../utils/embeds.js';
 import { getEconomyData, setEconomyData, getMaxBankCapacity } from '../../utils/economy.js';
 import { withErrorHandling, createError, ErrorTypes } from '../../utils/errorHandler.js';
-
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+
 export default {
     data: new SlashCommandBuilder()
-        .setName('withdraw')
-        .setDescription('Withdraw money from your bank to your wallet')
+        .setName('ta-ut')
+        .setDescription('Ta ut penger fra banken til lommeboka di')
         .addIntegerOption(option =>
             option
-                .setName('amount')
-                .setDescription('Amount to withdraw')
+                .setName('beløp')
+                .setDescription('Beløp som skal tas ut')
                 .setRequired(true)
                 .setMinValue(1)
         ),
@@ -21,15 +21,15 @@ export default {
             
             const userId = interaction.user.id;
             const guildId = interaction.guildId;
-            const amountInput = interaction.options.getInteger("amount");
+            const amountInput = interaction.options.getInteger("beløp");
 
             const userData = await getEconomyData(client, guildId, userId);
             
             if (!userData) {
                 throw createError(
-                    "Failed to load economy data",
+                    "Kunne ikke laste økonomidata",
                     ErrorTypes.DATABASE,
-                    "Failed to load your economy data. Please try again later.",
+                    "Kunne ikke laste inn økonomidataene dine. Vennligst prøv igjen senere.",
                     { userId, guildId }
                 );
             }
@@ -38,9 +38,9 @@ export default {
 
             if (withdrawAmount <= 0) {
                 throw createError(
-                    "Invalid withdrawal amount",
+                    "Ugyldig uttaksbeløp",
                     ErrorTypes.VALIDATION,
-                    "You must withdraw a positive amount.",
+                    "Du må ta ut et positivt beløp.",
                     { amount: withdrawAmount, userId }
                 );
             }
@@ -51,9 +51,9 @@ export default {
 
             if (withdrawAmount === 0) {
                 throw createError(
-                    "Empty bank account",
+                    "Tom bankkonto",
                     ErrorTypes.VALIDATION,
-                    "Your bank account is empty.",
+                    "Bankkontoen din er tom.",
                     { userId, bankBalance: userData.bank }
                 );
             }
@@ -64,22 +64,22 @@ export default {
             await setEconomyData(client, guildId, userId, userData);
 
             const embed = successEmbed(
-                'Withdrawal Successful',
-                `You successfully withdrew **$${withdrawAmount.toLocaleString()}** from your bank.`
+                'Uttak vellykket',
+                `Du har tatt ut **$${withdrawAmount.toLocaleString()}** fra banken.`
             )
                 .addFields(
                     {
-                        name: "New Cash Balance",
+                        name: "Ny kontantsaldo",
                         value: `$${userData.wallet.toLocaleString()}`,
                         inline: true,
                     },
                     {
-                        name: "New Bank Balance",
+                        name: "Ny banksaldo",
                         value: `$${userData.bank.toLocaleString()}`,
                         inline: true,
                     },
                 );
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
-    }, { command: 'withdraw' })
+    }, { command: 'ta-ut' })
 };

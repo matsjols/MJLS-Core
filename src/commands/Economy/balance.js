@@ -7,12 +7,12 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 
 export default {
     data: new SlashCommandBuilder()
-        .setName('balance')
-        .setDescription("Check your or someone else's balance")
+        .setName('saldo')
+        .setDescription('Sjekk din eller noen andres saldo')
         .addUserOption(option =>
             option
-                .setName('user')
-                .setDescription('User to check balance for')
+                .setName('bruker')
+                .setDescription('Bruker du vil sjekke saldoen til')
                 .setRequired(false)
         ),
 
@@ -20,31 +20,31 @@ export default {
         const deferred = await InteractionHelper.safeDefer(interaction);
         if (!deferred) return;
 
-        const userOption = interaction.options.getUser("user");
+        const userOption = interaction.options.getUser("bruker");
         const targetUser = userOption || interaction.user;
         const guildId = interaction.guildId;
 
-        logger.info(`[ECONOMY] Balance check - userOption: ${userOption?.id || 'null'}, targetUser: ${targetUser.id}, guildId: ${guildId}, isPrefix: ${!!interaction._commandStartTime}`);
+        logger.info(`[ECONOMY] Saldoesjekk - userOption: ${userOption?.id || 'null'}, targetUser: ${targetUser.id}, guildId: ${guildId}, isPrefix: ${!!interaction._commandStartTime}`);
 
-        logger.debug(`[ECONOMY] Balance check for ${targetUser.id}`, { userId: targetUser.id, guildId });
+        logger.debug(`[ECONOMY] Saldoesjekk for ${targetUser.id}`, { userId: targetUser.id, guildId });
 
         if (targetUser.bot) {
             throw createError(
                 "Bot user queried for balance",
                 ErrorTypes.VALIDATION,
-                "Bots don't have an economy balance."
+                "Bots har ikke økonomisalder."
             );
         }
 
         const userData = await getEconomyData(client, guildId, targetUser.id);
 
-        logger.info(`[ECONOMY] Economy data retrieved - userData:`, userData);
+        logger.info(`[ECONOMY] Økonomidata hentet - userData:`, userData);
 
         if (!userData) {
             throw createError(
-                "Failed to load economy data",
+                "Kunne ikke laste økonomidata",
                 ErrorTypes.DATABASE,
-                "Failed to load economy data. Please try again later.",
+                "Kunne ikke laste inn økonomidata. Vennligst prøv igjen senere.",
                 { userId: targetUser.id, guildId }
             );
         }
@@ -54,34 +54,34 @@ export default {
         const wallet = typeof userData.wallet === 'number' ? userData.wallet : 0;
         const bank = typeof userData.bank === 'number' ? userData.bank : 0;
 
-            const embed = createEmbed({
-                title: `${targetUser.username}'s Balance`,
-                description: `Here is the current financial status for ${targetUser.username}.`,
-            })
-                .addFields(
-                    {
-                        name: "💵 Cash",
-                        value: `$${wallet.toLocaleString()}`,
-                        inline: true,
-                    },
-                    {
-                        name: "🏦 Bank",
-                        value: `$${bank.toLocaleString()} / $${maxBank.toLocaleString()}`,
-                        inline: true,
-                    },
-                    {
-                        name: "💰 Total",
-                        value: `$${(wallet + bank).toLocaleString()}`,
-                        inline: true,
-                    }
-                )
-                .setFooter({
-                    text: `Requested by ${interaction.user.tag}`,
-                    iconURL: interaction.user.displayAvatarURL(),
-                });
+        const embed = createEmbed({
+            title: `Saldoen til ${targetUser.username}`,
+            description: `Her er den nåværende finansielle statusen til ${targetUser.username}.`,
+        })
+            .addFields(
+                {
+                    name: "💵 Kontanter",
+                    value: `$${wallet.toLocaleString()}`,
+                    inline: true,
+                },
+                {
+                    name: "🏦 Bank",
+                    value: `$${bank.toLocaleString()} / $${maxBank.toLocaleString()}`,
+                    inline: true,
+                },
+                {
+                    name: "💰 Totalt",
+                    value: `$${(wallet + bank).toLocaleString()}`,
+                    inline: true,
+                }
+            )
+            .setFooter({
+                text: `Forespurt av ${interaction.user.tag}`,
+                iconURL: interaction.user.displayAvatarURL(),
+            });
 
-            logger.info(`[ECONOMY] Balance retrieved`, { userId: targetUser.id, wallet, bank });
+        logger.info(`[ECONOMY] Saldo hentet`, { userId: targetUser.id, wallet, bank });
 
-            await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
-    }, { command: 'balance' })
+        await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
+    }, { command: 'saldo' })
 };

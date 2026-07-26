@@ -13,11 +13,11 @@ const GAMBLE_COOLDOWN = 5 * 60 * 1000;
 export default {
     data: new SlashCommandBuilder()
         .setName('gamble')
-        .setDescription('Gamble your money for a chance to win more')
+        .setDescription('Gamble pengene dine for en sjanse til å vinne mer')
         .addIntegerOption(option =>
             option
-                .setName('amount')
-                .setDescription('Amount of cash to gamble')
+                .setName('beløp')
+                .setDescription('Beløp i kontanter du vil satse')
                 .setRequired(true)
                 .setMinValue(1)
         ),
@@ -28,7 +28,7 @@ export default {
             
             const userId = interaction.user.id;
             const guildId = interaction.guildId;
-            const betAmount = interaction.options.getInteger("amount");
+            const betAmount = interaction.options.getInteger("beløp");
             const now = Date.now();
 
             const userData = await getEconomyData(client, guildId, userId);
@@ -42,18 +42,18 @@ export default {
                 const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
 
                 throw createError(
-                    "Gamble cooldown active",
+                    "Cooldown for pengespill aktiv",
                     ErrorTypes.RATE_LIMIT,
-                    `You need to cool down before gambling again. Wait **${minutes}m ${seconds}s**.`,
+                    `Du må roe deg ned før du gambler igjen. Vent i **${minutes}m ${seconds}s**.`,
                     { remaining, cooldownType: 'gamble' }
                 );
             }
 
             if (userData.wallet < betAmount) {
                 throw createError(
-                    "Insufficient cash for gamble",
+                    "Utilstrekkelige kontanter for pengespill",
                     ErrorTypes.VALIDATION,
-                    `You only have $${userData.wallet.toLocaleString()} cash, but you are trying to bet $${betAmount.toLocaleString()}.`,
+                    `Du har bare $${userData.wallet.toLocaleString()} i kontanter, men prøver å satse $${betAmount.toLocaleString()}.`,
                     { required: betAmount, current: userData.wallet }
                 );
             }
@@ -66,14 +66,13 @@ export default {
             if (cloverCount > 0) {
                 winChance += CLOVER_WIN_BONUS;
                 userData.inventory["lucky_clover"] -= 1;
-                cloverMessage = `\n🍀 **Lucky Clover Consumed:** Your win chance was boosted!`;
+                cloverMessage = `\n🍀 **Firkløver brukt:** Vinnermuligheten din ble økt!`;
                 usedClover = true;
             }
-            
             else if (charmCount > 0) {
                 winChance += CHARM_WIN_BONUS;
                 userData.inventory["lucky_charm"] -= 1;
-                cloverMessage = `\n🍀 **Lucky Charm Used (${charmCount - 1} uses remaining):** Your win chance was boosted!`;
+                cloverMessage = `\n🧿 **Lykkeamulering brukt (${charmCount - 1} bruk gjenstår):** Vinnermuligheten din ble økt!`;
                 usedCharm = true;
             }
 
@@ -83,46 +82,45 @@ export default {
 
             if (win) {
                 const amountWon = Math.floor(betAmount * PAYOUT_MULTIPLIER);
-                // Net change: the bet is replaced by the payout (bet was at stake, not pre-deducted)
                 cashChange = amountWon - betAmount;
 
                 resultEmbed = successEmbed(
-                    "🎉 You Won!",
-                    `You successfully gambled and turned your **$${betAmount.toLocaleString()}** bet into **$${amountWon.toLocaleString()}**!${cloverMessage}`,
+                    "🎉 Du vant!",
+                    `Du satset og gjorde din **$${betAmount.toLocaleString()}**-innsats om til **$${amountWon.toLocaleString()}**!${cloverMessage}`,
                 );
             } else {
-cashChange = -betAmount;
+                cashChange = -betAmount;
 
                 resultEmbed = warningEmbed(
-                    "💔 You Lost...",
-                    `The dice rolled against you. You lost your **$${betAmount.toLocaleString()}** bet.`,
+                    "📉 Du tapte...",
+                    `Terningene gikk mot deg. Du tapte din innsats på **$${betAmount.toLocaleString()}**.`,
                 );
             }
 
             userData.wallet = (userData.wallet || 0) + cashChange;
-userData.lastGamble = now;
+            userData.lastGamble = now;
 
             await setEconomyData(client, guildId, userId, userData);
 
             const newCash = userData.wallet;
 
             resultEmbed.addFields({
-                name: "New Cash Balance",
+                name: "Ny kontantsaldo",
                 value: `$${newCash.toLocaleString()}`,
                 inline: true,
             });
 
             if (usedClover) {
                 resultEmbed.setFooter({
-                    text: `You have ${userData.inventory["lucky_clover"]} Lucky Clovers left. Win chance was ${Math.round(winChance * 100)}%.`,
+                    text: `Du har ${userData.inventory["lucky_clover"]} firkløvere igjen. Vinnersjansen var ${Math.round(winChance * 100)}%.`,
                 });
             } else if (usedCharm) {
                 resultEmbed.setFooter({
-                    text: `You have ${userData.inventory["lucky_charm"]} Lucky Charm uses left. Win chance was ${Math.round(winChance * 100)}%.`,
+                    text: `Du har ${userData.inventory["lucky_charm"]} bruk av lykkeamulering igjen. Vinnersjansen var ${Math.round(winChance * 100)}%.`,
                 });
             } else {
                 resultEmbed.setFooter({
-                    text: `Next gamble available in 5 minutes. Base win chance: ${Math.round(BASE_WIN_CHANCE * 100)}%.`,
+                    text: `Neste spillegang tilgjengelig om 5 minutter. Basissjanse: ${Math.round(BASE_WIN_CHANCE * 100)}%.`,
                 });
             }
 

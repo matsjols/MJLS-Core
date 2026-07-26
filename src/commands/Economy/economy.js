@@ -6,14 +6,14 @@ import economyDashboard from './modules/economy_dashboard.js';
 export default {
     slashOnly: true,
     data: new SlashCommandBuilder()
-        .setName('economy')
-        .setDescription('Economy management commands')
+        .setName('økonomi')
+        .setDescription('Kommandoer for håndtering av økonomi')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .setDMPermission(false)
         .addSubcommand(subcommand =>
             subcommand
                 .setName('dashboard')
-                .setDescription('Open the economy management dashboard')
+                .setDescription('Åpne kontrollpanelet for økonomistyring')
         ),
     category: 'Economy',
 
