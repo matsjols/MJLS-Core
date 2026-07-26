@@ -7,7 +7,7 @@ import botConfig from '../config/bot.js';
 export const COUNTER_TYPE_CONFIG = {
   members: {
     label: 'Medlemmer + Bots',
-    baseName: 'Medlemmer og Bots',
+    baseName: 'Totalt',
     emoji: '👥'
   },
   members_only: {
@@ -43,7 +43,7 @@ export function getCounterEmoji(type) {
 }
 
 export function formatCounterChannelName(type, count) {
-  const template = botConfig.counters?.defaults?.channelName || '{name}-{count}';
+  const template = botConfig.counters?.defaults?.channelName || '{emoji}︱{name} ❯ {count}';
   const baseName = getCounterBaseName(type);
   return template
     .replaceAll('{name}', baseName)
