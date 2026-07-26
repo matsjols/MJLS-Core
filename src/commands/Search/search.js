@@ -7,33 +7,33 @@ import searchUrban from './modules/search_urban.js';
 
 export default {
     data: new SlashCommandBuilder()
-        .setName('search')
-        .setDescription('Search the web and dictionaries')
+        .setName('sok')
+        .setDescription('Søk på nettet og i ordbøker')
         .addSubcommand(subcommand =>
             subcommand
-                .setName('define')
-                .setDescription('Look up a word definition')
+                .setName('definer')
+                .setDescription('Slå opp definisjonen på et ord')
                 .addStringOption(option =>
-                    option.setName('word')
-                        .setDescription('The word to look up')
+                    option.setName('ord')
+                        .setDescription('Ordet du vil slå opp')
                         .setRequired(true))
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName('google')
-                .setDescription('Search Google')
+                .setDescription('Søk på Google')
                 .addStringOption(option =>
-                    option.setName('query')
-                        .setDescription('What would you like to search for?')
+                    option.setName('sok')
+                        .setDescription('Hva vil du søke etter?')
                         .setRequired(true))
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName('urban')
-                .setDescription('Search Urban Dictionary for definitions')
+                .setDescription('Søk på Urban Dictionary etter definisjoner')
                 .addStringOption(option =>
-                    option.setName('term')
-                        .setDescription('The term to look up on Urban Dictionary')
+                    option.setName('uttrykk')
+                        .setDescription('Uttrykket du vil slå opp på Urban Dictionary')
                         .setRequired(true))
         ),
 
@@ -41,14 +41,14 @@ export default {
         const subcommand = interaction.options.getSubcommand();
 
         switch (subcommand) {
-            case 'define':
+            case 'definer':
                 return await searchDefine.execute(interaction, config, client);
             case 'google':
                 return await searchGoogle.execute(interaction, config, client);
             case 'urban':
                 return await searchUrban.execute(interaction, config, client);
             default:
-                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Unknown subcommand' });
+                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Ukjent underkommando' });
         }
     }
 };

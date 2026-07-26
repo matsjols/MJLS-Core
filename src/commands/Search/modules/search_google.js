@@ -4,15 +4,15 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 
 export default {
     async execute(interaction) {
-        const query = interaction.options.getString('query');
+        const query = interaction.options.getString('sok');
         const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
 
         const embed = createEmbed({
-            title: 'Google Search',
-            description: `[Search for "${query}"](${searchUrl})`,
+            title: 'Google-søk',
+            description: `[Søk etter "${query}"](${searchUrl})`,
             color: 'info'
         })
-        .setFooter({ text: 'Google Search Results' });
+        .setFooter({ text: 'Google søkeresultater' });
 
         await InteractionHelper.safeReply(interaction, { embeds: [embed] });
 

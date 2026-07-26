@@ -7,7 +7,7 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 export default {
     async execute(interaction) {
         try {
-            const term = interaction.options.getString('term');
+            const term = interaction.options.getString('uttrykk');
 
             if (term.length < 2) {
                 logger.warn('Urban command - term too short', {
@@ -15,7 +15,7 @@ export default {
                     term: term,
                     guildId: interaction.guildId
                 });
-                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Please enter a term with at least 2 characters.' });
+                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Vennligst skriv inn et uttrykk med minst 2 tegn.' });
             }
 
             let deferTimer = null;
@@ -43,7 +43,7 @@ export default {
             clearDeferTimer();
 
             if (!response.data?.list?.length) {
-                return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: `No definitions found for "${term}" on Urban Dictionary.` });
+                return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: `Ingen definisjoner ble funnet for "${term}" på Urban Dictionary.` });
             }
 
             const definition = response.data.list[0];
@@ -56,7 +56,7 @@ export default {
 
             const formattedExample = cleanExample
                 ? `*"${cleanExample.replace(/\n/g, ' ').slice(0, 500)}..."*`
-                : '*No example provided*';
+                : '*Ingen eksempel oppgitt*';
 
             const embed = createEmbed({
                 title: definition.word,
@@ -66,18 +66,18 @@ export default {
             .setURL(definition.permalink)
             .addFields(
                 {
-                    name: 'Example',
+                    name: 'Eksempel',
                     value: formattedExample,
                     inline: false
                 },
                 {
-                    name: 'Stats',
-                    value: `${definition.thumbs_up.toLocaleString()} • ${definition.thumbs_down.toLocaleString()}`,
+                    name: 'Statistikk',
+                    value: `👍 ${definition.thumbs_up.toLocaleString()} • 👎 ${definition.thumbs_down.toLocaleString()}`,
                     inline: true
                 },
                 {
-                    name: 'Author',
-                    value: definition.author || 'Anonymous',
+                    name: 'Forfatter',
+                    value: definition.author || 'Anonym',
                     inline: true
                 }
             )
@@ -100,16 +100,16 @@ export default {
                 error: error.message,
                 stack: error.stack,
                 userId: interaction.user.id,
-                term: interaction.options.getString('term'),
+                term: interaction.options.getString('uttrykk'),
                 guildId: interaction.guildId,
                 apiStatus: error.response?.status,
                 commandName: 'urban'
             });
 
             if (error.response?.status === 404 || !error.response) {
-                await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: `No definitions found for "${interaction.options.getString('term')}" on Urban Dictionary.` });
+                await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: `Ingen definisjoner ble funnet for "${interaction.options.getString('uttrykk')}" på Urban Dictionary.` });
             } else if (error.response?.status === 429) {
-                await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: 'Too many requests to Urban Dictionary. Please try again in a few minutes.' });
+                await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: 'For mange forespørsler mot Urban Dictionary. Vennligst prøv igjen om noen minutter.' });
             } else {
                 await handleInteractionError(interaction, error, {
                     commandName: 'urban',
