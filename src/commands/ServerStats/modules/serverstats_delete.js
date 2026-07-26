@@ -6,19 +6,20 @@ import { logger } from '../../../utils/logger.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes, createError, wrapServiceBoundary } from '../../../utils/errorHandler.js';
+
 export async function handleDelete(interaction, client) {
     const guild = interaction.guild;
-    const counterId = interaction.options.getString("counter-id");
+    const counterId = interaction.options.getString("teller-id");
 
     try {
         await InteractionHelper.safeDefer(interaction);
     } catch (error) {
-        logger.error("Failed to defer reply:", error);
+        logger.error("Kunne ikke utsette svar (defer):", error);
         return;
     }
 
     if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels)) {
-        await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need **Manage Channels** permission to delete counters.' }).catch(logger.error);
+        await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Du trenger tillatelsen **Manage Channels** for å slette tellere.' }).catch(logger.error);
         return;
     }
 
@@ -26,40 +27,40 @@ export async function handleDelete(interaction, client) {
         const counters = await getServerCounters(client, guild.id);
 
         if (counters.length === 0) {
-            await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'No counters found to delete.' }).catch(logger.error);
+            await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Ingen tellere ble funnet å slette.' }).catch(logger.error);
             return;
         }
 
         const counterToDelete = counters.find(c => c.id === counterId);
         if (!counterToDelete) {
-            await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: `Counter with ID \`${counterId}\` not found. Use \`/serverstats list\` to see all counters.` }).catch(logger.error);
+            await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: `Teller med ID \`${counterId}\` ble ikke funnet. Bruk \`/serverstatistikk liste\` for å se alle tellere.` }).catch(logger.error);
             return;
         }
 
         const channel = guild.channels.cache.get(counterToDelete.channelId);
 
         const embed = createEmbed({
-            title: "Delete Counter & Channel",
-            description: `Are you sure you want to delete this counter and its channel?\n\n**ID:** \`${counterToDelete.id}\`\n**Type:** ${getCounterTypeDisplay(counterToDelete.type)}\n**Channel:** ${channel || 'Deleted Channel'}\n\n **The channel will be permanently deleted!**`,
+            title: "Slett teller og kanal",
+            description: `Er du sikker på at du vil slette denne telleren og tilhørende kanal?\n\n**ID:** \`${counterToDelete.id}\`\n**Type:** ${getCounterTypeDisplay(counterToDelete.type)}\n**Kanal:** ${channel || 'Slettet kanal'}\n\n **Kanalen vil bli permanent slettet!**`,
             color: getColor('error')
         });
 
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId(`counter-delete:confirm:${counterToDelete.id}:${interaction.user.id}`)
-                .setLabel("Confirm Delete")
+                .setLabel("Bekreft sletting")
                 .setStyle(ButtonStyle.Danger),
             new ButtonBuilder()
                 .setCustomId(`counter-delete:cancel:${counterToDelete.id}:${interaction.user.id}`)
-                .setLabel("Cancel")
+                .setLabel("Avbryt")
                 .setStyle(ButtonStyle.Secondary)
         );
 
         await InteractionHelper.safeEditReply(interaction, { embeds: [embed], components: [row] }).catch(logger.error);
 
     } catch (error) {
-        logger.error("Error in handleDelete:", error);
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while fetching counters. Please try again.' }).catch(logger.error);
+        logger.error("Feil i handleDelete:", error);
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Det oppstod en feil under henting av tellere. Vennligst prøv igjen.' }).catch(logger.error);
     }
 }
 
@@ -69,9 +70,9 @@ export const performDeletionByCounterId = wrapServiceBoundary(async function per
     const counter = counters.find(c => c.id === counterId);
     if (!counter) {
         throw createError(
-            'Counter not found',
+            'Teller ikke funnet',
             ErrorTypes.USER_INPUT,
-            `Counter with ID \`${counterId}\` was not found.`,
+            `Teller med ID \`${counterId}\` ble ikke funnet.`,
             { guildId: guild.id, counterId, operation: 'performDeletionByCounterId' }
         );
     }
@@ -81,9 +82,9 @@ export const performDeletionByCounterId = wrapServiceBoundary(async function per
     const saved = await saveServerCounters(client, guild.id, updatedCounters);
     if (!saved) {
         throw createError(
-            'Counter delete failed',
+            'Sletting av teller feilet',
             ErrorTypes.DATABASE,
-            'Failed to delete counter. Please try again.',
+            'Kunne ikke slette telleren. Vennligst prøv igjen.',
             { guildId: guild.id, counterId, operation: 'performDeletionByCounterId' }
         );
     }
@@ -93,28 +94,28 @@ export const performDeletionByCounterId = wrapServiceBoundary(async function per
 
     if (channel) {
         try {
-            await channel.delete(`Counter deleted - removing channel: ${counter.id}`);
+            await channel.delete(`Teller slettet - fjerner kanal: ${counter.id}`);
             channelDeleted = true;
         } catch (error) {
-            logger.error("Error deleting channel:", error);
+            logger.error("Feil ved sletting av kanal:", error);
         }
     }
 
-    let message = `✅ **Counter Deleted Successfully!**\n\n**ID:** \`${counter.id}\`\n**Type:** ${getCounterTypeDisplay(counter.type)}`;
+    let message = `✅ **Teller slettet!**\n\n**ID:** \`${counter.id}\`\n**Type:** ${getCounterTypeDisplay(counter.type)}`;
 
     if (channelDeleted) {
-        message += `\n**Channel:** ${channel.name} (deleted)`;
+        message += `\n**Kanal:** ${channel.name} (slettet)`;
     } else if (channel) {
-        message += `\n**Channel:** ${channel.name} (failed to delete)`;
+        message += `\n**Kanal:** ${channel.name} (kunne ikke slettes)`;
     } else {
-        message += `\n**Channel:** Already deleted`;
+        message += `\n**Kanal:** Allerede slettet`;
     }
 
     return { message };
 }, {
     service: 'serverstats',
     operation: 'performDeletionByCounterId',
-    userMessage: 'An error occurred while deleting the counter. Please try again.',
+    userMessage: 'Det oppstod en feil under sletting av telleren. Vennligst prøv igjen.',
 });
 
 function getCounterTypeDisplay(type) {

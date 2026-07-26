@@ -6,18 +6,19 @@ import { logger } from '../../../utils/logger.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
+
 export async function handleList(interaction, client) {
     const guild = interaction.guild;
 
     try {
         await InteractionHelper.safeDefer(interaction);
     } catch (error) {
-        logger.error("Failed to defer reply:", error);
+        logger.error("Kunne ikke utsette svar (defer):", error);
         return;
     }
 
     if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels)) {
-        await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need **Manage Channels** permission to view counters.' }).catch(logger.error);
+        await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Du trenger tillatelsen **Manage Channels** for å se tellere.' }).catch(logger.error);
         return;
     }
 
@@ -34,36 +35,36 @@ export async function handleList(interaction, client) {
                 validCounters.push(counter);
             } else {
                 orphanedCounters.push(counter);
-                logger.info(`Removing orphaned counter ${counter.id} (type: ${counter.type}, deleted channel: ${counter.channelId}) from guild ${guild.id}`);
+                logger.info(`Fjerner foreldreløs teller ${counter.id} (type: ${counter.type}, slettet kanal: ${counter.channelId}) fra server ${guild.id}`);
             }
         }
 
         if (orphanedCounters.length > 0) {
             await saveServerCounters(client, guild.id, validCounters);
-            logger.info(`Cleaned up ${orphanedCounters.length} orphaned counter(s) from guild ${guild.id}`);
+            logger.info(`Renset opp ${orphanedCounters.length} foreldreløse teller(e) fra server ${guild.id}`);
         }
 
         if (validCounters.length === 0) {
             const embed = createEmbed({
-                title: "Server Counters",
-                description: "No counters have been set up for this server yet.\n\nUse `/serverstats create` to set up your first counter!",
+                title: "Serverstatistikk – Tellere",
+                description: "Ingen tellere er satt opp for denne serveren ennå.\n\nBruk `/serverstatistikk opprett` for å sette opp din første teller!",
                 color: getColor('warning')
             });
 
             embed.addFields({
-                name: "**Available Counter Types**",
-                value: "**Members + Bots** - Total server members\n **Members Only** - Human members only\n **Bots Only** - Bot members only",
+                name: "**Tilgjengelige tellertyper**",
+                value: "**Medlemmer + boter** - Totalt antall medlemmer på serveren\n **Kun medlemmer** - Kun menneskelige medlemmer\n **Kun boter** - Kun bot-medlemmer",
                 inline: false
             });
 
             embed.addFields({
-                name: "**Usage Examples**",
-                value: "`/serverstats create type:members channel_type:voice category:Stats`\n`/serverstats create type:bots channel_type:text category:Server Info`\n`/serverstats list`",
+                name: "**Eksempler på bruk**",
+                value: "`/serverstatistikk opprett type:medlemmer kanal_type:tale kategori:Statistikk`\n`/serverstatistikk opprett type:boter kanal_type:tekst kategori:Serverinfo`\n`/serverstatistikk liste`",
                 inline: false
             });
 
             embed.setFooter({ 
-                text: "Counter System • Automatic updates every 15 minutes" 
+                text: "Tellersystem • Automatisk oppdatering hvert 15. minutt" 
             });
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed] }).catch(logger.error);
@@ -71,8 +72,8 @@ export async function handleList(interaction, client) {
         }
 
         const embed = createEmbed({
-            title: `Server Counters (${validCounters.length})`,
-            description: "Here are all the active counters for this server.\n\nCounters automatically update every 15 minutes.",
+            title: `Servertellere (${validCounters.length})`,
+            description: "Her er alle aktive tellere for denne serveren.\n\nTellere oppdateres automatisk hvert 15. minutt.",
             color: getColor('info')
         });
 
@@ -81,46 +82,45 @@ export async function handleList(interaction, client) {
             const channel = guild.channels.cache.get(counter.channelId);
             
             if (!channel) {
-                
-                logger.warn(`Counter ${counter.id} still has missing channel after cleanup`);
+                logger.warn(`Teller ${counter.id} mangler fortsatt kanal etter opprydding`);
                 continue;
             }
 
             const currentCount = getCurrentCount(stats, counter.type);
-            const status = channel.name.includes(':') ? '✅ Active' : '⚠️ Not Updated';
+            const status = channel.name.includes(':') ? '✅ Aktiv' : '⚠️ Ikke oppdatert';
             
             embed.addFields({
-                name: `${getCounterTypeEmoji(counter.type)} Counter #${i + 1} - ${channel.name}`,
-                value: `**ID:** \`${counter.id}\`\n**Type:** ${getCounterTypeDisplay(counter.type)}\n**Channel:** ${channel}\n**Current Count:** ${currentCount}\n**Status:** ${status}\n**Created:** ${new Date(counter.createdAt).toLocaleDateString()}`,
+                name: `${getCounterTypeEmoji(counter.type)} Teller #${i + 1} - ${channel.name}`,
+                value: `**ID:** \`${counter.id}\`\n**Type:** ${getCounterTypeDisplay(counter.type)}\n**Kanal:** ${channel}\n**Nåværende antall:** ${currentCount}\n**Status:** ${status}\n**Opprettet:** ${new Date(counter.createdAt).toLocaleDateString('no-NO')}`,
                 inline: false
             });
         }
 
         embed.addFields({
-            name: "**Statistics**",
-            value: `**Total Counters:** ${validCounters.length}\n**Active Counters:** ${validCounters.filter(c => {
+            name: "**Statistikk**",
+            value: `**Totalt antall tellere:** ${validCounters.length}\n**Aktive tellere:** ${validCounters.filter(c => {
                 const channel = guild.channels.cache.get(c.channelId);
                 return channel && channel.name.includes(':');
-            }).length}\n**Next Update:** <t:${Math.floor(Date.now() / 1000) + 900}:R>`,
+            }).length}\n**Neste oppdatering:** <t:${Math.floor(Date.now() / 1000) + 900}:R>`,
             inline: false
         });
 
         embed.addFields({
-            name: "**Management Commands**",
-            value: "`/serverstats create` - Create new counter\n`/serverstats update` - Update existing counter\n`/serverstats delete` - Delete counter",
+            name: "**Administrasjonskommandoer**",
+            value: "`/serverstatistikk opprett` - Opprett ny teller\n`/serverstatistikk oppdater` - Oppdater eksisterende teller\n`/serverstatistikk slett` - Slett teller",
             inline: false
         });
 
         embed.setFooter({ 
-            text: "Counter System • Automatic updates every 15 minutes" 
+            text: "Tellersystem • Automatisk oppdatering hvert 15. minutt" 
         });
         embed.setTimestamp();
 
         await InteractionHelper.safeEditReply(interaction, { embeds: [embed] }).catch(logger.error);
 
     } catch (error) {
-        logger.error("Error displaying counters:", error);
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while fetching counters. Please try again.' }).catch(logger.error);
+        logger.error("Feil ved visning av tellere:", error);
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Det oppstod en feil under henting av tellere. Vennligst prøv igjen.' }).catch(logger.error);
     }
 }
 
