@@ -7,7 +7,7 @@ import searchUrban from './modules/search_urban.js';
 
 export default {
     data: new SlashCommandBuilder()
-        .setName('sok')
+        .setName('søk')
         .setDescription('Søk på nettet og i ordbøker')
         .addSubcommand(subcommand =>
             subcommand
@@ -23,7 +23,7 @@ export default {
                 .setName('google')
                 .setDescription('Søk på Google')
                 .addStringOption(option =>
-                    option.setName('sok')
+                    option.setName('søk')
                         .setDescription('Hva vil du søke etter?')
                         .setRequired(true))
         )

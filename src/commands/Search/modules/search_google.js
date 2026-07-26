@@ -4,7 +4,7 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 
 export default {
     async execute(interaction) {
-        const query = interaction.options.getString('sok');
+        const query = interaction.options.getString('søk');
         const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
 
         const embed = createEmbed({
