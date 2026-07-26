@@ -53,16 +53,16 @@ export async function reconcileTicketPanels(client) {
                 summary.healthyPanels += 1;
             } else if (panelStatus.reason === 'channel_missing') {
                 summary.missingChannels += 1;
-                logger.warn(`Ticket panel channel missing for guild ${guild.id} (${guild.name})`);
+                logger.warn(`Kanal for ticket-panel mangler for server ${guild.id} (${guild.name})`);
             } else if (panelStatus.reason === 'panel_deleted') {
                 summary.deletedPanels += 1;
                 logger.warn(
-                    `Ticket panel message deleted for guild ${guild.id} (${guild.name}) — admins can repost from /ticket dashboard`,
+                    `Melding for ticket-panel slettet for server ${guild.id} (${guild.name}) — administratorer kan publisere på nytt fra /ticket dashboard`,
                 );
             }
         } catch (error) {
             summary.errors += 1;
-            logger.warn(`Ticket panel health check failed for guild ${guild.id}:`, error.message);
+            logger.warn(`Sjekk av ticket-panel-status feilet for server ${guild.id}:`, error.message);
         }
     }
 
@@ -98,16 +98,16 @@ export async function reconcileVerificationPanels(client) {
                 summary.healthyPanels += 1;
             } else if (panelStatus.reason === 'channel_missing') {
                 summary.missingChannels += 1;
-                logger.warn(`Verification panel channel missing for guild ${guild.id} (${guild.name})`);
+                logger.warn(`Kanal for verifiseringspanel mangler for server ${guild.id} (${guild.name})`);
             } else if (panelStatus.reason === 'panel_deleted') {
                 summary.deletedPanels += 1;
                 logger.warn(
-                    `Verification panel deleted for guild ${guild.id} (${guild.name}) — repost from /verification dashboard`,
+                    `Verifiseringspanel slettet for server ${guild.id} (${guild.name}) — publiser på nytt fra /verification dashboard`,
                 );
             }
         } catch (error) {
             summary.errors += 1;
-            logger.warn(`Verification panel health check failed for guild ${guild.id}:`, error.message);
+            logger.warn(`Sjekk av verifiseringspanel-status feilet for server ${guild.id}:`, error.message);
         }
     }
 
@@ -148,18 +148,18 @@ export async function reconcileReactionRolePanelHealth(client) {
                 } else if (panelStatus.reason === 'channel_missing') {
                     summary.missingChannels += 1;
                     logger.warn(
-                        `Reaction role panel channel missing for guild ${guild.id}, message ${panelData.messageId}`,
+                        `Kanal for reaksjonsrolle-panel mangler for server ${guild.id}, melding ${panelData.messageId}`,
                     );
                 } else if (panelStatus.reason === 'panel_deleted') {
                     summary.deletedPanels += 1;
                     logger.warn(
-                        `Reaction role panel deleted for guild ${guild.id} — repost from /reactroles dashboard`,
+                        `Reaksjonsrolle-panel slettet for server ${guild.id} — publiser på nytt fra /reactroles dashboard`,
                     );
                 }
             }
         } catch (error) {
             summary.errors += 1;
-            logger.warn(`Reaction role panel health check failed for guild ${guild.id}:`, error.message);
+            logger.warn(`Sjekk av reaksjonsrolle-panel-status feilet for server ${guild.id}:`, error.message);
         }
     }
 

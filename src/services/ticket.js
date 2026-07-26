@@ -1,5 +1,3 @@
-// ticket.js
-
 import {
   ChannelType,
   ActionRowBuilder,
@@ -17,6 +15,7 @@ import { logTicketEvent } from '../utils/ticket/ticketLogging.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { ensureTypedServiceError, wrapServiceBoundary } from '../utils/serviceErrorBoundary.js';
 import { PRIORITY_MAP } from '../utils/helpers.js';
+
 const TICKET_DELETE_DELAY_MS = 3000;
 const TICKET_DELETE_DELAY_SECONDS = Math.floor(TICKET_DELETE_DELAY_MS / 1000);
 const TICKET_SERVICE = 'ticketService';
@@ -29,7 +28,7 @@ function requireTicket(ticketData, channel) {
   if (!ticketData) {
     ticketUserError(
       'Not a ticket channel',
-      'This is not a ticket channel.',
+      'Dette er ikke en ticket-kanal.',
       ErrorTypes.VALIDATION,
       { channelId: channel?.id, guildId: channel?.guild?.id }
     );
@@ -41,13 +40,11 @@ function rethrowTicketError(error, operation, userMessage, context = {}) {
   throw ensureTypedServiceError(error, {
     service: TICKET_SERVICE,
     operation,
-    message: `Ticket operation failed: ${operation}`,
+    message: `Ticket-operasjon feilet: ${operation}`,
     userMessage,
     context,
   });
 }
-
-
 
 function buildTicketControlRow({ claimedBy = null } = {}) {
   return new ActionRowBuilder().addComponents(
@@ -64,7 +61,7 @@ function buildTicketControlRow({ claimedBy = null } = {}) {
       .setEmoji('📌'),
     new ButtonBuilder()
       .setCustomId('ticket_close')
-      .setLabel('Close')
+      .setLabel('Lukk')
       .setStyle(ButtonStyle.Danger)
       .setEmoji('🔒'),
   );
@@ -75,11 +72,11 @@ export const getUserTicketCount = wrapServiceBoundary(async function getUserTick
 }, {
   service: TICKET_SERVICE,
   operation: 'getUserTicketCount',
-  userMessage: 'Failed to count open tickets.',
+  userMessage: 'Kunne ikke telle åpne tickets.',
   context: {},
 });
 
-export async function createTicket(guild, member, categoryId, reason = 'No reason provided', priority = 'none') {
+export async function createTicket(guild, member, categoryId, reason = 'Ingen grunn oppgitt', priority = 'none') {
   try {
     const config = await getGuildConfig(guild.client, guild.id);
     const ticketConfig = config.tickets || {};
@@ -90,7 +87,7 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     if (currentTicketCount >= maxTicketsPerUser) {
       ticketUserError(
         `Max open tickets reached for ${member.id}`,
-        `You have reached the maximum number of open tickets (${maxTicketsPerUser}). Please close your existing tickets before creating a new one.`,
+        `Du har nådd maksimalt antall åpne tickets (${maxTicketsPerUser}). Vennligst lukk eksisterende tickets før du oppretter en ny.`,
         ErrorTypes.VALIDATION,
         { guildId: guild.id, userId: member.id, operation: 'createTicket' }
       );
@@ -174,12 +171,12 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     
     const embed = createEmbed({
       title: `Ticket #${ticketNumber}`,
-      description: `${member.toString()}, thanks for creating a ticket!\n\n**Reason:** ${reason}\n**Priority:** ${priorityInfo.emoji} ${priorityInfo.label}`,
+      description: `${member.toString()}, takk for at du opprettet en ticket!\n\n**Grunn:** ${reason}\n**Prioritet:** ${priorityInfo.emoji} ${priorityInfo.label}`,
       color: priorityInfo.color,
       fields: [
-        { name: 'Status', value: '🟢 Open', inline: true },
-        { name: 'Claimed By', value: 'Not claimed', inline: true },
-        { name: 'Created', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
+        { name: 'Status', value: '🟢 Åpen', inline: true },
+        { name: 'Clamed av', value: 'Ikke claimed', inline: true },
+        { name: 'Opprettet', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
       ],
     });
     
@@ -189,12 +186,12 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
       row.addComponents(
         new ButtonBuilder()
           .setCustomId('ticket_priority:low')
-          .setLabel('Low')
+          .setLabel('Lav')
           .setStyle(ButtonStyle.Secondary)
           .setEmoji('🔵'),
         new ButtonBuilder()
           .setCustomId('ticket_priority:high')
-          .setLabel('High')
+          .setLabel('Høy')
           .setStyle(ButtonStyle.Danger)
           .setEmoji('🔴')
       );
@@ -232,11 +229,11 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     return { channel, ticketData };
     
   } catch (error) {
-    rethrowTicketError(error, 'createTicket', 'Failed to create ticket. Please try again in a moment.', { guildId: guild?.id, userId: member?.id });
+    rethrowTicketError(error, 'createTicket', 'Kunne ikke opprette ticket. Vennligst prøv igjen om et øyeblikk.', { guildId: guild?.id, userId: member?.id });
   }
 }
 
-export async function closeTicket(channel, closer, reason = 'No reason provided') {
+export async function closeTicket(channel, closer, reason = 'Ingen grunn oppgitt') {
   try {
     const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel);
     
@@ -261,10 +258,10 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
           await channel.setParent(closedCategoryId, { lockPermissions: false });
           movedToClosedCategory = true;
         } catch (moveError) {
-            logger.warn(`Could not move ticket ${channel.id} to closed category ${closedCategoryId}: ${moveError.message}`);
+            logger.warn(`Kunne ikke flytte ticket ${channel.id} til lukket-kategori ${closedCategoryId}: ${moveError.message}`);
         }
       } else {
-        logger.warn(`Configured closed category is invalid for guild ${channel.guild.id}: ${closedCategoryId}`);
+        logger.warn(`Konfigurert lukket-kategori er ugyldig for server ${channel.guild.id}: ${closedCategoryId}`);
       }
     }
     
@@ -273,8 +270,8 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
         const ticketCreator = await channel.client.users.fetch(ticketData.userId).catch(() => null);
         if (ticketCreator) {
           const dmEmbed = createEmbed({
-            title: '🎫 Your Ticket Has Been Closed',
-            description: `Your ticket **${channel.name}** has been closed.\n\n**Reason:** ${reason}\n**Closed by:** ${closer.tag}\n**Closed at:** <t:${Math.floor(Date.now() / 1000)}:F>\n\nThank you for using our support system! If you have any further questions, feel free to create a new ticket.`,
+            title: '🎫 Din ticket har blitt lukket',
+            description: `Din ticket **${channel.name}** har blitt lukket.\n\n**Grunn:** ${reason}\n**Lukket av:** ${closer.tag}\n**Lukket:** <t:${Math.floor(Date.now() / 1000)}:F>\n\nTakk for at du brukte vår kundestøtte! Hvis du har flere spørsmål, kan du gjerne opprette en ny ticket.`,
             color: '#e74c3c',
             footer: { text: `Ticket ID: ${ticketData.id}` }
           });
@@ -283,10 +280,10 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
 
           try {
             const feedbackEmbed = createEmbed({
-              title: '⭐ How was your support experience?',
-              description: `We'd love to know how we did with **${channel.name}**.\nSelect a rating below — it only takes a second!`,
+              title: '⭐ Hvordan var din opplevelse?',
+              description: `Vi vil gjerne vite hvordan opplevelsen din var med **${channel.name}**.\nVelg en vurdering nedenfor — det tar bare et sekund!`,
               color: '#F1C40F',
-              footer: { text: 'Your feedback helps us improve.' },
+              footer: { text: 'Din tilbakemelding hjelper oss å bli bedre.' },
             });
 
             const base = `ticket_feedback:${channel.guild.id}:${channel.id}`;
@@ -300,11 +297,11 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
             const declineRow = new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`ticket_feedback_comment:${channel.guild.id}:${channel.id}`)
-                .setLabel('✍️ Add Comment')
+                .setLabel('✍️ Legg til kommentar')
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
                 .setCustomId(`ticket_feedback_decline:${channel.guild.id}:${channel.id}`)
-                .setLabel('❌ No thanks')
+                .setLabel('❌ Nei takk')
                 .setStyle(ButtonStyle.Secondary),
             );
 
@@ -313,11 +310,11 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
               components: [starsRow, declineRow],
             });
           } catch (feedbackError) {
-            logger.warn(`Could not send feedback survey to ticket creator ${ticketData.userId}: ${feedbackError.message}`);
+            logger.warn(`Kunne ikke sende tilbakemeldingsskjema til ticket-oppretter ${ticketData.userId}: ${feedbackError.message}`);
           }
         }
       } catch (dmError) {
-          logger.warn(`Could not send DM to ticket creator ${ticketData.userId}: ${dmError.message}`);
+          logger.warn(`Kunne ikke sende DM til ticket-oppretter ${ticketData.userId}: ${dmError.message}`);
       }
     }
     
@@ -340,7 +337,7 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
         }
       }
     } catch (permError) {
-        logger.warn(`Could not update user permissions for closed ticket: ${permError.message}`);
+        logger.warn(`Kunne ikke oppdatere brukertillatelser for lukket ticket: ${permError.message}`);
     }
     
     const messages = await channel.messages.fetch();
@@ -354,12 +351,12 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
       const statusField = embed.fields?.find(f => f.name === 'Status');
       
       if (statusField) {
-        statusField.value = '🔴 Closed';
+        statusField.value = '🔴 Lukket';
       }
       
       const updatedEmbed = createEmbed({
         title: embed.title || 'Ticket',
-        description: embed.description || 'Ticket discussion',
+        description: embed.description || 'Ticket-diskusjon',
         color: '#e74c3c',
         fields: embed.fields || [],
         footer: embed.footer
@@ -367,13 +364,13 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
       
       await ticketMessage.edit({ 
         embeds: [updatedEmbed],
-components: []
+        components: []
       });
     }
     
     const closeEmbed = createEmbed({
-      title: 'Ticket Closed',
-      description: `This ticket has been closed by ${closer}.\n**Reason:** ${reason}${dmOnClose ? '\n\n📩 A DM has been sent to the ticket creator.' : ''}`,
+      title: 'Ticket lukket',
+      description: `Denne ticketen har blitt lukket av ${closer}.\n**Grunn:** ${reason}${dmOnClose ? '\n\n📩 En melding på DM har blitt sendt til oppretteren.' : ''}`,
       color: '#e74c3c',
       footer: { text: `Ticket ID: ${ticketData.id}` }
     });
@@ -381,12 +378,12 @@ components: []
     const controlRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('ticket_reopen')
-        .setLabel('Reopen Ticket')
+        .setLabel('Gjenåpne ticket')
         .setStyle(ButtonStyle.Success)
         .setEmoji('🔓'),
       new ButtonBuilder()
         .setCustomId('ticket_delete')
-        .setLabel('Delete Ticket')
+        .setLabel('Slett ticket')
         .setStyle(ButtonStyle.Danger)
         .setEmoji('🗑️')
     );
@@ -414,7 +411,7 @@ components: []
     return ticketData;
     
   } catch (error) {
-    rethrowTicketError(error, 'closeTicket', 'Failed to close ticket. Please try again in a moment.', { guildId: channel?.guild?.id, channelId: channel?.id, closerId: closer?.id });
+    rethrowTicketError(error, 'closeTicket', 'Kunne ikke lukke ticket. Vennligst prøv igjen om et øyeblikk.', { guildId: channel?.guild?.id, channelId: channel?.id, closerId: closer?.id });
   }
 }
 
@@ -425,7 +422,7 @@ export async function claimTicket(channel, claimer) {
     if (ticketData.claimedBy) {
       ticketUserError(
         'Ticket already claimed',
-        `This ticket is already claimed by <@${ticketData.claimedBy}>`,
+        `Denne ticketen er allerede claimed av <@${ticketData.claimedBy}>`,
         ErrorTypes.VALIDATION,
         { channelId: channel.id, claimedBy: ticketData.claimedBy, operation: 'claimTicket' }
       );
@@ -444,7 +441,7 @@ export async function claimTicket(channel, claimer) {
     
     if (ticketMessage) {
       const embed = ticketMessage.embeds[0];
-      const claimedField = embed.fields?.find(f => f.name === 'Claimed By');
+      const claimedField = embed.fields?.find(f => f.name === 'Claimed av' || f.name === 'Claimed By');
       
       if (claimedField) {
         claimedField.value = claimer.toString();
@@ -459,22 +456,22 @@ export async function claimTicket(channel, claimer) {
     }
     
     const claimEmbed = createEmbed({
-      title: 'Ticket Claimed',
-      description: `🎉 ${claimer} has claimed this ticket!`,
+      title: 'Ticket claimed',
+      description: `🎉 ${claimer} har claimed seg denne ticketen!`,
       color: '#2ecc71'
     });
     
     const unclaimRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('ticket_unclaim')
-        .setLabel('Unclaim')
+        .setLabel('Frigi ticket')
         .setStyle(ButtonStyle.Secondary)
         .setEmoji('🔓')
     );
 
     const claimStatusMessage = messages.find(m =>
       m.embeds.length > 0 &&
-      (m.embeds[0].title === 'Ticket Claimed' || m.embeds[0].title === 'Ticket Unclaimed')
+      (m.embeds[0].title === 'Ticket claimed' || m.embeds[0].title === 'Ticket frigitt' || m.embeds[0].title === 'Ticket Claimed' || m.embeds[0].title === 'Ticket Unclaimed')
     );
 
     if (claimStatusMessage) {
@@ -501,7 +498,7 @@ export async function claimTicket(channel, claimer) {
     return ticketData;
     
   } catch (error) {
-    rethrowTicketError(error, 'claimTicket', 'Failed to claim ticket. Please try again in a moment.', { guildId: channel?.guild?.id, channelId: channel?.id, claimerId: claimer?.id });
+    rethrowTicketError(error, 'claimTicket', 'Kunne ikke claime ticket. Vennligst prøv igjen om et øyeblikk.', { guildId: channel?.guild?.id, channelId: channel?.id, claimerId: claimer?.id });
   }
 }
 
@@ -512,7 +509,7 @@ export async function reopenTicket(channel, reopener) {
     if (ticketData.status !== 'closed') {
       ticketUserError(
         'Ticket not closed',
-        'This ticket is not currently closed.',
+        'Denne ticketen er ikke lukket for øyeblikket.',
         ErrorTypes.VALIDATION,
         { channelId: channel.id, operation: 'reopenTicket' }
       );
@@ -540,11 +537,11 @@ export async function reopenTicket(channel, reopener) {
           movedToOpenCategory = true;
         } catch (moveError) {
           openCategoryMoveFailed = true;
-          logger.warn(`Could not move reopened ticket ${channel.id} to open category ${openCategoryId}: ${moveError.message}`);
+          logger.warn(`Kunne ikke flytte gjenåpnet ticket ${channel.id} til åpen-kategori ${openCategoryId}: ${moveError.message}`);
         }
       } else {
         openCategoryMoveFailed = true;
-        logger.warn(`Configured open ticket category is invalid for guild ${channel.guild.id}: ${openCategoryId}`);
+        logger.warn(`Konfigurert kategori for åpne tickets er ugyldig for server ${channel.guild.id}: ${openCategoryId}`);
       }
     }
     
@@ -559,7 +556,7 @@ export async function reopenTicket(channel, reopener) {
         });
       }
     } catch (error) {
-      logger.warn(`Could not restore access for user ${ticketData.userId}:`, error.message);
+      logger.warn(`Kunne ikke gjenopprette tilgang for bruker ${ticketData.userId}:`, error.message);
     }
     
     const messages = await channel.messages.fetch();
@@ -573,7 +570,7 @@ export async function reopenTicket(channel, reopener) {
       const statusField = embed.fields?.find(f => f.name === 'Status');
       
       if (statusField) {
-        statusField.value = '🟢 Open';
+        statusField.value = '🟢 Åpen';
       }
       
       const row = buildTicketControlRow({ claimedBy: ticketData.claimedBy });
@@ -585,14 +582,14 @@ export async function reopenTicket(channel, reopener) {
     }
     
     const reopenEmbed = createEmbed({
-      title: 'Ticket Reopened',
-      description: `🔓 ${reopener} has reopened this ticket!`,
+      title: 'Ticket gjenåpnet',
+      description: `🔓 ${reopener} har gjenåpnet denne ticketen!`,
       color: '#2ecc71'
     });
 
     const closeStatusMessage = messages.find(m =>
       m.embeds.length > 0 &&
-      m.embeds[0].title === 'Ticket Closed' &&
+      (m.embeds[0].title === 'Ticket lukket' || m.embeds[0].title === 'Ticket Closed') &&
       m.components.length > 0 &&
       m.components[0].components.some(c => c.customId === 'ticket_reopen')
     );
@@ -606,7 +603,7 @@ export async function reopenTicket(channel, reopener) {
     return { ticketData, movedToOpenCategory, openCategoryMoveFailed };
     
   } catch (error) {
-    rethrowTicketError(error, 'reopenTicket', 'Failed to reopen ticket. Please try again in a moment.', { guildId: channel?.guild?.id, channelId: channel?.id, reopenerId: reopener?.id });
+    rethrowTicketError(error, 'reopenTicket', 'Kunne ikke gjenåpne ticket. Vennligst prøv igjen om et øyeblikk.', { guildId: channel?.guild?.id, channelId: channel?.id, reopenerId: reopener?.id });
   }
 }
 
@@ -622,7 +619,7 @@ function escapeHtml(text) {
 
 async function generateTranscript(channel) {
   try {
-    logger.debug('Generating transcript for channel', {
+    logger.debug('Genererer transkripsjon for kanal', {
       channelId: channel.id,
       channelName: channel.name
     });
@@ -648,17 +645,17 @@ async function generateTranscript(channel) {
 
     const rows = messages.map((msg) => {
       const ts = new Date(msg.createdTimestamp).toISOString().replace('T', ' ').slice(0, 19);
-      const author = escape(msg.author?.tag ?? msg.author?.username ?? 'Unknown');
-      const content = escape(msg.content || (msg.embeds.length ? '[embed]' : '[attachment]'));
+      const author = escape(msg.author?.tag ?? msg.author?.username ?? 'Ukjent');
+      const content = escape(msg.content || (msg.embeds.length ? '[embed]' : '[vedlegg]'));
       return `<tr><td class="ts">${ts}</td><td class="author">${author}</td><td class="msg">${content}</td></tr>`;
     }).join('\n');
 
     const html = `<!DOCTYPE html>
-<html lang="en">
+<html lang="no">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Transcript – #${escape(channel.name)}</title>
+<title>Transkripsjon – #${escape(channel.name)}</title>
 <style>
 body{font-family:sans-serif;background:#36393f;color:#dcddde;margin:0;padding:16px}
 h1{color:#fff;font-size:1.2rem;margin-bottom:8px}
@@ -671,10 +668,10 @@ td{padding:4px 8px;border-bottom:1px solid #40444b;vertical-align:top}
 </style>
 </head>
 <body>
-<h1>📜 Transcript – #${escape(channel.name)}</h1>
-<p style="color:#72767d">${messages.length} message(s) exported on ${new Date().toUTCString()}</p>
+<h1>📜 Transkripsjon – #${escape(channel.name)}</h1>
+<p style="color:#72767d">${messages.length} melding(er) eksportert den ${new Date().toUTCString()}</p>
 <table>
-<thead><tr><th>Timestamp (UTC)</th><th>Author</th><th>Message</th></tr></thead>
+<thead><tr><th>Tidsstempel (UTC)</th><th>Forfatter</th><th>Melding</th></tr></thead>
 <tbody>
 ${rows}
 </tbody>
@@ -685,7 +682,7 @@ ${rows}
     const buffer = Buffer.from(html, 'utf8');
     const attachment = new AttachmentBuilder(buffer, { name: `ticket-${channel.id}.html` });
 
-    logger.info('✅ Successfully generated transcript', {
+    logger.info('✅ Transkripsjon ble generert', {
       channelId: channel.id,
       channelName: channel.name,
       messageCount: messages.length,
@@ -694,7 +691,7 @@ ${rows}
 
     return attachment;
   } catch (error) {
-    logger.error('❌ Failed to generate transcript:', {
+    logger.error('❌ Kunne ikke generere transkripsjon:', {
       channelId: channel.id,
       channelName: channel.name,
       errorMessage: error.message,
@@ -710,8 +707,8 @@ export async function deleteTicket(channel, deleter) {
     const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel);
     
     const deleteEmbed = createEmbed({
-      title: 'Ticket Deleted',
-      description: `🗑️ This ticket will be permanently deleted in ${TICKET_DELETE_DELAY_SECONDS} seconds.`,
+      title: 'Ticket slettet',
+      description: `🗑️ Denne ticketen vil bli permanent slettet om ${TICKET_DELETE_DELAY_SECONDS} sekunder.`,
       color: '#e74c3c',
       footer: { text: `Ticket ID: ${ticketData.id}` }
     });
@@ -735,7 +732,7 @@ export async function deleteTicket(channel, deleter) {
 
     setTimeout(async () => {
       try {
-        logger.debug('Starting ticket deletion process', {
+        logger.debug('Starter sletteprosess for ticket', {
           channelId: channel.id,
           ticketId: ticketData.id
         });
@@ -744,18 +741,18 @@ export async function deleteTicket(channel, deleter) {
         try {
           attachment = await generateTranscript(channel);
           if (attachment) {
-            logger.info('Transcript generated successfully, attempting to send', {
+            logger.info('Transkripsjon generert, forsøker å sende', {
               channelId: channel.id,
               ticketNumber: ticketData.id
             });
           } else {
-            logger.warn('Transcript generation returned null', {
+            logger.warn('Generering av transkripsjon returnerte null', {
               channelId: channel.id,
               ticketNumber: ticketData.id
             });
           }
         } catch (transcriptError) {
-          logger.error('Error during transcript generation', {
+          logger.error('Feil under generering av transkripsjon', {
             channelId: channel.id,
             ticketNumber: ticketData.id,
             error: transcriptError.message
@@ -766,7 +763,7 @@ export async function deleteTicket(channel, deleter) {
           try {
             const guildConfig = await getGuildConfig(channel.client, channel.guild.id);
             if (!guildConfig.ticketTranscriptChannelId) {
-              logger.warn('No transcript channel configured, skipping transcript send', {
+              logger.warn('Ingen kanal for transkripsjoner er konfigurert, hopper over sending', {
                 channelId: channel.id,
                 ticketNumber: ticketData.id
               });
@@ -774,12 +771,12 @@ export async function deleteTicket(channel, deleter) {
               const transcriptChannel = await channel.client.channels.fetch(guildConfig.ticketTranscriptChannelId).catch(() => null);
               
               if (!transcriptChannel) {
-                logger.error('Could not fetch transcript channel', {
+                logger.error('Kunne ikke hente transkripsjonskanal', {
                   channelId: channel.id,
                   transcriptChannelId: guildConfig.ticketTranscriptChannelId
                 });
               } else if (!transcriptChannel.isSendable()) {
-                logger.error('Transcript channel exists but is not sendable', {
+                logger.error('Transkripsjonskanal eksisterer, men boten kan ikke sende meldinger der', {
                   channelId: channel.id,
                   transcriptChannelId: transcriptChannel.id
                 });
@@ -787,14 +784,14 @@ export async function deleteTicket(channel, deleter) {
                 
                 const transcriptEmbed = buildStandardLogEmbed({
                   color: 0x3498db,
-                  title: 'Ticket Transcript',
+                  title: 'Ticket-transkripsjon',
                   description: [
                     formatLogLine('Ticket', `#${ticketData.id}`),
-                    formatLogLine('Channel', `#${channel.name}`),
-                    formatLogLine('Generated', `<t:${Math.floor(Date.now() / 1000)}:F>`),
+                    formatLogLine('Kanal', `#${channel.name}`),
+                    formatLogLine('Generert', `<t:${Math.floor(Date.now() / 1000)}:F>`),
                   ].join('\n'),
                   footer: deleter?.username
-                    ? { text: `Deleted by ${deleter.username}`, iconURL: deleter.displayAvatarURL?.() }
+                    ? { text: `Slettet av ${deleter.username}`, iconURL: deleter.displayAvatarURL?.() }
                     : undefined,
                   timestamp: true,
                 });
@@ -804,7 +801,7 @@ export async function deleteTicket(channel, deleter) {
                   files: [attachment]
                 });
 
-                logger.info('✅ Transcript sent successfully', {
+                logger.info('✅ Transkripsjon sendt', {
                   channelId: channel.id,
                   ticketNumber: ticketData.id,
                   transcriptChannelId: transcriptChannel.id
@@ -812,7 +809,7 @@ export async function deleteTicket(channel, deleter) {
               }
             }
           } catch (sendError) {
-            logger.error('Failed to send transcript to channel:', {
+            logger.error('Kunne ikke sende transkripsjon til kanal:', {
               channelId: channel.id,
               ticketNumber: ticketData.id,
               error: sendError.message
@@ -821,14 +818,14 @@ export async function deleteTicket(channel, deleter) {
         }
 
         try {
-          await channel.delete('Ticket deleted permanently');
-          logger.info('✅ Channel deleted', {
+          await channel.delete('Ticket slettet permanent');
+          logger.info('✅ Kanal slettet', {
             channelId: channel.id,
             channelName: channel.name,
             ticketNumber: ticketData.id
           });
         } catch (deleteError) {
-          logger.error('❌ Failed to delete ticket channel:', {
+          logger.error('❌ Kunne ikke slette ticket-kanal:', {
             channelId: channel.id,
             channelName: channel.name,
             ticketNumber: ticketData.id,
@@ -838,7 +835,7 @@ export async function deleteTicket(channel, deleter) {
           });
         }
       } catch (error) {
-        logger.error('❌ Unexpected error during ticket deletion:', {
+        logger.error('❌ Uventet feil under sletting av ticket:', {
           channelId: channel.id,
           channelName: channel?.name,
           ticketNumber: ticketData?.id,
@@ -852,7 +849,7 @@ export async function deleteTicket(channel, deleter) {
     return ticketData;
     
   } catch (error) {
-    rethrowTicketError(error, 'deleteTicket', 'Failed to delete ticket. Please try again in a moment.', { guildId: channel?.guild?.id, channelId: channel?.id, deleterId: deleter?.id });
+    rethrowTicketError(error, 'deleteTicket', 'Kunne ikke slette ticket. Vennligst prøv igjen om et øyeblikk.', { guildId: channel?.guild?.id, channelId: channel?.id, deleterId: deleter?.id });
   }
 }
 
@@ -863,7 +860,7 @@ export async function unclaimTicket(channel, unclaimer) {
     if (!ticketData.claimedBy) {
       ticketUserError(
         'Ticket not claimed',
-        'This ticket is not currently claimed.',
+        'Denne ticketen er ikke claimed av noen for øyeblikket.',
         ErrorTypes.VALIDATION,
         { channelId: channel.id, operation: 'unclaimTicket' }
       );
@@ -872,7 +869,7 @@ export async function unclaimTicket(channel, unclaimer) {
     if (ticketData.claimedBy !== unclaimer.id && !unclaimer.permissions.has(PermissionFlagsBits.ManageChannels)) {
       ticketUserError(
         'Cannot unclaim ticket',
-        'You can only unclaim your own tickets or need Manage Channels permission.',
+        'Du kan bare frigi dine egne tickets eller krever tillatelsen Administrer kanaler.',
         ErrorTypes.PERMISSION,
         { channelId: channel.id, operation: 'unclaimTicket' }
       );
@@ -892,10 +889,10 @@ export async function unclaimTicket(channel, unclaimer) {
     
     if (ticketMessage) {
       const embed = ticketMessage.embeds[0];
-      const claimedField = embed.fields?.find(f => f.name === 'Claimed By');
+      const claimedField = embed.fields?.find(f => f.name === 'claimed av' || f.name === 'Claimed By');
       
       if (claimedField) {
-        claimedField.value = 'Not claimed';
+        claimedField.value = 'Ikke claimed';
       }
       
       const row = buildTicketControlRow();
@@ -908,13 +905,13 @@ export async function unclaimTicket(channel, unclaimer) {
     
     const claimMessage = messages.find(m => 
       m.embeds.length > 0 && 
-      (m.embeds[0].title === 'Ticket Claimed' || m.embeds[0].title === 'Ticket Unclaimed')
+      (m.embeds[0].title === 'Ticket claimed' || m.embeds[0].title === 'Ticket frigitt' || m.embeds[0].title === 'Ticket Claimed' || m.embeds[0].title === 'Ticket Unclaimed')
     );
     
     if (claimMessage) {
       const unclaimEmbed = createEmbed({
-        title: 'Ticket Unclaimed',
-        description: `🔓 ${unclaimer} has unclaimed this ticket!`,
+        title: 'Ticket frigitt',
+        description: `🔓 ${unclaimer} har frigitt denne ticketen!`,
         color: '#f39c12'
       });
       
@@ -924,8 +921,8 @@ export async function unclaimTicket(channel, unclaimer) {
       });
     } else {
       const unclaimEmbed = createEmbed({
-        title: 'Ticket Unclaimed',
-        description: `🔓 ${unclaimer} has unclaimed this ticket!`,
+        title: 'Ticket frigitt',
+        description: `🔓 ${unclaimer} har frigitt denne ticketen!`,
         color: '#f39c12'
       });
       
@@ -950,7 +947,7 @@ export async function unclaimTicket(channel, unclaimer) {
     return ticketData;
     
   } catch (error) {
-    rethrowTicketError(error, 'unclaimTicket', 'Failed to unclaim ticket. Please try again in a moment.', { guildId: channel?.guild?.id, channelId: channel?.id, unclaimerId: unclaimer?.id });
+    rethrowTicketError(error, 'unclaimTicket', 'Kunne ikke frigi ticket. Vennligst prøv igjen om et øyeblikk.', { guildId: channel?.guild?.id, channelId: channel?.id, unclaimerId: unclaimer?.id });
   }
 }
 
@@ -966,7 +963,7 @@ export async function updateTicketPriority(channel, priority, updater) {
     if (!priorityInfo) {
       ticketUserError(
       'Invalid priority level',
-      'Invalid priority level.',
+      'Ugyldig prioritetsnivå.',
       ErrorTypes.VALIDATION,
       { channelId: channel.id, priority, operation: 'updateTicketPriority' }
     );
@@ -990,7 +987,7 @@ export async function updateTicketPriority(channel, priority, updater) {
       try {
         await channel.setName(newName);
       } catch (nameError) {
-        logger.warn(`Could not update channel name for priority: ${nameError.message}`);
+        logger.warn(`Kunne ikke oppdatere kanalnavn for prioritet: ${nameError.message}`);
       }
     }
     
@@ -1005,7 +1002,7 @@ export async function updateTicketPriority(channel, priority, updater) {
       
       const updatedEmbed = createEmbed({
         title: embed.title || 'Ticket',
-        description: embed.description?.split('\n**Priority:**')[0] + `\n**Priority:** ${priorityInfo.emoji} ${priorityInfo.label}`,
+        description: embed.description?.split('\n**Priority:**')[0].split('\n**Prioritet:**')[0] + `\n**Prioritet:** ${priorityInfo.emoji} ${priorityInfo.label}`,
         color: priorityInfo.color,
         fields: embed.fields || [],
         footer: embed.footer
@@ -1015,8 +1012,8 @@ export async function updateTicketPriority(channel, priority, updater) {
     }
     
     const updateEmbed = createEmbed({
-      title: 'Priority Updated',
-      description: `📊 Ticket priority updated to **${priorityInfo.emoji} ${priorityInfo.label}** by ${updater}`,
+      title: 'Prioritet oppdatert',
+      description: `📊 Prioritet for ticket oppdatert til **${priorityInfo.emoji} ${priorityInfo.label}** av ${updater}`,
       color: priorityInfo.color
     });
     
@@ -1042,6 +1039,6 @@ export async function updateTicketPriority(channel, priority, updater) {
     return ticketData;
     
   } catch (error) {
-    rethrowTicketError(error, 'updateTicketPriority', 'Failed to update ticket priority. Please try again in a moment.', { guildId: channel?.guild?.id, channelId: channel?.id, updaterId: updater?.id, priority });
+    rethrowTicketError(error, 'updateTicketPriority', 'Kunne ikke oppdatere prioritet for ticket. Vennligst prøv igjen om et øyeblikk.', { guildId: channel?.guild?.id, channelId: channel?.id, updaterId: updater?.id, priority });
   }
 }

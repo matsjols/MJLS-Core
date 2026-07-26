@@ -1,5 +1,3 @@
-// serverstatsService.js
-
 import { logger } from '../utils/logger.js';
 import { logEvent, EVENT_TYPES } from './loggingService.js';
 import { formatLogLine } from '../utils/logging/logEmbeds.js';
@@ -8,17 +6,17 @@ import botConfig from '../config/bot.js';
 
 export const COUNTER_TYPE_CONFIG = {
   members: {
-    label: 'Members + Bots',
-    baseName: 'Members & Bots',
+    label: 'Medlemmer + Bots',
+    baseName: 'Medlemmer og Bots',
     emoji: '👥'
   },
   members_only: {
-    label: 'Members Only',
-    baseName: 'Members',
+    label: 'Kun Medlemmer',
+    baseName: 'Medlemmer',
     emoji: '👤'
   },
   bots: {
-    label: 'Bots Only',
+    label: 'Kun Bots',
     baseName: 'Bots',
     emoji: '🤖'
   }
@@ -26,8 +24,8 @@ export const COUNTER_TYPE_CONFIG = {
 
 function getCounterConfig(type) {
   return COUNTER_TYPE_CONFIG[type] || {
-    label: 'Unknown',
-    baseName: 'Counter',
+    label: 'Ukjent',
+    baseName: 'Teller',
     emoji: '❓'
   };
 }
@@ -71,7 +69,7 @@ export async function getGuildCounterStats(guild) {
     memberCollection = await guild.members.fetch();
   } catch (error) {
     if (process.env.NODE_ENV !== 'production') {
-      logger.debug(`Failed to fetch all guild members for ${guild.id}, using cache only`, error);
+      logger.debug(`Kunne ikke hente alle servermedlemmer for ${guild.id}, bruker kun hurtigbuffer`, error);
     }
   }
 
@@ -143,7 +141,7 @@ function sanitizeCounters(counters, guildId) {
 export async function updateCounter(client, guild, counter) {
   try {
     if (!counter || !counter.type || !counter.channelId) {
-      logger.warn('Skipping invalid counter in updateCounter:', counter);
+      logger.warn('Hopper over ugyldig teller i updateCounter:', counter);
       return false;
     }
     
@@ -157,31 +155,31 @@ export async function updateCounter(client, guild, counter) {
       }
     }
     if (!channel) {
-      logger.warn(`Counter channel ${channelId} not found in guild ${guild.id}, skipping update`);
+      logger.warn(`Tellerkanal ${channelId} ble ikke funnet i server ${guild.id}, hopper over oppdatering`);
       return false;
     }
 
     const count = await getCounterCount(guild, type);
     if (count === null) {
-      logger.error('Unknown counter type:', type);
+      logger.error('Ukjent tellertype:', type);
       return false;
     }
 
     const baseName = getCounterBaseName(type);
     if (process.env.NODE_ENV !== 'production') {
-      logger.debug(`Base name: "${baseName}", Current name: "${channel.name}"`);
+      logger.debug(`Basenavn: "${baseName}", Nåværende navn: "${channel.name}"`);
     }
     
     const newName = formatCounterChannelName(type, count);
     if (process.env.NODE_ENV !== 'production') {
-      logger.debug(`New name would be: "${newName}"`);
+      logger.debug(`Nytt navn vil bli: "${newName}"`);
     }
     
     if (channel.name !== newName) {
       try {
         await channel.setName(newName);
         if (process.env.NODE_ENV !== 'production') {
-          logger.debug(`Updated channel name to: "${newName}"`);
+          logger.debug(`Oppdaterte kanalnavn til: "${newName}"`);
         }
 
         try {
@@ -190,31 +188,31 @@ export async function updateCounter(client, guild, counter) {
             guildId: guild.id,
             eventType: EVENT_TYPES.COUNTER_UPDATE,
             data: {
-              title: 'Counter Updated',
+              title: 'Teller oppdatert',
               lines: [
                 formatLogLine('Type', getCounterTypeLabel(type)),
-                formatLogLine('Count', count.toString()),
-                formatLogLine('Channel', channel.toString()),
+                formatLogLine('Antall', count.toString()),
+                formatLogLine('Kanal', channel.toString()),
               ],
               channelId: channel.id,
             },
           });
         } catch (error) {
-          logger.debug('Error logging counter update:', error);
+          logger.debug('Feil ved logging av telleroppdatering:', error);
         }
 
       } catch (error) {
-        logger.error(`Failed to update channel name for ${channel.id}:`, error);
+        logger.error(`Kunne ikke oppdatere kanalnavn for ${channel.id}:`, error);
         return false;
       }
     } else {
       if (process.env.NODE_ENV !== 'production') {
-        logger.debug('Channel name already correct, no update needed');
+        logger.debug('Kanalnavnet er allerede korrekt, ingen oppdatering nødvendig');
       }
     }
     return true;
   } catch (error) {
-    logger.error("Error updating counter:", error);
+    logger.error("Feil ved oppdatering av teller:", error);
     return false;
   }
 }
@@ -222,7 +220,7 @@ export async function updateCounter(client, guild, counter) {
 export async function getServerCounters(client, guildId) {
   try {
     if (!client || !client.db) {
-      logger.warn('Database not available for getServerCounters');
+      logger.warn('Databasen er ikke tilgjengelig for getServerCounters');
       return [];
     }
     
@@ -245,14 +243,14 @@ export async function getServerCounters(client, guildId) {
       counters = [data];
     } else {
       if (process.env.NODE_ENV !== 'production') {
-        logger.debug('No counter data found, returning empty array');
+        logger.debug('Ingen tellermeldinger funnet, returnerer tom matrise');
       }
       return [];
     }
 
     return sanitizeCounters(counters, guildId);
   } catch (error) {
-    logger.error("Error getting server counters:", error);
+    logger.error("Feil ved henting av servertellere:", error);
     return [];
   }
 }
@@ -260,23 +258,23 @@ export async function getServerCounters(client, guildId) {
 export async function saveServerCounters(client, guildId, counters) {
   try {
     if (!client || !client.db) {
-      logger.warn('Database not available for saveServerCounters');
+      logger.warn('Databasen er ikke tilgjengelig for saveServerCounters');
       return false;
     }
     
     const sanitizedCounters = sanitizeCounters(counters, guildId);
 
     if (process.env.NODE_ENV !== 'production') {
-      logger.debug(`Saving ${sanitizedCounters.length} counters for guild ${guildId}:`, sanitizedCounters);
+      logger.debug(`Lagrer ${sanitizedCounters.length} tellere for server ${guildId}:`, sanitizedCounters);
     }
 
     await client.db.set(getServerCountersKey(guildId), sanitizedCounters);
     if (process.env.NODE_ENV !== 'production') {
-      logger.debug('Counters saved successfully');
+      logger.debug('Tellere ble lagret');
     }
     return true;
   } catch (error) {
-    logger.error("Error saving server counters:", error);
+    logger.error("Feil ved lagring av servertellere:", error);
     return false;
   }
 }
