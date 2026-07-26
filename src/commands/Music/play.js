@@ -6,15 +6,15 @@ export default {
     slashOnly: true,
     category: 'Music',
     data: new SlashCommandBuilder()
-        .setName('play')
-        .setDescription('Play a song or add it to the queue')
+        .setName('spill-av')
+        .setDescription('Spill av en sang eller legg den til i køen')
         .addStringOption((opt) =>
-            opt.setName('query').setDescription('Song name or URL').setRequired(true),
+            opt.setName('søk').setDescription('Sangnavn eller lenke').setRequired(true),
         ),
 
     async execute(interaction, config, client) {
         await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
-        const result = await playQuery(client, interaction, interaction.options.getString('query'));
+        const result = await playQuery(client, interaction, interaction.options.getString('søk'));
         await replyMusicSuccess(interaction, result.embed);
     },
 };

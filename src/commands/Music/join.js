@@ -6,8 +6,8 @@ import { deferMusicCommand } from '../../services/music/prefixSupport.js';
 export default {
     category: 'Music',
     data: new SlashCommandBuilder()
-        .setName('join')
-        .setDescription('Join your voice channel without starting playback'),
+        .setName('musikk-join')
+        .setDescription('Bli med i talekanalen din uten å starte avspilling'),
 
     async execute(interaction, config, client) {
         await deferMusicCommand(interaction);

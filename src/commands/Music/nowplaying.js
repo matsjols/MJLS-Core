@@ -6,8 +6,8 @@ import { deferMusicCommand } from '../../services/music/prefixSupport.js';
 export default {
     category: 'Music',
     data: new SlashCommandBuilder()
-        .setName('nowplaying')
-        .setDescription('Show the currently playing track'),
+        .setName('spilles-nå')
+        .setDescription('Vis sangen som spilles nå'),
 
     async execute(interaction, config, client) {
         await deferMusicCommand(interaction);

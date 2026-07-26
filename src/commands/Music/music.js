@@ -21,86 +21,86 @@ import { deferMusicCommand } from '../../services/music/prefixSupport.js';
 export default {
     category: 'Music',
     data: new SlashCommandBuilder()
-        .setName('music')
-        .setDescription('Manage playback, queue, and voice session settings')
+        .setName('musikk')
+        .setDescription('Administrer avspilling, kø og innstillinger for talekanal')
         .addSubcommand((sub) =>
-            sub.setName('pause').setDescription('Pause playback'),
+            sub.setName('pause').setDescription('Sett avspillingen på pause'),
         )
         .addSubcommand((sub) =>
-            sub.setName('resume').setDescription('Resume playback'),
+            sub.setName('fortsett').setDescription('Gjenoppta avspillingen'),
         )
         .addSubcommand((sub) =>
-            sub.setName('skip').setDescription('Skip the current track'),
+            sub.setName('hopp-over').setDescription('Hopp over gjeldende sang'),
         )
         .addSubcommand((sub) =>
-            sub.setName('stop').setDescription('Stop playback and clear the queue'),
+            sub.setName('stopp').setDescription('Stopp avspillingen og tøm køen'),
         )
         .addSubcommand((sub) =>
-            sub.setName('shuffle').setDescription('Shuffle the queue'),
+            sub.setName('shuffle').setDescription('Miks / stokk om på køen'),
         )
         .addSubcommand((sub) =>
             sub
                 .setName('loop')
-                .setDescription('Set loop mode')
+                .setDescription('Velg repeteringsmodus')
                 .addStringOption((opt) =>
                     opt
-                        .setName('mode')
-                        .setDescription('Loop mode')
+                        .setName('modus')
+                        .setDescription('Repeteringsmodus')
                         .setRequired(true)
                         .addChoices(
-                            { name: 'Off', value: 'none' },
-                            { name: 'Track', value: 'track' },
-                            { name: 'Queue', value: 'queue' },
+                            { name: 'Av', value: 'none' },
+                            { name: 'Sang', value: 'track' },
+                            { name: 'Kø', value: 'queue' },
                         ),
                 ),
         )
         .addSubcommand((sub) =>
             sub
-                .setName('volume')
-                .setDescription('Set playback volume')
+                .setName('volum')
+                .setDescription('Endre avspillingsvolum')
                 .addIntegerOption((opt) =>
-                    opt.setName('level').setDescription('Volume (0-100)').setRequired(true).setMinValue(0).setMaxValue(100),
+                    opt.setName('niva').setDescription('Volum (0-100)').setRequired(true).setMinValue(0).setMaxValue(100),
                 ),
         )
         .addSubcommand((sub) =>
             sub
-                .setName('seek')
-                .setDescription('Seek to a position in the current track')
+                .setName('spol')
+                .setDescription('Spol til et tidspunkt i sangen')
                 .addIntegerOption((opt) =>
-                    opt.setName('seconds').setDescription('Position in seconds').setRequired(true).setMinValue(0),
+                    opt.setName('sekunder').setDescription('Posisjon i sekunder').setRequired(true).setMinValue(0),
                 ),
         )
         .addSubcommand((sub) =>
             sub
-                .setName('remove')
-                .setDescription('Remove a track from the queue')
+                .setName('fjern')
+                .setDescription('Fjern en sang fra køen')
                 .addIntegerOption((opt) =>
-                    opt.setName('position').setDescription('Queue position').setRequired(true).setMinValue(1),
+                    opt.setName('posisjon').setDescription('Køposisjon').setRequired(true).setMinValue(1),
                 ),
         )
         .addSubcommand((sub) =>
             sub
-                .setName('move')
-                .setDescription('Move a track in the queue')
+                .setName('flytt')
+                .setDescription('Flytt en sang i køen')
                 .addIntegerOption((opt) =>
-                    opt.setName('from').setDescription('Current position').setRequired(true).setMinValue(1),
+                    opt.setName('fra').setDescription('Nåværende posisjon').setRequired(true).setMinValue(1),
                 )
                 .addIntegerOption((opt) =>
-                    opt.setName('to').setDescription('New position').setRequired(true).setMinValue(1),
+                    opt.setName('til').setDescription('Ny posisjon').setRequired(true).setMinValue(1),
                 ),
         )
         .addSubcommand((sub) =>
-            sub.setName('clear').setDescription('Clear the queue'),
+            sub.setName('tøm').setDescription('Tøm hele køen'),
         )
         .addSubcommand((sub) =>
-            sub.setName('leave').setDescription('Disconnect the bot from the voice channel'),
+            sub.setName('forlat').setDescription('Koble boten fra talekanalen'),
         )
         .addSubcommand((sub) =>
             sub
                 .setName('247')
-                .setDescription('Toggle 24/7 mode (stay in voice channel when idle)')
+                .setDescription('Slå på/av 24/7-modus (bli i talekanalen når inaktiv)')
                 .addBooleanOption((opt) =>
-                    opt.setName('enabled').setDescription('Enable or disable 24/7 mode').setRequired(true),
+                    opt.setName('aktivert').setDescription('Aktiver eller deaktiver 24/7-modus').setRequired(true),
                 ),
         ),
 
@@ -114,17 +114,17 @@ export default {
                 await replyMusicSuccess(interaction, embed);
                 break;
             }
-            case 'resume': {
+            case 'fortsett': {
                 const embed = await resumePlayback(client, interaction);
                 await replyMusicSuccess(interaction, embed);
                 break;
             }
-            case 'skip': {
+            case 'hopp-over': {
                 const embed = await skipTrack(client, interaction);
                 await replyMusicSuccess(interaction, embed);
                 break;
             }
-            case 'stop': {
+            case 'stopp': {
                 const embed = await stopPlayback(client, interaction);
                 await replyMusicSuccess(interaction, embed);
                 break;
@@ -135,53 +135,53 @@ export default {
                 break;
             }
             case 'loop': {
-                const embed = await setLoopMode(client, interaction, interaction.options.getString('mode'));
+                const embed = await setLoopMode(client, interaction, interaction.options.getString('modus'));
                 await replyMusicSuccess(interaction, embed);
                 break;
             }
-            case 'volume': {
-                const embed = await setVolume(client, interaction, interaction.options.getInteger('level'));
+            case 'volum': {
+                const embed = await setVolume(client, interaction, interaction.options.getInteger('niva'));
                 await replyMusicSuccess(interaction, embed);
                 break;
             }
-            case 'seek': {
-                const embed = await seekTrack(client, interaction, interaction.options.getInteger('seconds'));
+            case 'spol': {
+                const embed = await seekTrack(client, interaction, interaction.options.getInteger('sekunder'));
                 await replyMusicSuccess(interaction, embed);
                 break;
             }
-            case 'remove': {
-                const embed = await removeFromQueue(client, interaction, interaction.options.getInteger('position'));
+            case 'fjern': {
+                const embed = await removeFromQueue(client, interaction, interaction.options.getInteger('posisjon'));
                 await replyMusicSuccess(interaction, embed);
                 break;
             }
-            case 'move': {
+            case 'flytt': {
                 const embed = await moveInQueue(
                     client,
                     interaction,
-                    interaction.options.getInteger('from'),
-                    interaction.options.getInteger('to'),
+                    interaction.options.getInteger('fra'),
+                    interaction.options.getInteger('til'),
                 );
                 await replyMusicSuccess(interaction, embed);
                 break;
             }
-            case 'clear': {
+            case 'tøm': {
                 const embed = await clearQueue(client, interaction);
                 await replyMusicSuccess(interaction, embed);
                 break;
             }
-            case 'leave': {
+            case 'forlat': {
                 const embed = await leaveVoiceChannel(client, interaction);
                 await replyMusicSuccess(interaction, embed);
                 break;
             }
             case '247': {
-                const embed = await setTwentyFourSeven(client, interaction, interaction.options.getBoolean('enabled'));
+                const embed = await setTwentyFourSeven(client, interaction, interaction.options.getBoolean('aktivert'));
                 await replyMusicSuccess(interaction, embed);
                 break;
             }
             default:
                 await InteractionHelper.safeEditReply(interaction, {
-                    content: 'Unknown music subcommand.',
+                    content: 'Ukjent musikk-underkommando.',
                 });
         }
     },
