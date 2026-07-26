@@ -43,11 +43,14 @@ export function getCounterEmoji(type) {
 }
 
 export function formatCounterChannelName(type, count) {
+  const config = getCounterConfig(type);
+  const formattedCount = typeof count === 'number' ? count.toLocaleString('no-NO') : count;
   const template = botConfig.counters?.defaults?.channelName || '{emoji}︱{name} ❯ {count}';
-  const baseName = getCounterBaseName(type);
+
   return template
-    .replaceAll('{name}', baseName)
-    .replaceAll('{count}', String(count));
+    .replaceAll('{emoji}', config.emoji)
+    .replaceAll('{name}', config.baseName)
+    .replaceAll('{count}', String(formattedCount));
 }
 
 export function getCounterActionMessage(action, values = {}) {
