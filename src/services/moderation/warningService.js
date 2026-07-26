@@ -1,5 +1,3 @@
-// warningService.js
-
 import { db, getFromDb, setInDb, getWarningsKey, getWarningsPrefix } from '../../utils/database.js';
 import { logger } from '../../utils/logger.js';
 import { createError, ErrorTypes, wrapServiceClassMethods } from '../../utils/errorHandler.js';
@@ -17,12 +15,12 @@ class WarningService {
     const warnings = await getFromDb(key, []);
 
     if (!Array.isArray(warnings)) {
-      logger.warn(`Warnings for ${userId} in ${guildId} corrupted, resetting`);
+      logger.warn(`Advarsler for ${userId} i ${guildId} er korrupte, tilbakestiller`);
       await setInDb(key, []);
       throw createError(
-        'Corrupted warning data',
+        'Korrupte advarselsdata',
         ErrorTypes.DATABASE,
-        'Warning data was corrupted and has been reset. Please try again.',
+        'Advarselsdata var korrupt og har blitt tilbakestilt. Vennligst prøv igjen.',
         { guildId, userId, service: 'warningService', operation: 'addWarning' }
       );
     }
@@ -40,7 +38,7 @@ class WarningService {
     warnings.push(warning);
     await setInDb(key, warnings);
 
-    logger.info(`Warning added: ${userId} in ${guildId} by ${moderatorId}`);
+    logger.info(`Advarsel lagt til: ${userId} i ${guildId} av ${moderatorId}`);
 
     return {
       id: warning.id,
@@ -69,9 +67,9 @@ class WarningService {
     const index = warnings.findIndex(w => w.id === warningId);
     if (index === -1) {
       throw createError(
-        'Warning not found',
+        'Advarsel ikke funnet',
         ErrorTypes.USER_INPUT,
-        'That warning could not be found. It may have already been removed.',
+        'Finner ikke den advarselen. Den kan allerede ha blitt fjernet.',
         { guildId, userId, warningId, service: 'warningService', operation: 'removeWarning' }
       );
     }
@@ -79,7 +77,7 @@ class WarningService {
     warnings[index].status = 'deleted';
     await setInDb(key, warnings);
 
-    logger.info(`Warning removed: ${warningId} for ${userId} in ${guildId}`);
+    logger.info(`Advarsel fjernet: ${warningId} for ${userId} i ${guildId}`);
     return { removed: true };
   }
 
@@ -90,7 +88,7 @@ class WarningService {
 
     await setInDb(key, []);
 
-    logger.info(`Warnings cleared for ${userId} in ${guildId} (${count} removed)`);
+    logger.info(`Advarsler slettet for ${userId} i ${guildId} (${count} fjernet)`);
     return { count };
   }
 
@@ -114,7 +112,7 @@ class WarningService {
 
     allWarnings.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-    logger.debug(`Fetched guild warnings for ${guildId} with ${allWarnings.length} total`);
+    logger.debug(`Hentet serveradvarsler for ${guildId} med totalt ${allWarnings.length}`);
     return allWarnings.slice(0, limit);
   }
 }

@@ -1,5 +1,5 @@
 export const VOICE_CHANNEL_DENIAL =
-    'You need to be in the same voice channel as the bot to use music controls.';
+    'Du må være i samme talekanal som boten for å bruke musikkontrollene.';
 
 export function canControlMusic(member, player) {
     const memberChannel = member?.voice?.channel;

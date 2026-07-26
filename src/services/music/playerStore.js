@@ -1,4 +1,4 @@
-// Per-guild music session state (in-memory). Adapted from Musicify playerStore (Apache-2.0).
+// Tilstand per server for musikkøkt (i minne). Tilpasset fra Musicify playerStore (Apache-2.0).
 
 export class GuildMusicData {
     constructor() {

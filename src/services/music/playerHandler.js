@@ -1,4 +1,4 @@
-// Player event handlers for Riffy. Adapted from Musicify playerHandler (Apache-2.0).
+// Spillerhendelseshåndterere for Riffy. Tilpasset fra Musicify playerHandler (Apache-2.0).
 
 import { logger } from '../../utils/logger.js';
 import { getGuildMusicData, clearUpdateInterval } from './playerStore.js';
@@ -37,7 +37,7 @@ async function editOrSendPlayerMessage(client, guildData, channelId, embed, comp
         guildData.playerMessageId = newMsg.id;
         guildData.playerChannelId = channel.id;
     } catch (error) {
-        logger.error('Failed to send music player message:', error);
+        logger.error('Klarte ikke å sende musikkspillermelding:', error);
     }
 }
 
@@ -54,7 +54,7 @@ export async function refreshPlayerMessage(client, guildId) {
         const channelId = guildData.playerChannelId || player.textChannel;
         await editOrSendPlayerMessage(client, guildData, channelId, embed, components);
     } catch (error) {
-        logger.error('Failed to refresh music player message:', error);
+        logger.error('Klarte ikke å oppdatere musikkspillermelding:', error);
     }
 }
 
@@ -68,13 +68,10 @@ function startUpdateInterval(client, guildId) {
 
 export function setupPlayerHandler(client) {
     if (!client.riffy) {
-        logger.warn('Riffy not initialized; music player handlers not attached.');
+        logger.warn('Riffy er ikke initialisert; musikkspiller-håndterere er ikke tilkoblet.');
         return;
     }
 
-    // Lavalink nodes often flap (reconnect -> error -> reconnect). Throttle all
-    // per-node messages to one line per interval, log the first connect only,
-    // and skip reconnect noise entirely since it is meaningless during flapping.
     const nodeLogState = new Map();
     const NODE_LOG_INTERVAL_MS = 5 * 60 * 1000;
 
@@ -99,33 +96,31 @@ export function setupPlayerHandler(client) {
             return;
         }
         markNodeConnected(node.name);
-        logger.info(`Lavalink node "${node.name}" connected.`);
+        logger.info(`Lavalink-node "${node.name}" tilkoblet.`);
     });
 
     client.riffy.on('nodeReconnect', () => {
-        // Intentionally silent — reconnect spam is not actionable during flapping.
+        // Bevisst tyst
     });
 
     client.riffy.on('nodeError', (node, error) => {
         if (!shouldLogNodeEvent(node.name)) {
             return;
         }
-        logger.warn(`Lavalink node "${node.name}" error: ${error?.message || error}`);
+        logger.warn(`Lavalink-node "${node.name}" feil: ${error?.message || error}`);
     });
 
     client.riffy.on('nodeDisconnect', (node) => {
         if (!shouldLogNodeEvent(node.name)) {
             return;
         }
-        logger.warn(`Lavalink node "${node.name}" disconnected.`);
+        logger.warn(`Lavalink-node "${node.name}" frakoblet.`);
     });
 
     client.riffy.on('trackStart', async (player, track) => {
         try {
             const guildData = getGuildMusicData(player.guildId);
 
-            // Keep the Lavalink player's loop mode aligned with the stored preference.
-            // Skip temporarily clears track-loop so it can advance; restore it here.
             if (guildData.loop && player.loop !== guildData.loop) {
                 player.setLoop(guildData.loop);
             }
@@ -148,7 +143,7 @@ export function setupPlayerHandler(client) {
             await editOrSendPlayerMessage(client, guildData, channelId, embed, components);
             startUpdateInterval(client, player.guildId);
         } catch (error) {
-            logger.error('Music trackStart error:', error);
+            logger.error('Feil i trackStart for musikk:', error);
         }
     });
 
@@ -170,7 +165,7 @@ export function setupPlayerHandler(client) {
                         await msg.delete();
                     }
                 } catch {
-                    // already deleted
+                    // allerede slettet
                 }
                 guildData.playerMessageId = null;
                 guildData.playerChannelId = null;
@@ -187,13 +182,13 @@ export function setupPlayerHandler(client) {
                             currentPlayer.destroy();
                         }
                     } catch {
-                        // player already destroyed
+                        // spiller allerede ødelagt
                     }
                     guildData.idleTimeout = null;
                 }, IDLE_DISCONNECT_MS);
             }
         } catch (error) {
-            logger.error('Music queueEnd error:', error);
+            logger.error('Feil i queueEnd for musikk:', error);
         }
     });
 
@@ -209,7 +204,7 @@ export function setupPlayerHandler(client) {
                     await msg.delete();
                 }
             } catch {
-                // already deleted
+                // allerede slettet
             }
         }
 
@@ -224,18 +219,18 @@ export function setupPlayerHandler(client) {
     });
 
     client.riffy.on('trackError', async (player, track, payload) => {
-        logger.error(`Track error in ${player.guildId} for "${track?.info?.title}":`, payload?.error || payload);
+        logger.error(`Sporfeil i ${player.guildId} for "${track?.info?.title}":`, payload?.error || payload);
         const guildData = getGuildMusicData(player.guildId);
         if (guildData.playerChannelId) {
             const channel = client.channels.cache.get(guildData.playerChannelId);
             if (channel) {
-                channel.send(`Failed to play **${track?.info?.title || 'track'}**. Skipping...`).catch(() => null);
+                channel.send(`Klarte ikke å spille **${track?.info?.title || 'spor'}**. Hopper over...`).catch(() => null);
             }
         }
     });
 
     client.riffy.on('trackStuck', async (player, track, payload) => {
-        logger.warn(`Track stuck in ${player.guildId} for "${track?.info?.title}" (${payload?.thresholdMs}ms)`);
+        logger.warn(`Spor har låst seg i ${player.guildId} for "${track?.info?.title}" (${payload?.thresholdMs}ms)`);
     });
 }
 
@@ -248,7 +243,7 @@ export async function shutdownMusic(client) {
         try {
             player.destroy();
         } catch (error) {
-            logger.debug('Error destroying music player during shutdown:', error.message);
+            logger.debug('Feil ved avslutning av musikkspiller under nedstenging:', error.message);
         }
     }
 }
