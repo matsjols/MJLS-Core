@@ -35,7 +35,8 @@ export function getCounterTypeLabel(type) {
 }
 
 export function getCounterBaseName(type) {
-  return getCounterConfig(type).baseName;
+  const config = getCounterConfig(type);
+  return `${config.emoji}︱${config.baseName} ❯ 0`;
 }
 
 export function getCounterEmoji(type) {
@@ -45,12 +46,9 @@ export function getCounterEmoji(type) {
 export function formatCounterChannelName(type, count) {
   const config = getCounterConfig(type);
   const formattedCount = typeof count === 'number' ? count.toLocaleString('no-NO') : count;
-  const template = botConfig.counters?.defaults?.channelName || '{emoji}︱{name} ❯ {count}';
 
-  return template
-    .replaceAll('{emoji}', config.emoji)
-    .replaceAll('{name}', config.baseName)
-    .replaceAll('{count}', String(formattedCount));
+  // Bygger navnet eksakt slik du ønsker: "👪︱Totalt ❯ 19"
+  return `${config.emoji}︱${config.baseName} ❯ ${formattedCount}`;
 }
 
 export function getCounterActionMessage(action, values = {}) {
@@ -168,22 +166,11 @@ export async function updateCounter(client, guild, counter) {
       return false;
     }
 
-    const baseName = getCounterBaseName(type);
-    if (process.env.NODE_ENV !== 'production') {
-      logger.debug(`Basenavn: "${baseName}", Nåværende navn: "${channel.name}"`);
-    }
-    
     const newName = formatCounterChannelName(type, count);
-    if (process.env.NODE_ENV !== 'production') {
-      logger.debug(`Nytt navn vil bli: "${newName}"`);
-    }
     
     if (channel.name !== newName) {
       try {
         await channel.setName(newName);
-        if (process.env.NODE_ENV !== 'production') {
-          logger.debug(`Oppdaterte kanalnavn til: "${newName}"`);
-        }
 
         try {
           await logEvent({
@@ -207,10 +194,6 @@ export async function updateCounter(client, guild, counter) {
       } catch (error) {
         logger.error(`Kunne ikke oppdatere kanalnavn for ${channel.id}:`, error);
         return false;
-      }
-    } else {
-      if (process.env.NODE_ENV !== 'production') {
-        logger.debug('Kanalnavnet er allerede korrekt, ingen oppdatering nødvendig');
       }
     }
     return true;
@@ -245,9 +228,6 @@ export async function getServerCounters(client, guildId) {
     } else if (data && typeof data === 'object' && !data.ok && isValidCounterShape(data)) {
       counters = [data];
     } else {
-      if (process.env.NODE_ENV !== 'production') {
-        logger.debug('Ingen tellermeldinger funnet, returnerer tom matrise');
-      }
       return [];
     }
 
@@ -267,14 +247,7 @@ export async function saveServerCounters(client, guildId, counters) {
     
     const sanitizedCounters = sanitizeCounters(counters, guildId);
 
-    if (process.env.NODE_ENV !== 'production') {
-      logger.debug(`Lagrer ${sanitizedCounters.length} tellere for server ${guildId}:`, sanitizedCounters);
-    }
-
     await client.db.set(getServerCountersKey(guildId), sanitizedCounters);
-    if (process.env.NODE_ENV !== 'production') {
-      logger.debug('Tellere ble lagret');
-    }
     return true;
   } catch (error) {
     logger.error("Feil ved lagring av servertellere:", error);
