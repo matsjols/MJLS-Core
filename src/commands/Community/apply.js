@@ -37,7 +37,7 @@ function getApplicationStatusPresentation(statusValue) {
 export default {
     slashOnly: true,
     data: new SlashCommandBuilder()
-        .setName("søk")
+        .setName("søknad")
         .setDescription("Administrer rollesøknader")
         .addSubcommand((subcommand) =>
             subcommand
@@ -45,7 +45,7 @@ export default {
                 .setDescription("Send inn en søknad for en rolle")
                 .addStringOption((option) =>
                     option
-                        .setName("søknad")
+                        .setName("til")
                         .setDescription("Søknaden du vil sende inn")
                         .setRequired(true)
                         .setAutocomplete(true),
@@ -110,7 +110,7 @@ export default {
         } else if (subcommand === "liste") {
             await handleList(interaction);
         }
-    }, { type: 'command', commandName: 'søk' })
+    }, { type: 'command', commandName: 'søknad' })
 };
 
 export async function handleApplicationModal(interaction) {
@@ -166,7 +166,7 @@ export async function handleApplicationModal(interaction) {
             'Søknad sendt inn',
             `Din søknad for **${applicationRole.name}** har blitt sendt inn!\n\n` +
             `Søknads-ID: \`${application.id}\`\n` +
-            `Du kan sjekke status med \`/søk status id:${application.id}\``
+            `Du kan sjekke status med \`/søknad status id:${application.id}\``
         );
         
         await InteractionHelper.safeEditReply(interaction, { embeds: [embed], flags: ["Ephemeral"] });
@@ -240,13 +240,13 @@ async function handleList(interaction) {
             embed.addFields({
                 name: `${index + 1}. ${appRole.name}`,
                 value: `**Rolle:** ${role ?`<@&${appRole.roleId}>`: 'Fant ikke rollen'}\n` +
-                       `**Søk med:** \`/søk send-inn søknad:"${appRole.name}"\``,
+                       `**Søk med:** \`/søknad send-inn til:"${appRole.name}"\``,
                 inline: false
             });
         });
 
         embed.setFooter({
-            text: "Bruk /søk send-inn søknad:<navn> for å søke på en av disse rollene."
+            text: "Bruk /søknad send-inn til:<navn> for å søke på en av disse rollene."
         });
 
         return InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
@@ -267,8 +267,8 @@ async function handleList(interaction) {
 }
 
 async function handleSubmit(interaction, settings) {
-    // Bruker "søknad" her for å hente fra alternativet i kommandobyggeren
-    const applicationName = interaction.options.getString("søknad"); 
+    // Bruker "til" her for å hente fra alternativet i kommandobyggeren
+    const applicationName = interaction.options.getString("til"); 
     const member = interaction.member;
 
     const applicationRoles = await getApplicationRoles(interaction.client, interaction.guild.id);
@@ -278,7 +278,7 @@ async function handleSubmit(interaction, settings) {
     );
 
     if (!applicationRole) {
-        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Bruk `/søk liste` for å se tilgjengelige søknader.' });
+        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Bruk `/søknad liste` for å se tilgjengelige søknader.' });
     }
 
     const userApps = await getUserApplications(
